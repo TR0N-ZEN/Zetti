@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>game</title>
+    <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
+    <meta name="theme-color" content="#ffffff;">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
+    <script src="socket.io/socket.io.js" defer></script>
+    <script src="http://192.168.178.95:80/game.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="http://192.168.178.95:80/unison.css">
+    <link rel="stylesheet" type="text/css" href="http://192.168.178.95:80/game.css">
+</head>
+<body>
+    <div id="login">
+        <form>
+            <input type="text" placeholder="Your name" autocomplete="off" autofocus id="loginName"/>
+            <button>SEND</button>
+        </form>
+    </div>
+    <div class="wrapper">
+        <!-- Panel for the clients Points, Name and Guesses - simply some infos for an overview -->
+        <div class="info grid-box">
+            <p id="Name">Name: </p>
+            <p id="Points">Points: </p>
+            <p id="Guesses">Guesses: </p>
+            <div class="chat">
+                <button>CHAT</button>
+                <div class="window grid-box">
+                    <ul>
+
+                    </ul>
+                    <form>
+                        <input type="text" placeholder="message" autocomplete="off" id="message" />
+                        <button>SND</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="playingField grid-box">
+            <div class="playingStack"></div>
+        </div>
+        <div class="hand grid-box">
+            <div><a></a></div>
+            <div><a></a></div>
+            <div><a></a></div>
+            <div><a></a></div>
+            <div><a></a></div>
+        </div>
+    </div>
+</body>
+</html>
