@@ -1,32 +1,6 @@
 // JavaScript source code
 
 
-//Cards Generator----------------------------------------------------------
-function card(color, value) {
-    this.color = color;
-    this.value = value;
-}
-var cards = [];
-var cardIndex = 0;
-var colors = ["red", "green", "blue", "yellow"]
-
-for (color of colors) {
-    for (x = 1; x < 14; x++) {
-        cards[cardIndex] = new card(color, x);
-        cardIndex++;
-    }
-}
-for (x = 1; x < 5; x++) {
-    cards[cardIndex] = new card(undefined, 14);
-    cardIndex++;
-}
-for (x = 1; x < 5; x++) {
-    cards[cardIndex] = new card(undefined, 0);
-    cardIndex++;
-}
-//END Card Generator-------------------------------------------------------
-
-
 
 
 //Player Generator---------------------------------------------------------
@@ -50,7 +24,7 @@ const app = express();
 const httpsserver = require('http').Server(app);
 var io = require('socket.io')(httpsserver); // 'io' holds all sockets
 
-const IPaddress = '192.168.178.95';
+const IPaddress = '192.168.178.30';
 const port = 80;
 
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
@@ -83,6 +57,33 @@ httpsserver.listen(port, IPaddress, function () {
 
 
 
+//Cards Generator----------------------------------------------------------
+function card(color, value) {
+    this.color = color;
+    this.value = value;
+}
+var cards = [];
+var cardIndex = 0;
+var colors = ["red", "green", "blue", "yellow"]
+
+for (color of colors) {
+    for (x = 1; x < 14; x++) {
+        cards[cardIndex] = new card(color, x);
+        cardIndex++;
+    }
+}
+for (x = 1; x < 5; x++) {
+    cards[cardIndex] = new card(undefined, 14);
+    cardIndex++;
+}
+for (x = 1; x < 5; x++) {
+    cards[cardIndex] = new card(undefined, 0);
+    cardIndex++;
+}
+//END Card Generator-------------------------------------------------------
+
+
+
 //Schuffle Cards-----------------------------------------------------------
 function shuffleCards() {
     for (i = cards.length - 1; i > 0; i--) {
@@ -95,10 +96,13 @@ function shuffleCards() {
 }
 //END Schuffle Cards-------------------------------------------------------
 
-const AmountOfRounds = 60 / playerList.length();
-console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
-var trumpColor;
+
+
+//GAME---------------------------------------------------------------------
 function game() {
+    const AmountOfRounds = 60 / playerList.length();
+    console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
+    var trumpColor;
     for (round = 1; round < AmountOfRounds; round++) {
         io.emit('newRound', round); 
         trumpColor = colors[Math.floor(Math.random() * 4)];
@@ -113,3 +117,4 @@ function game() {
 
     }
 }
+//END GAME-----------------------------------------------------------------

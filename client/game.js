@@ -37,11 +37,16 @@ socket.on('MessageFromServer', function (message) {
 var infoName = $('.wrapper .info #Name');
 var infoPoints = $('.wrapper .info #Points');
 var infoGuesses = $('.wrapper .info #Guesses');
+var cards = $('.wrapper .hand div');
 socket.on('PlayerObject', (JSON_PlayerObject) => {
     PlayerObject = JSON.parse(JSON_PlayerObject);
     infoName.append(PlayerObject.name);
     infoPoints.append(PlayerObject.points);
     infoGuesses.append(PlayerObject.guesses);
+    //ATTENTION
+    for (i = 0; i < cards.length; i++) {
+        cards[i].append(PlayerObject.cards[i].color + " " + PlayerObject.cards[i].value);
+    }
 });
 //END--------------------------------------------------
 
