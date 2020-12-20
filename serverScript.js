@@ -24,7 +24,7 @@ const app = express();
 const httpsserver = require('http').Server(app);
 var io = require('socket.io')(httpsserver); // 'io' holds all sockets
 
-const IPaddress = '192.168.178.30';
+const IPaddress = '192.168.178.4'; //enter your current ip address inorder to avoid errors
 const port = 80;
 
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
@@ -62,6 +62,7 @@ function card(color, value) {
     this.color = color;
     this.value = value;
 }
+//global set of cards
 var cards = [];
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"]
@@ -100,16 +101,18 @@ function shuffleCards() {
 
 //GAME---------------------------------------------------------------------
 function game() {
-    const AmountOfRounds = 60 / playerList.length();
+    const AmountOfRounds = cards.lenght() / playerList.length;
     console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
     var trumpColor;
-    for (round = 1; round < AmountOfRounds; round++) {
-        io.emit('newRound', round); 
+    for (round = 1; round <= AmountOfRounds; round++) {
+        //determine trump color
         trumpColor = colors[Math.floor(Math.random() * 4)];
-        io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
+        //
+        io.emit('newRound', round, trumpColor); 
+        //io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
         shuffleCards();
         cardIndex = 0;
-        for (id = 0; id < playerList.length(); id++) {
+        for (id = 0; id < playerList.length; id++) {
             playerList[id].cards = cards.slice(cardIndex, cardIndex + round); //this is copying the elements of the cards array with the index 'cardIndex' to 'cardIndex + round -1' into the playerList object's cards array
             cardIndex = cardIndex + round;
         }
