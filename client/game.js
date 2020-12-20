@@ -12,8 +12,18 @@ $('#login form').submit(function (e) {
 //END Login--------------------------------------------------------------------
 
 //All around the chat----------------------------------------------------------
-$('.chat > button').click(function () {
-    $('.info .chat .window').slideToggle("fast", "swing");
+var chat_hidden = false;
+$('.chat > button').click( () => {
+    //$('.info .chat .window').slideToggle("fast", "swing");
+    if (chat_hidden) {
+        $('.info .chat .window').css('right', 0);
+        chat_hidden = false;
+    } else {
+        let width_in_px = $('.info .chat .window').css('width');
+        let width = "-" + width_in_px;
+        $('.info .chat .window').css('right', width);
+        chat_hidden = true;
+    }
 });
 
 $('.chat .window > form').submit(function (e) {
@@ -44,9 +54,13 @@ socket.on('PlayerObject', (JSON_PlayerObject) => {
     infoPoints.append(PlayerObject.points);
     infoGuesses.append(PlayerObject.guesses);
     //ATTENTION
+});
+//END--------------------------------------------------
+
+
+//-----------------------------------------------------
+socket.on('newRound', (round, trumpColor) => {
     for (i = 0; i < cards.length; i++) {
         cards[i].append(PlayerObject.cards[i].color + " " + PlayerObject.cards[i].value);
     }
 });
-//END--------------------------------------------------
-
