@@ -57,6 +57,7 @@
             z-index: 1;
             display: grid;
             grid-template-rows: 4fr 1fr;
+            transition: right 1s;
         }
 
             .info .chat .window ul {
