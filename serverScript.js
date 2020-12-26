@@ -1,55 +1,109 @@
 // JavaScript source code
 
 
-
-
 //Player Generator---------------------------------------------------------
-var ID = 0;
+var IDs = [0, 0, 0, 0, 0, 0];
+var ID;
 var playerList = [];
-function Player(name) {
+function Player(name, socket_id) {
+    for (let i = 0; i < IDs.length; i++) {
+        if (IDs[i] == 0) {
+            IDs[i] = 1;
+            ID = i;
+            break;
+        }
+    }
     this.name = name;
     this.id = ID;
+    this.socket_id = socket_id;
     this.points = 0;
     this.guesses = 0;
     this.cards = [];
-    ID++;
+    console.log(this);
 }
 //END Cards Generator------------------------------------------------------
+var already_voted = [];
 
 
+function login (name, socket_id) {
+    playerList.push(new Player(name, socket_id));
+    console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
+    socket.emit('PlayerObject', JSON.stringify(playerList[playerList.length - 1]));
+    io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
+}
+
+function vote (playerid) {
+    if (!already_voted.includes(playerid)) {
+        console.log("vote");
+        already_voted.push(playerid);
+        socket.emit('vote.update', already_voted.length, playerList.length);
+        if (already_voted.length == playerList.length) {
+            //START GAME
+            socket.emit('prepare_game');
+            console.log("START GAME");
+        }
+    }
+}
 
 //Server Setup-------------------------------------------------------------
 const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
-var io = require('socket.io')(httpsserver); // 'io' holds all sockets
-
-const IPaddress = '192.168.178.4'; //enter your current ip address inorder to avoid errors
+let io = require('socket.io')(httpsserver); // 'io' holds all sockets
+const IPaddress = '192.168.178.32'; //enter your current ip address inorder to avoid errors
 const port = 80;
-
+//-------------------------------------------------------------------------
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
     console.log('a user connected');
-    console.log(socket.id);
-
     socket.on('toServerConsole', function (text) { console.log(text); });
-    socket.on('Login', function (name) {
-        playerList.push(new Player(name));
-        //console.log("New Player " + playerList[ID - 1].name + " arrived.");
-        socket.emit('PlayerObject', JSON.stringify(playerList[ID - 1]));
-        io.emit('MessageFromServer', playerList[ID - 1].name + " arrived.");
+    socket.on('login', (name) => {
+        if (playerList.length < 6) {
+            playerList.push(new Player(name, socket.id));
+            console.log("IDs: " + IDs)
+            console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
+            socket.emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
+            io.emit('vote.update', already_voted.length, playerList.length);
+            io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
+        } else {
+            socket.emit('login.unsuccessful');
+        }
     });
-    socket.on('MessageFromClient', function (message) {    //Messages from a Client to the Server
-        //console.log(message);
-        io.emit('MessageFromServer',message); //Message from the Server to Clients
+    socket.on('MessageFromClient', (message) => { io.emit('MessageFromServer', message); });
+    socket.on('vote', (playerid) => {
+        if (!already_voted.includes(playerid)) {
+            console.log("vote");
+            already_voted.push(playerid);
+            io.emit('vote.update', already_voted.length, playerList.length);
+            if (already_voted.length == playerList.length) {
+                //START GAME
+                io.emit('prepare_game');
+                console.log("START GAME");
+            }
+        }
     });
-    socket.on('disconnect', function () { console.log('user disconnected'); });
+    socket.on('disconnect', (reason) => {
+        console.log('user disconnected');
+        for (let i = 0; i < playerList.length; i++) {
+            if (io.of('/').sockets[playerList[i].socket_id] === undefined) {
+                io.emit('MessageFromServer', playerList[i].name + " left.")
+                already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
+                IDs[playerList[i].id] = 0;
+                playerList.splice(i, 1);
+                io.emit('vote.update', already_voted.length, playerList.length);
+                break;
+            }
+        }
+        console.log("IDs: " + IDs)
+    });
 });           
-
 app.use(express.static('client'));
 app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/client/game.html');
+    if (playerList.length < 6) {
+        res.sendFile(__dirname + '/client/game.html');
+    } else {
+        res.sendFile(__dirname + '/client/game_is_full.html');
+    }
 });
-
 httpsserver.listen(port, IPaddress, function () {
     console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
 });
