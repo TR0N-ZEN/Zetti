@@ -19,65 +19,57 @@ class Player {
         this.socket_id = socket_id;
         this.points = 0;
         this.guesses = 0;
-        this.cards = [];
-        console.log(this);
+        this.hand = [];
+        //console.log(this);
     }
 }
 //END Player Generator------------------------------------------------------
 var already_voted = [];
 
-var playingfield = {
-    cards: [],
-    playingstack: [],
-    shuffle: () => {
-        for (i = this.cards.length - 1; i > 0; i--) {
-            j = Math.floor(Math.random() * i)
-            let k = this.cards[i]
-            this.cards[i] = this.cards[j]
-            this.cards[j] = k
-        }
-        console.log(playingfield.cards);
-    }
-}
-
-//Cards Generator----------------------------------------------------------
 class Card {
-    constructor(color, value) {
-    this.color = color;
-    this.value = value;
+    constructor(color, number) {
+        this.color = color;
+        this.number = number;
     }
 }
 
-//global set of cards
-//var cards = [];
+var playingfield = {
+    deck: new Array(),
+    playingstack: new Array(),
+    shuffle: () => {
+        for (i = this.deck.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * i)
+            let k = this.deck[i]
+            this.deck[i] = deck[j]
+            this.deck[j] = k
+        }
+        console.log(this.deck);
+    },
+    to_playingstack: (color, number) => {
+        console.log(this.playingstack);
+        //this.playingstack.push(new Card(color, number));
+    }
+}
+
+//deck Generator----------------------------------------------------------
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"]
 
 for (color of colors) {
     for (x = 1; x < 14; x++) {
-        playingfield.cards[cardIndex] = new Card(color, x);
+        playingfield.deck[cardIndex] = new Card(color, x);
         cardIndex++;
     }
 }
 for (x = 1; x < 5; x++) {
-    playingfield.cards[cardIndex] = new Card(undefined, 14); //Zauberer
+    playingfield.deck[cardIndex] = new Card(undefined, 14); //Zauberer
     cardIndex++;
 }
 for (x = 1; x < 5; x++) {
-    playingfield.cards[cardIndex] = new Card(undefined, 0); //Narren
+    playingfield.deck[cardIndex] = new Card(undefined, 0); //Narren
     cardIndex++;
 }
 //END Card Generator-------------------------------------------------------
-
-
-
-//Schuffle playingfield.cards-----------------------------------------------------------
-function shuffleCards() {
-    
-}
-//END Schuffle playingfield.cards-------------------------------------------------------
-
-
 
 /*
 function login (name, socket_id) {
@@ -105,7 +97,7 @@ async function game() {
     let ready = await ready;
         io.emit('game.start');
         console.log("START GAME");
-        const AmountOfRounds = playingfield.cards.lenght() / playerList.length;
+        const AmountOfRounds = playingfield.deck.lenght() / playerList.length;
         console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
         var trumpColor;
         for (round = 1; round <= AmountOfRounds; round++) {
@@ -114,24 +106,24 @@ async function game() {
             //
             io.emit('game.round', round, trumpColor);
             //io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
-            shuffleCards();
+            shuffledeck();
             cardIndex = 0;
             for (let id = 0; id < playerList.length; id++) {
-                playerList[id].playingfield.cards = playingfield.cards.slice(cardIndex, round);
+                playerList[id].playingfield.deck = playingfield.deck.slice(cardIndex, round);
                 cardIndex = cardIndex + round;
                 for (let i = 0; i < playerList.lenght; i++) {
                     if (playerList[i].socket_id == socket.id) {
 
                     }
                 }
-                socket.emit('playingfield.cards.hand.update', playerList);
+                socket.emit('playingfield.deck.hand.update', playerList);
             }
     }
 }
 
 
 function game() {
-    const AmountOfRounds = playingfield.cards.lenght() / playerList.length;
+    const AmountOfRounds = playingfield.deck.lenght() / playerList.length;
     console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
     var trumpColor;
     for (round = 1; round <= AmountOfRounds; round++) {
@@ -140,17 +132,17 @@ function game() {
         //
         io.emit('game.round', round, trumpColor);
         //io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
-        shuffleCards();
+        shuffledeck();
         cardIndex = 0;
         for (let id = 0; id < playerList.length; id++) {
-            playerList[id].playingfield.cards = playingfield.cards.slice(cardIndex, round);
+            playerList[id].playingfield.deck = playingfield.deck.slice(cardIndex, round);
             cardIndex = cardIndex + round;
             for (let i = 0; i < playerList.lenght; i++) {
                 if (playerList[i].socket_id == socket.id) {
 
                 }
             }
-            socket.emit('playingfield.cards.hand.update', playerList);
+            socket.emit('playingfield.deck.hand.update', playerList);
         }
     }
 }
@@ -166,10 +158,11 @@ const port = 80;
 //-------------------------------------------------------------------------
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
     console.log(Object.keys(io.sockets.sockets));
-    console.log(Object.keys(io.sockets.connected));
+    //console.log(io.sockets.connected);
     console.log('a user connected');
     socket.on('toServerConsole', function (text) { console.log(text); });
     socket.on('login', (name) => {
+        //console.log(socket);
         if (playerList.length < 6) {
             playerList.push(new Player(name, socket.id));
             console.log("login.successful");
@@ -199,7 +192,7 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
     });
     socket.on('card.play', (color, number) => {
         console.log("card.play");
-        playingfield.cardplayed(color, number);
+        playingfield.playingstack.push(color, number);
         io.emit('card.update', color, number);
     });
     socket.on('disconnect', (reason) => {
@@ -219,19 +212,21 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
 });
 
 app.use(express.static('client'));
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
+    let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
+    //p = __dirname
     if (playerList.length < 6) {
-        res.sendFile(__dirname + '/client/game.html');
+        res.sendFile( p + '/client/game.html');
     } else {
-        res.sendFile(__dirname + '/client/game_is_full.html');
+        res.sendFile( p  + '/client/game_is_full.html');
     }
 });
-httpsserver.listen(port, IPaddress, function () {
+httpsserver.listen(port, IPaddress, () => {
     console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
 });
 //END Server Setup---------------------------------------------------------
-console.log(Object.keys(io.sockets.sockets));
-console.log(Object.keys(io.sockets.connected));
+//console.log(Object.keys(io.sockets.sockets));
+//console.log(Object.keys(io.sockets.connected));
 
 //GAME---------------------------------------------------------------------
 io.emit('MessageFromServer', "Ya know I am ready.");
