@@ -32,10 +32,17 @@ $('.chat .window > form').submit(function (button) {
     $('.chat .window form #message').val('');
     return false;
 });
-////ready?------------------------------------------------------
+////vote------------------------------------------------------
 $('#ready_player > button').on('click', () => {
     socket.emit('vote', PlayerObject.id);
 });
+///card.play
+$('.hand > div').on('click', (card) => {
+    socket.emit('card.play', (card.color, card.number)); //not thought out yet
+});
+
+
+//LISTENERS---------------------------------------------------
 socket.on('login.successful', (JSON_PlayerObject) => {
     $('#login').slideUp();
     PlayerObject = JSON.parse(JSON_PlayerObject);
@@ -48,19 +55,25 @@ socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
     //ATTENTION
 });
-
-
-//LISTENERS---------------------------------------------------
-socket.on('login.unsuccessful', () => {  })
 socket.on('vote.update', (votes, amount_of_players) => {
     $('#votes').text(votes.toString() + " / " + amount_of_players.toString());
 });
-socket.on('MessageFromServer', function (message) {
+socket.on('MessageFromServer', (message) => {
     chatWindowsList.prepend($('<li>').text(message));
 });
-socket.on('prepare');
-socket.on('newRound', (round, trumpColor) => {
+socket.on('game.start', () => {
+    console.log("game.start");
+    $('#ready_player').css("display", "none");
+});
+socket.on('card.distribute', (cards) => {
+    console.log("card.distribute");
+});
+socket.on('game.round', (round, trumpColor) => {
+    console.log("game.round");
     for (i = 0; i < cards.length; i++) {
         cards[i].append(PlayerObject.cards[i].color + " " + PlayerObject.cards[i].value);
     }
 });
+socket.on('game.trick', () => {
+    console.log("game.trick");
+}); // de: Stich <=> eng: trick

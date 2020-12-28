@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\client"
+    "\\client",
+    "\\experimental"
   ],
+  "SelectedNode": "\\experimental\\websocket_server.js",
   "PreviewInSolutionExplorer": false
 }
