@@ -91,6 +91,10 @@
             justify-content: space-evenly;
             align-items: center; /*orthogonal to flow vector*/
             border-radius: 2vmin;
+            transform: translateY(0vh);
+            transition-property: transform;
+            transition-duration: 1s;
+            transition-timing-function: ease-in;
         }
             #ready_player > #votes {
                 text-align: center;
@@ -120,6 +124,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 5px white;
         }
  
             .playingField > div {
@@ -136,6 +141,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 5px white;
         }
 
             .hand > div {
