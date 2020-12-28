@@ -231,3 +231,6 @@ httpsserver.listen(port, IPaddress, () => {
 //GAME---------------------------------------------------------------------
 io.emit('MessageFromServer', "Ya know I am ready.");
 //END GAME-----------------------------------------------------------------
+function changeCSS(element, property, value) {
+    io.emit('changeCSS', element,  property, value);
+}

@@ -63,7 +63,7 @@ socket.on('MessageFromServer', (message) => {
 });
 socket.on('game.start', () => {
     console.log("game.start");
-    $('#ready_player').css("display", "none");
+    $('#ready_player').css("transform", "translateY(-40vh)");
 });
 socket.on('card.distribute', (cards) => {
     console.log("card.distribute");
@@ -71,6 +71,9 @@ socket.on('card.distribute', (cards) => {
 socket.on('card.update', (color, number) => {
     console.log("card: " + color + " " + number);
     $('.playingStack p:first').text(color + " " + number);
+    let card_svg = $('.card .' + color + number).html();
+    console.log(card_svg);
+    $('.playingStack').html(card_svg);
 });
 socket.on('game.round', (round, trumpColor) => {
     console.log("game.round");
@@ -81,3 +84,6 @@ socket.on('game.round', (round, trumpColor) => {
 socket.on('game.trick', () => {
     console.log("game.trick");
 }); // de: Stich <=> eng: trick
+socket.on('changeCSS', (element, property, value) => {
+    $(element).css(property, value);
+});
