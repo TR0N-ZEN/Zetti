@@ -68,6 +68,10 @@ socket.on('game.start', () => {
 socket.on('card.distribute', (cards) => {
     console.log("card.distribute");
 });
+socket.on('card.update', (color, number) => {
+    console.log("card: " + color + " " + number);
+    $('.playingStack p:first').text(color + " " + number);
+});
 socket.on('game.round', (round, trumpColor) => {
     console.log("game.round");
     for (i = 0; i < cards.length; i++) {
