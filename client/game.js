@@ -37,8 +37,10 @@ $('#ready_player > button').on('click', () => {
     socket.emit('vote', PlayerObject.id);
 });
 ///card.play
-$('.hand > div').on('click', (card) => {
-    socket.emit('card.play', (card.color, card.number)); //not thought out yet
+socket.on('waiting_for_card', () => {
+    $('.hand > div').on('click', (card) => {
+        socket.emit('card.play', (card.color, card.number)); //not thought out yet
+    });
 });
 
 
@@ -80,6 +82,9 @@ socket.on('game.round', (round, trumpColor) => {
     for (i = 0; i < cards.length; i++) {
         cards[i].append(PlayerObject.cards[i].color + " " + PlayerObject.cards[i].value);
     }
+});
+socket.on('waiting_for', (playername) => {
+    $('')
 });
 socket.on('game.trick', () => {
     console.log("game.trick");
