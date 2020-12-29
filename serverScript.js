@@ -54,11 +54,11 @@ for (color of colors) {
     }
 }
 for (let x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card(undefined, 14); //Zauberer
+    playingfield.deck[cardIndex] = new Card("Z", 14); //Zauberer
     cardIndex++;
 }
 for (let x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card(undefined, 0); //Narren
+    playingfield.deck[cardIndex] = new Card("N", 0); //Narren
     cardIndex++;
 }
 
@@ -128,13 +128,13 @@ async function play_trick(trump_color) {
 }
 function distribute_cards(round) {
     console.log("distribute cards");
-    for (let k = 0; k < playerList.length; k++) {
+    for (let i = 0; i < playerList.length; i++) {
         let cards_to_distribute = [];
-        let socket_id = playerList[k].socket_id;
+        let socket_id = playerList[i].socket_id;
         for (let j = 0; j < round; j++) {
-            cards_to_distribute.push(playingfield.deck[k * round + j]);
+            cards_to_distribute.push(playingfield.deck[i * round + j]);
         }
-        console.log("to " + playerList[k].name);
+        console.log("to " + playerList[i].name + ": " + cards_to_distribute);
         io.to(socket_id).emit('card.distribute', JSON.stringify(cards_to_distribute));
     }
 }
@@ -151,6 +151,7 @@ async function play_round(round) {
     playingfield.shuffle();
     trump_color = get_random_color();
     distribute_cards(round);
+    //take guesses
     for (let trick_number = 0; trick_number < round; trick_number++) {
         await play_trick(trump_color);
     }
@@ -160,78 +161,82 @@ async function play_round(round) {
 
 //Server Setup-------------------------------------------------------------
 const express = require('express');
+//const { disconnect } = require('process');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 const IPaddress = '192.168.178.32'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
-
+function login(name, socketid) {
+    if (playerList.length < 6) {
+        playerList.push(new Player(name, socketid));
+        console.log("login.successful");
+        io.to(socketid).emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
+        let names = new Array(playerList.length);
+        for (let a = 0; a < playerList.length; a++) {
+            names[a] = playerList[a].name;
+        }
+        console.log(names);
+        io.emit('playerBoard.update', JSON.stringify(names));
+        console.log("IDs: " + IDs)
+        console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
+        io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
+        io.emit('vote.update', already_voted.length, playerList.length);
+    } else {
+        console.log("login.unsuccessful");
+        io.to(socketid).emit('login.unsuccessful');
+    }
+}
+function vote(playerid) {
+    console.log("vote");
+    if (!already_voted.includes(playerid)) {
+        console.log("vote accepted");
+        already_voted.push(playerid);
+        io.emit('vote.update', already_voted.length, playerList.length);
+        if (already_voted.length == playerList.length) {
+            console.log("start game");
+            io.emit('game.start');
+            setTimeout(() => { play_round(2); }, 5000);
+        }
+    } else { console.log("vote rejected"); }
+}
+function card_to_playingstack(color, number) {
+    console.log("card.toPlayingstack");
+    playingfield.to_playingstack(color, number);
+    io.emit('card.update', color, number);
+}
+function disconnected() {
+    console.log('user disconnected'); 
+    for (let i = 0; i < playerList.length; i++) {
+        if (io.of('/').sockets[playerList[i].socket_id] === undefined) {
+            io.emit('MessageFromServer', playerList[i].name + " left.")
+            already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
+            IDs[playerList[i].id] = 0;
+            playerList.splice(i, 1);
+            io.emit('vote.update', already_voted.length, playerList.length);
+            break;
+        }
+    }
+    console.log("IDs: " + IDs)
+}
 //LISTENER------------------------------------------------------------------------
 /*
  * login
  * MessageFromClient
  * vote
  * card
- *      .play
+ *      .toPlayingstack
  */
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
     //console.log(Object.keys(io.sockets.sockets));
     console.log('a user connected');
     socket.on('toServerConsole', (text) => { console.log(text); });
-    socket.on('login', (name) => {
-        if (playerList.length < 6) {
-            playerList.push(new Player(name, socket.id));
-            console.log("login.successful");
-            socket.emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
-            let names = new Array(playerList.length);
-            for (let a = 0; a < playerList.length; a++) {
-                names[a] = playerList[a].name;
-            }
-            console.log(names);
-            io.emit('playerBoard.update', JSON.stringify(names));
-            console.log("IDs: " + IDs)
-            console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
-            io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
-            io.emit('vote.update', already_voted.length, playerList.length);
-        } else {
-            console.log("login.unsuccessful");
-            socket.emit('login.unsuccessful');
-        }
-    });
+    socket.on('login', (name) => { login(name, socket.id); });
     socket.on('MessageFromClient', (message) => { io.emit('MessageFromServer', message); });
-    socket.on('vote', (playerid) => {
-        console.log("vote");
-        if (!already_voted.includes(playerid)) {
-            console.log("vote accepted");
-            already_voted.push(playerid);
-            io.emit('vote.update', already_voted.length, playerList.length);
-            if (already_voted.length == playerList.length) {
-                console.log("start game");
-                io.emit('game.start');
-                setTimeout(() => { play_round(1); }, 3000);
-            }
-        } else { console.log("vote rejected"); }
-    });
-    socket.on('card.play', (color, number) => {
-        console.log("card.play");
-        playingfield.to_playingstack(color, number);
-        io.emit('card.update', color, number);
-    });
-    socket.on('disconnect', (reason) => {
-        console.log('user disconnected');
-        for (let i = 0; i < playerList.length; i++) {
-            if (io.of('/').sockets[playerList[i].socket_id] === undefined) {
-                io.emit('MessageFromServer', playerList[i].name + " left.")
-                already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
-                IDs[playerList[i].id] = 0;
-                playerList.splice(i, 1);
-                io.emit('vote.update', already_voted.length, playerList.length);
-                break;
-            }
-        }
-        console.log("IDs: " + IDs)
-    });
+    socket.on('vote', (playerid) => { vote(playerid); });
+    socket.on('card.toPlayingstack', (color, number) => { card_to_playingstack(color, number); });
+    socket.on('disconnect', (reason) => { disconnected(); });
 });
 app.use(express.static('client'));
 app.get('/', (req, res) => {

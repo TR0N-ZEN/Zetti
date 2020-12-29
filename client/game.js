@@ -28,7 +28,7 @@ $('.chat > button').click( () => {
  * MessageFromClient
  * vote
  * card
- *      .play
+ *      .toPlayingstack
  */
 $('#login form').submit(function (button) {
     button.preventDefault(); // prevents default action of e/the button so page reloading
@@ -123,7 +123,7 @@ socket.on('card.distribute', (JSON_cards) => {
         console.log("clicked a card");
         let card = $(this);//.target.attributes.class.name;
         console.log(card);
-        //socket.emit('card.play', (card.color, card.number)); //not thought out yet
+        //socket.emit('card.toPlayingstack', (card.color, card.number)); //not thought out yet
     });
 });
 socket.on('card.waitingFor', (playerName) => {
@@ -133,12 +133,6 @@ socket.on('card.waitingFor', (playerName) => {
 socket.on('card.waiting', () => {
     console.log("card.waiting");
 });
-//$('.hand > div').click(() => {
-//    console.log("clicked a card");
-//    let card = this;//.target.attributes.class.name;
-//    console.log(card);
-//    //socket.emit('card.play', (card.color, card.number)); //not thought out yet
-//});
 socket.on('card.update', (color, number) => {
     console.log("card: " + color + " " + number);
     $('.playingStack p:first').text(color + " " + number);
