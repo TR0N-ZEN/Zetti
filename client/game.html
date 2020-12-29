@@ -6,7 +6,7 @@
     <title>game</title>
     <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
     <meta name="theme-color" content="#ffffff;">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" defer></script>
     <script src="socket.io/socket.io.js" defer></script>
     <script src="game.js" defer></script>
     <link rel="stylesheet" type="text/css" href="unison.css">
@@ -42,20 +42,15 @@
             <p id="votes"></p>
             <button>Ready?</button>
         </div>
+        <div class="playerBoard">
+        </div>
         <div class="playingField grid-box">
-            <ul>
-
-            </ul>
             <div class="playingStack">
                 <p></p>
             </div>
         </div>
         <div class="hand grid-box">
-            <div><a></a></div>
-            <div><a></a></div>
-            <div><a></a></div>
-            <div><a></a></div>
-            <div><a></a></div>
+            <div></div>
         </div>
     </div>
     <div class="card" style="display: none;">
@@ -74,7 +69,7 @@
                 <text x="50" y="50" fill="red">red 3</text>
             </svg>
         </div>
-        <div class="red14">
+        <div class="red4">
             <svg viewBox="0 0 100 100">
                 <text x="50" y="50" fill="red">red 4</text>
             </svg>
@@ -139,7 +134,7 @@
                 <text x="50" y="50" fill="yellow">yellow 3</text>
             </svg>
         </div>
-        <div class="yellow14">
+        <div class="yellow4">
             <svg viewBox="0 0 100 100">
                 <text x="50" y="50" fill="yellow">yellow 4</text>
             </svg>
@@ -269,7 +264,7 @@
                 <text x="50" y="50" fill="green">green 3</text>
             </svg>
         </div>
-        <div class="green14">
+        <div class="green4">
             <svg viewBox="0 0 100 100">
                 <text x="50" y="50" fill="green">green 4</text>
             </svg>

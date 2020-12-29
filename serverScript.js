@@ -1,4 +1,4 @@
-// JavaScript source code
+////playingfield and player preparation
 var IDs = [0, 0, 0, 0, 0, 0];
 var ID;
 var playerList = [];
@@ -7,7 +7,8 @@ var current_starter = 0;
 var last_winner = undefined;
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"];
-
+var trump_color;
+var trick = [];
 class Player {
     constructor(name, socket_id) {
         for (let i = 0; i < IDs.length; i++) {
@@ -23,7 +24,6 @@ class Player {
         this.points = 0;
         this.guesses = 0;
         this.hand = [];
-        //console.log(this);
     }
 }
 class Card {
@@ -36,7 +36,6 @@ var playingfield = {
     deck: new Array(60),
     playingstack: new Array(),
     shuffle: function () {
-        console.log(this.deck.length);
         for (let i = this.deck.length - 1; i > 0; i--) {
             j = Math.floor(Math.random() * i);
             let k = this.deck[i];
@@ -45,10 +44,25 @@ var playingfield = {
         }
     },
     to_playingstack: function (color, number) {
-        console.log(this.playingstack);
         this.playingstack.push(new Card(color, number));
     }
 }
+for (color of colors) {
+    for (let x = 1; x < 14; x++) {
+        playingfield.deck[cardIndex] = new Card(color, x);
+        cardIndex++;
+    }
+}
+for (let x = 1; x < 5; x++) {
+    playingfield.deck[cardIndex] = new Card(undefined, 14); //Zauberer
+    cardIndex++;
+}
+for (let x = 1; x < 5; x++) {
+    playingfield.deck[cardIndex] = new Card(undefined, 0); //Narren
+    cardIndex++;
+}
+
+////game functionalities
 function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m -> r  surjective and not injective.
     let r = m % n;
     if (r == 0) {
@@ -59,139 +73,90 @@ function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m
     }
     return r;
 }
-function play_trick(d) {
-    let trick = new Array(playerList.length);
-    let color_to_serve;
-    if (d == 0) {
-        player = current_starter;
+
+//EMITTER---------------------------------------------------
+/*
+ * login.
+ *      successful
+ *      unsuccessful
+ * playerBoard.
+ *      update
+ * vote.
+ *      update
+ * game.
+ *      start
+ *      round
+ *      trick
+ * card.
+ *      distribute //cards on hand
+ *      update //card on stack
+ * waiting_for_card
+ * waiting_for_player
+ * 
+ * changeCSS
+ * */
+
+async function play_trick(trump_color) {
+    console.log("play trick");
+    console.log("trump is: " + trump_color);
+    let start_player;
+    if (last_winner === undefined) {
+        start_player = current_starter;
     } else {
-        player = last_winner;
+        start_player = last_winner;
     }
     for (let i = 0; i < playerList.length; i++) {
+        let go_on = () => {};
+        let player = mod(start_player + i, playerList.length);
+        console.log("card.waitingFor " + playerList[player].name);
         socket = playerList[player].socket_id;
-        io.to(socket).emit('waiting_for_card');
-        io.emit('waiting_for', playerList[player].name);
-        let card_from_client_hasnt_arrived = true;
-        io.on('client_plays_card', (color, number) => { trick.push(new Card(color, number)); card_from_client_hasnt_arrived = false; })
-        while (card_from_client_hasnt_arrived) {
-            //this blocks further execution so that one player can only play after another
-        }
-        if (i == 0) { color_to_serve = trick[0].color; }
-        //determine who won and set last_winner to the winners index in playerList
+        io.to(socket).emit('card.waiting');
+        io.emit('card.waitingFor', playerList[player].name);
+        io.on('card.play', (color, number) => {
+            trick.push(new Card(color, number));
+            playingfield.to_playingstack(color, number);
+            io.emit('card.update', color, number);
+            go_on();
+        });
+        await new Promise((resolve) => {
+            go_on = resolve;
+        });
     }
+    if (i == 0) { color_to_serve = trick[0].color; }
+        //determine who won and set last_winner to the winners index in playerList
+    //last_winner =
 }
 function distribute_cards(round) {
+    console.log("distribute cards");
     for (let k = 0; k < playerList.length; k++) {
         let cards_to_distribute = [];
         let socket_id = playerList[k].socket_id;
-        for (j = 0; j < round; j++) {
-            cards_to_distribute.push(deck[k * round + j]);
+        for (let j = 0; j < round; j++) {
+            cards_to_distribute.push(playingfield.deck[k * round + j]);
         }
-        io.to(socket_id).emit('distribute_cards', cards_to_distribute);
+        console.log("to " + playerList[k].name);
+        io.to(socket_id).emit('card.distribute', JSON.stringify(cards_to_distribute));
     }
 }
-function get_random_color() { let index = Math.floor(Math.random() * 60); return playingfield.deck[index].color; };
-function play_round(c) {
+function get_random_color() {
+    let index = Math.floor(Math.random() * 60);
+    if (index == 60) { index = 59; }
+    return playingfield.deck[index].color;
+    //let index = Math.floor(Math.random() * 4);
+    //if (index == 4) { index = 3; }
+    //return colors{index];
+};
+async function play_round(round) {
+    console.log("play round " + round);
     playingfield.shuffle();
-    let trump_color = get_random_color();
-    distribute_cards(c);
-    for (let trick_number = 0; t < c; t++) {
-        play_trick(trick_number, trump_color);
+    trump_color = get_random_color();
+    distribute_cards(round);
+    for (let trick_number = 0; trick_number < round; trick_number++) {
+        await play_trick(trump_color);
     }
+    last_winner = undefined;
     current_starter = mod(current_starter + 1, playerList.length);
 }
-
-for (color of colors) {
-    for (x = 1; x < 14; x++) {
-        playingfield.deck[cardIndex] = new Card(color, x);
-        cardIndex++;
-    }
-}
-for (x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card(undefined, 14); //Zauberer
-    cardIndex++;
-}
-for (x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card(undefined, 0); //Narren
-    cardIndex++;
-}
-
-/*
-function login (name, socket_id) {
-    playerList.push(new Player(name, socket_id));
-    console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
-    socket.emit('PlayerObject', JSON.stringify(playerList[playerList.length - 1]));
-    io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
-}
-
-function vote (playerid) {
-    if (!already_voted.includes(playerid)) {
-        console.log("vote");
-        already_voted.push(playerid);
-        socket.emit('vote.update', already_voted.length, playerList.length);
-        if (already_voted.length == playerList.length) {
-            //START GAME
-            console.log("game.start");
-            socket.emit('game.start');
-            
-        }
-    }
-}
-
-async function game() {
-    let ready = await ready;
-        io.emit('game.start');
-        console.log("START GAME");
-        const AmountOfRounds = playingfield.deck.lenght() / playerList.length;
-        console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
-        var trumpColor;
-        for (round = 1; round <= AmountOfRounds; round++) {
-            //determine trump color
-            trumpColor = colors[Math.floor(Math.random() * 4)];
-            //
-            io.emit('game.round', round, trumpColor);
-            //io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
-            shuffledeck();
-            cardIndex = 0;
-            for (let id = 0; id < playerList.length; id++) {
-                playerList[id].playingfield.deck = playingfield.deck.slice(cardIndex, round);
-                cardIndex = cardIndex + round;
-                for (let i = 0; i < playerList.lenght; i++) {
-                    if (playerList[i].socket_id == socket.id) {
-
-                    }
-                }
-                socket.emit('playingfield.deck.hand.update', playerList);
-            }
-    }
-}
-
-
-function game() {
-    const AmountOfRounds = playingfield.deck.lenght() / playerList.length;
-    console.log("The amount of rounds to be played is " + AmountOfRounds.toString());
-    var trumpColor;
-    for (round = 1; round <= AmountOfRounds; round++) {
-        //determine trump color
-        trumpColor = colors[Math.floor(Math.random() * 4)];
-        //
-        io.emit('game.round', round, trumpColor);
-        //io.emit('MessageFromServer', "Trump is " + trumpColor + ". " + trumpColor + " is trump.");
-        shuffledeck();
-        cardIndex = 0;
-        for (let id = 0; id < playerList.length; id++) {
-            playerList[id].playingfield.deck = playingfield.deck.slice(cardIndex, round);
-            cardIndex = cardIndex + round;
-            for (let i = 0; i < playerList.lenght; i++) {
-                if (playerList[i].socket_id == socket.id) {
-
-                }
-            }
-            socket.emit('playingfield.deck.hand.update', playerList);
-        }
-    }
-}
-*/
 
 //Server Setup-------------------------------------------------------------
 const express = require('express');
@@ -201,17 +166,30 @@ let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 const IPaddress = '192.168.178.32'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
+
+//LISTENER------------------------------------------------------------------------
+/*
+ * login
+ * MessageFromClient
+ * vote
+ * card
+ *      .play
+ */
 io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
-    console.log(Object.keys(io.sockets.sockets));
-    //console.log(io.sockets.connected);
+    //console.log(Object.keys(io.sockets.sockets));
     console.log('a user connected');
-    socket.on('toServerConsole', function (text) { console.log(text); });
+    socket.on('toServerConsole', (text) => { console.log(text); });
     socket.on('login', (name) => {
-        //console.log(socket);
         if (playerList.length < 6) {
             playerList.push(new Player(name, socket.id));
             console.log("login.successful");
             socket.emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
+            let names = new Array(playerList.length);
+            for (let a = 0; a < playerList.length; a++) {
+                names[a] = playerList[a].name;
+            }
+            console.log(names);
+            io.emit('playerBoard.update', JSON.stringify(names));
             console.log("IDs: " + IDs)
             console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
             io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
@@ -231,7 +209,7 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
             if (already_voted.length == playerList.length) {
                 console.log("start game");
                 io.emit('game.start');
-                play_round(1);
+                setTimeout(() => { play_round(1); }, 3000);
             }
         } else { console.log("vote rejected"); }
     });
@@ -239,9 +217,6 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
         console.log("card.play");
         playingfield.to_playingstack(color, number);
         io.emit('card.update', color, number);
-        if (playingfield.playingstack.length == playerList.length) {
-            console.log("round over");
-        }
     });
     socket.on('disconnect', (reason) => {
         console.log('user disconnected');
@@ -258,7 +233,6 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
         console.log("IDs: " + IDs)
     });
 });
-
 app.use(express.static('client'));
 app.get('/', (req, res) => {
     let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
@@ -272,13 +246,11 @@ app.get('/', (req, res) => {
 httpsserver.listen(port, IPaddress, () => {
     console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
 });
-//END Server Setup---------------------------------------------------------
 //console.log(Object.keys(io.sockets.sockets));
 //console.log(Object.keys(io.sockets.connected));
 
-//GAME---------------------------------------------------------------------
-io.emit('MessageFromServer', "Ya know I am ready.");
-//END GAME-----------------------------------------------------------------
+
+//DEBUGING------------------------------------------------------
 function changeCSS(element, property, value) {
     io.emit('changeCSS', element,  property, value);
 }
