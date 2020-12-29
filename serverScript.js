@@ -1,12 +1,15 @@
 // JavaScript source code
-
-
-//Player Generator---------------------------------------------------------
 var IDs = [0, 0, 0, 0, 0, 0];
 var ID;
 var playerList = [];
+var already_voted = [];
+var current_starter = 0;
+var last_winner = undefined;
+var cardIndex = 0;
+var colors = ["red", "green", "blue", "yellow"];
+
 class Player {
-    constructor (name, socket_id) {
+    constructor(name, socket_id) {
         for (let i = 0; i < IDs.length; i++) {
             if (IDs[i] == 0) {
                 IDs[i] = 1;
@@ -23,37 +26,80 @@ class Player {
         //console.log(this);
     }
 }
-//END Player Generator------------------------------------------------------
-var already_voted = [];
-
 class Card {
     constructor(color, number) {
         this.color = color;
         this.number = number;
     }
 }
-
 var playingfield = {
-    deck: new Array(),
+    deck: new Array(60),
     playingstack: new Array(),
-    shuffle: () => {
-        for (i = this.deck.length - 1; i > 0; i--) {
-            j = Math.floor(Math.random() * i)
-            let k = this.deck[i]
-            this.deck[i] = deck[j]
-            this.deck[j] = k
+    shuffle: function () {
+        console.log(this.deck.length);
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * i);
+            let k = this.deck[i];
+            this.deck[i] = this.deck[j];
+            this.deck[j] = k;
         }
-        console.log(this.deck);
     },
-    to_playingstack: (color, number) => {
+    to_playingstack: function (color, number) {
         console.log(this.playingstack);
-        //this.playingstack.push(new Card(color, number));
+        this.playingstack.push(new Card(color, number));
     }
 }
-
-//deck Generator----------------------------------------------------------
-var cardIndex = 0;
-var colors = ["red", "green", "blue", "yellow"]
+function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m -> r  surjective and not injective.
+    let r = m % n;
+    if (r == 0) {
+        return 0;
+    }
+    if (r < 0) {
+        return n + r;
+    }
+    return r;
+}
+function play_trick(d) {
+    let trick = new Array(playerList.length);
+    let color_to_serve;
+    if (d == 0) {
+        player = current_starter;
+    } else {
+        player = last_winner;
+    }
+    for (let i = 0; i < playerList.length; i++) {
+        socket = playerList[player].socket_id;
+        io.to(socket).emit('waiting_for_card');
+        io.emit('waiting_for', playerList[player].name);
+        let card_from_client_hasnt_arrived = true;
+        io.on('client_plays_card', (color, number) => { trick.push(new Card(color, number)); card_from_client_hasnt_arrived = false; })
+        while (card_from_client_hasnt_arrived) {
+            //this blocks further execution so that one player can only play after another
+        }
+        if (i == 0) { color_to_serve = trick[0].color; }
+        //determine who won and set last_winner to the winners index in playerList
+    }
+}
+function distribute_cards(round) {
+    for (let k = 0; k < playerList.length; k++) {
+        let cards_to_distribute = [];
+        let socket_id = playerList[k].socket_id;
+        for (j = 0; j < round; j++) {
+            cards_to_distribute.push(deck[k * round + j]);
+        }
+        io.to(socket_id).emit('distribute_cards', cards_to_distribute);
+    }
+}
+function get_random_color() { let index = Math.floor(Math.random() * 60); return playingfield.deck[index].color; };
+function play_round(c) {
+    playingfield.shuffle();
+    let trump_color = get_random_color();
+    distribute_cards(c);
+    for (let trick_number = 0; t < c; t++) {
+        play_trick(trick_number, trump_color);
+    }
+    current_starter = mod(current_starter + 1, playerList.length);
+}
 
 for (color of colors) {
     for (x = 1; x < 14; x++) {
@@ -69,7 +115,6 @@ for (x = 1; x < 5; x++) {
     playingfield.deck[cardIndex] = new Card(undefined, 0); //Narren
     cardIndex++;
 }
-//END Card Generator-------------------------------------------------------
 
 /*
 function login (name, socket_id) {
@@ -186,14 +231,17 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
             if (already_voted.length == playerList.length) {
                 console.log("start game");
                 io.emit('game.start');
-                var round = 1;
+                play_round(1);
             }
         } else { console.log("vote rejected"); }
     });
     socket.on('card.play', (color, number) => {
         console.log("card.play");
-        playingfield.playingstack.push(color, number);
+        playingfield.to_playingstack(color, number);
         io.emit('card.update', color, number);
+        if (playingfield.playingstack.length == playerList.length) {
+            console.log("round over");
+        }
     });
     socket.on('disconnect', (reason) => {
         console.log('user disconnected');
