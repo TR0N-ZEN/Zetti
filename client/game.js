@@ -116,14 +116,14 @@ socket.on('card.distribute', (JSON_cards) => {
     console.log(cards);
     hand.html("");
     for (let a = 0; a < cards.length; a++) {
-        let card_svg = $('.card .' + cards[a].color + cards[a].number);
+        let card_svg = $('.card .' + cards[a].color + "_" + cards[a].number);
         hand.append(card_svg);
     }
     $('.hand > div').click(function () {
-        console.log("clicked a card");
-        let card = $(this);//.target.attributes.class.name;
-        console.log(card);
-        //socket.emit('card.toPlayingstack', (card.color, card.number)); //not thought out yet
+        //console.log("clicked a card");
+        let card = $(this)[0].className.split("_");//.target.attributes.class.name;
+        console.log(card[0], card[1]);
+        socket.emit('card.toPlayingstack', card[0], card[1]); //not thought out yet
     });
 });
 socket.on('card.waitingFor', (playerName) => {
@@ -136,7 +136,7 @@ socket.on('card.waiting', () => {
 socket.on('card.update', (color, number) => {
     console.log("card: " + color + " " + number);
     $('.playingStack p:first').text(color + " " + number);
-    let card_svg = $('.card .' + color + number).html();
+    let card_svg = $('.card .' + color + "_" + number).html();
     console.log(card_svg);
     $('.playingStack').html(card_svg);
 });
