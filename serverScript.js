@@ -96,6 +96,7 @@ function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m
  * changeCSS
  * */
 
+var go_on = () => { };
 async function play_trick(trump_color) {
     console.log("play trick");
     console.log("trump is: " + trump_color);
@@ -106,23 +107,24 @@ async function play_trick(trump_color) {
         start_player = last_winner;
     }
     for (let i = 0; i < playerList.length; i++) {
-        let go_on = () => {};
-        let player = mod(start_player + i, playerList.length);
-        console.log("card.waitingFor " + playerList[player].name);
-        socket = playerList[player].socket_id;
-        io.to(socket).emit('card.waiting');
-        io.emit('card.waitingFor', playerList[player].name);
-        io.on('card.play', (color, number) => {
-            trick.push(new Card(color, number));
-            playingfield.to_playingstack(color, number);
-            io.emit('card.update', color, number);
-            go_on();
-        });
+        go_on = () => { };
+        let current_player = mod(start_player + i, playerList.length);
+        console.log("card.waitingFor " + playerList[current_player].name);
+        socket_id = playerList[current_player].socket_id;
+        io.to(socket_id).emit('card.waiting');
+        io.emit('card.waitingFor', playerList[current_player].name);
+        //io.to(socket_id).on('card.toPlayingstack', (color, number) => {
+        //    console.log(color + " " + number);
+        //    trick.push(new Card(color, number));
+        //    playingfield.to_playingstack(color, number);
+        //    io.emit('card.update', color, number);
+        //    go_on();
+        //});
         await new Promise((resolve) => {
             go_on = resolve;
         });
     }
-    if (i == 0) { color_to_serve = trick[0].color; }
+    //if (i == 0) { color_to_serve = trick[0].color; }
         //determine who won and set last_winner to the winners index in playerList
     //last_winner =
 }
@@ -154,9 +156,14 @@ async function play_round(round) {
     //take guesses
     for (let trick_number = 0; trick_number < round; trick_number++) {
         await play_trick(trump_color);
+        console.log(trick);
+        console.log("calc winner; set last_winner");
     }
     last_winner = undefined;
     current_starter = mod(current_starter + 1, playerList.length);
+    if (round < 60 / playerList.length) {
+        play_round(++round);
+    }
 }
 
 //Server Setup-------------------------------------------------------------
@@ -197,15 +204,15 @@ function vote(playerid) {
         if (already_voted.length == playerList.length) {
             console.log("start game");
             io.emit('game.start');
-            setTimeout(() => { play_round(2); }, 5000);
+            setTimeout(() => { play_round(1); }, 2000);
         }
     } else { console.log("vote rejected"); }
 }
-function card_to_playingstack(color, number) {
-    console.log("card.toPlayingstack");
-    playingfield.to_playingstack(color, number);
-    io.emit('card.update', color, number);
-}
+//function card_to_playingstack(color, number) {
+//    console.log("card.toPlayingstack");
+//    playingfield.to_playingstack(color, number);
+//    io.emit('card.update', color, number);
+//}
 function disconnected() {
     console.log('user disconnected'); 
     for (let i = 0; i < playerList.length; i++) {
@@ -235,7 +242,14 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
     socket.on('login', (name) => { login(name, socket.id); });
     socket.on('MessageFromClient', (message) => { io.emit('MessageFromServer', message); });
     socket.on('vote', (playerid) => { vote(playerid); });
-    socket.on('card.toPlayingstack', (color, number) => { card_to_playingstack(color, number); });
+    //socket.on('card.toPlayingstack', (color, number) => { card_to_playingstack(color, number); });
+    socket.on('card.toPlayingstack', (color, number) => {
+        console.log(color + " " + number);
+        trick.push(new Card(color, number));
+        playingfield.to_playingstack(color, number);
+        io.emit('card.update', color, number);
+        go_on();
+    });
     socket.on('disconnect', (reason) => { disconnected(); });
 });
 app.use(express.static('client'));
