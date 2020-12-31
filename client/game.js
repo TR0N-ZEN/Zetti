@@ -23,7 +23,9 @@ $('.chat > button').click( () => {
 });
 
 //EMITTER------------------------------------------------------------------------
-/*
+/* 
+ * socket.emit(x, ...)
+ * 
  * login
  * MessageFromClient
  * vote
@@ -49,6 +51,8 @@ $('#ready_player > button').on('click', () => {
 
 //LISTENERS---------------------------------------------------
 /*
+ * socket.on(x, function)
+ * 
  * login.
  *      successful
  *      unsuccessful
@@ -63,11 +67,9 @@ $('#ready_player > button').on('click', () => {
  *      trick
  * card.
  *      distribute //cards on hand
- *      waiting
+ *      waiting -> emit('card.toPlayingstack', ...) -> card.update
  *      waitingFor
  *      update //card on stack
- * waiting_for_card
- * waiting_for_player
  * 
  * changeCSS
  * */ 
@@ -116,15 +118,12 @@ socket.on('card.distribute', (JSON_cards) => {
     console.log(cards);
     hand.html("");
     for (let a = 0; a < cards.length; a++) {
-        let card_svg = $('.card .' + cards[a].color + "_" + cards[a].number);
-        hand.append(card_svg);
+        let card_svg = $('.card .' + cards[a].color + "_" + cards[a].number).html();
+        let card = document.createElement('div');
+        card.setAttribute("class", cards[a].color + "_" + cards[a].number);
+        card.innerHTML = card_svg;
+        hand.append(card);
     }
-    $('.hand > div').click(function () {
-        //console.log("clicked a card");
-        let card = $(this)[0].className.split("_");//.target.attributes.class.name;
-        console.log(card[0], card[1]);
-        socket.emit('card.toPlayingstack', card[0], card[1]); //not thought out yet
-    });
 });
 socket.on('card.waitingFor', (playerName) => {
     $('.playerBoard > p').css("color", "white");
@@ -132,11 +131,17 @@ socket.on('card.waitingFor', (playerName) => {
 });
 socket.on('card.waiting', () => {
     console.log("card.waiting");
+    $('.hand > div').click(function () {
+        //console.log("clicked a card");
+        let card = $(this)[0].className.split("_");//.target.attributes.class.name;
+        console.log(card[0], card[1]);
+        socket.emit('card.toPlayingstack', card[0], card[1]); //not thought out yet
+    });
 });
 socket.on('card.update', (color, number) => {
-    console.log("card: " + color + " " + number);
+    console.log("card.update: " + color + " " + number);
     $('.playingStack p:first').text(color + " " + number);
-    let card_svg = $('.card .' + color + "_" + number).html();
+    let card_svg = $("." + color + "_" + number).html();
     console.log(card_svg);
     $('.playingStack').html(card_svg);
 });
