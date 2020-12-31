@@ -38,6 +38,14 @@
             grid-template-columns: 1fr 1fr 1fr 1fr;
             box-shadow: 0 0 5px white;
         }
+            .info > div {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-content: center;
+                padding-left: 0.5vw;
+                color: white;
+            }
             .info .chat button {
                 width: 100%;
                 height: 100%;

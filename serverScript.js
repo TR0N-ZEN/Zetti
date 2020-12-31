@@ -172,7 +172,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.32'; //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.5'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(name, socketid) {
