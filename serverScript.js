@@ -3,12 +3,12 @@ var IDs = [0, 0, 0, 0, 0, 0];
 var ID;
 var playerList = [];
 var already_voted = [];
-var current_starter = 0;
+var round_starter = 0;
 var last_winner = undefined;
+var trick = [];
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"];
-var trump_color;
-var trick = [];
+
 class Player {
     constructor(name, socket_id) {
         for (let i = 0; i < IDs.length; i++) {
@@ -97,15 +97,16 @@ function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m
  * */
 
 var go_on = () => { };
-async function play_trick(trump_color) {
-    console.log("play trick");
-    console.log("trump is: " + trump_color);
+async function play_trick() {
+    console.group("play trick");
     let start_player;
     if (last_winner === undefined) {
-        start_player = current_starter;
+        start_player = round_starter;
     } else {
+        console.log(last_winner);
         start_player = last_winner;
     }
+    console.log(start_player);
     for (let i = 0; i < playerList.length; i++) {
         go_on = () => { };
         let current_player = mod(start_player + i, playerList.length);
@@ -120,10 +121,14 @@ async function play_trick(trump_color) {
         //    io.emit('card.update', color, number);
         //    go_on();
         //});
+        //-> socket.on(card.toPlayingstack);
         await new Promise((resolve) => {
             go_on = resolve;
         });
     }
+    console.groupEnd();
+    return 0;
+    
     //if (i == 0) { color_to_serve = trick[0].color; }
         //determine who won and set last_winner to the winners index in playerList
     //last_winner =
@@ -136,34 +141,49 @@ function distribute_cards(round) {
         for (let j = 0; j < round; j++) {
             cards_to_distribute.push(playingfield.deck[i * round + j]);
         }
-        console.log("to " + playerList[i].name + ": " + cards_to_distribute);
+        //console.log("to " + playerList[i].name + ": " + cards_to_distribute);
         io.to(socket_id).emit('card.distribute', JSON.stringify(cards_to_distribute));
     }
 }
 function get_random_color() {
-    let index = Math.floor(Math.random() * 60);
-    if (index == 60) { index = 59; }
-    return playingfield.deck[index].color;
-    //let index = Math.floor(Math.random() * 4);
-    //if (index == 4) { index = 3; }
-    //return colors{index];
+    //let index = Math.floor(Math.random() * 60);
+    //if (index == 60) { index = 59; }
+    //return playingfield.deck[index].color;
+    let index = Math.floor(Math.random() * 4);
+    if (index == 4) { index = 3; }
+    return colors[index];
 };
+async function take_guesses() {
+    console.group("take_guesses");
+    console.groupEnd();
+    return 0;
+}
+async function calculate_winner() {
+    console.log("calculate winner");
+    last_winner = 0;
+    return 0;
+}
 async function play_round(round) {
-    console.log("play round " + round);
+    console.group("play round " + round);
     playingfield.shuffle();
-    trump_color = get_random_color();
+    let trump_color = get_random_color();
+    console.log(trump_color);
     distribute_cards(round);
     //take guesses
+    take_guesses();
     for (let trick_number = 0; trick_number < round; trick_number++) {
-        await play_trick(trump_color);
-        console.log(trick);
-        console.log("calc winner; set last_winner");
+        await play_trick();
+        //console.log(trick);
+        await calculate_winner();
     }
     last_winner = undefined;
-    current_starter = mod(current_starter + 1, playerList.length);
-    if (round < 60 / playerList.length) {
+    round_starter = mod(round_starter + 1, playerList.length);
+    //calculate winner;
+    console.groupEnd();
+    if (round < (60 / playerList.length)) {
         play_round(++round);
     }
+    
 }
 
 //Server Setup-------------------------------------------------------------
@@ -196,23 +216,20 @@ function login(name, socketid) {
     }
 }
 function vote(playerid) {
-    console.log("vote");
+    console.group("vote");
     if (!already_voted.includes(playerid)) {
         console.log("vote accepted");
         already_voted.push(playerid);
         io.emit('vote.update', already_voted.length, playerList.length);
+        console.groupEnd();
         if (already_voted.length == playerList.length) {
             console.log("start game");
             io.emit('game.start');
             setTimeout(() => { play_round(1); }, 2000);
         }
-    } else { console.log("vote rejected"); }
+    } else { console.log("vote rejected"); console.groupEnd();}
+    
 }
-//function card_to_playingstack(color, number) {
-//    console.log("card.toPlayingstack");
-//    playingfield.to_playingstack(color, number);
-//    io.emit('card.update', color, number);
-//}
 function disconnected() {
     console.log('user disconnected'); 
     for (let i = 0; i < playerList.length; i++) {
