@@ -145,6 +145,10 @@
                 border: 0.5vh solid white;
                 border-radius: 5px;
             }
+                .playingField > div > svg {
+                    width: 100%;
+                    height: 100%;
+                }
         .hand {
             grid-area: hand;
             display: flex;
