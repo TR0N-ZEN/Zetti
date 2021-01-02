@@ -3,10 +3,13 @@ var chat_hidden = false;
 var chatWindowsList = $('.chat .window > ul');
 var playerBoard = $('.playerBoard');
 var infoName = $('.wrapper .info #Name');
+var infoRound = $('.wrapper .info #Round');
+var infoTrump = $('.wrapper .info #Trump');
 var infoPoints = $('.wrapper .info #Points');
 var infoGuesses = $('.wrapper .info #Guesses');
 var hand = $('.wrapper .hand');
 var cards = $('.wrapper .hand div');
+var playingStack = $('.playingStack');
 
 
 $('.chat > button').click( () => {
@@ -85,10 +88,8 @@ socket.on('login.unsuccessful', () => {
 });
 socket.on('playerBoard.update', (JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
-    console.log(names);
     playerBoard.html("");
     for (let a = 0; a < names.length; a++) {
-        console.log(names[a]);
         playerBoard.append('<p id="' + names[a] + '">' + names[a] + '</p>');
     }
 })
@@ -104,10 +105,9 @@ socket.on('game.start', () => {
     setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
 });
 socket.on('game.round', (round, trumpColor) => {
-    console.log("game.round");
-    for (i = 0; i < cards.length; i++) {
-        cards[i].append(PlayerObject.cards[i].color + " " + PlayerObject.cards[i].value);
-    }
+    console.log("game.round :" + round.toString());
+    infoRound.text("Round: " + round.toString());
+    infoTrump.text("Trump: " + trumpColor.toString());
 });
 socket.on('game.trick', () => {
     console.log("game.trick");
@@ -115,7 +115,6 @@ socket.on('game.trick', () => {
 socket.on('card.distribute', (JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
-    console.log(cards);
     hand.html("");
     for (let a = 0; a < cards.length; a++) {
         let card_svg = $('.card .' + cards[a].color + "_" + cards[a].number).html();
@@ -131,19 +130,18 @@ socket.on('card.waitingFor', (playerName) => {
 });
 socket.on('card.waiting', () => {
     console.log("card.waiting");
+    $('.hand > div').unbind("click")
     $('.hand > div').click(function () {
-        //console.log("clicked a card");
         let card = $(this)[0].className.split("_");//.target.attributes.class.name;
-        console.log(card[0], card[1]);
-        socket.emit('card.toPlayingstack', card[0], card[1]); //not thought out yet
+        console.log("You clicked: " + card[0], card[1]);
+        socket.emit('card.toPlayingstack', card[0], card[1]);
     });
 });
 socket.on('card.update', (color, number) => {
     console.log("card.update: " + color + " " + number);
-    $('.playingStack p:first').text(color + " " + number);
+    //$('.playingStack p:first').text(color + " " + number);
     let card_svg = $("." + color + "_" + number).html();
-    console.log(card_svg);
-    $('.playingStack').html(card_svg);
+    playingStack.html(card_svg);
 });
 
 
