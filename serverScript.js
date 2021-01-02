@@ -215,7 +215,7 @@ function disconnected() {
  * card
  *      .toPlayingstack
  */
-io.on('connection', function (socket) { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
+io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
     //console.log(Object.keys(io.sockets.sockets));
     console.log('a user connected');
     socket.on('toServerConsole', (text) => { console.log(text); });
