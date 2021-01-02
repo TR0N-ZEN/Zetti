@@ -73,18 +73,19 @@ for (let x = 1; x < 5; x++) {
  * */
 
 var go_on = () => { };
+var current_player = 0;
+var trick_starter;
 async function play_trick() {
     console.group("play trick");
-    let start_player;
     if (last_winner === undefined) {
-        start_player = round_starter;
+        trick_starter = round_starter;
     } else {
-        start_player = last_winner;
+        trick_starter = last_winner;
     }
-    console.log(start_player);
+    console.log("start player: " + trick_starter);
     for (let i = 0; i < playerList.length; i++) {
         go_on = () => { };
-        let current_player = mod(start_player + i, playerList.length);
+        current_player = mod(trick_starter + i, playerList.length);
         console.log("card.waitingFor " + playerList[current_player].name);
         let socket_id = playerList[current_player].socket_id;
         io.to(socket_id).emit('card.waiting');
@@ -92,6 +93,7 @@ async function play_trick() {
         await new Promise((resolve) => {
             go_on = resolve; // resolve can be triggered from outside by calling go_on();
         });
+        
     }
     return 0;
 }
@@ -117,18 +119,38 @@ function get_random_color() {
 }
 async function take_guesses() {
     console.group("take_guesses");
-    console.groupEnd();
-    return 0;
+    
 }
 async function calculate_winner() {
     console.log("calculate winner");
-    last_winner = 0;
-    return 0;
+    let starting_color = trick[trick_starter].color;
+    let high_card = trick[trick_starter];
+    let trump_played = false;
+    let winner;
+    if (starting_color == trump_color) {
+        for (let i = 0; i < playerList.length; i++) {
+            if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
+        }
+        winner = high_card_index;
+    } else {
+        for (let i = 0; i < playerList.length; i++) {
+            if (trick[trick_starter + i].color == trump_color) { trump_played = true; }
+            if (trick[trick_starter + i].color == starting_color && !trump_played) {
+                if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
+            } else if (trick[trick_starter + i].color == trump_color) {
+                if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
+            }
+        }
+        winner = high_card_index;
+    }
+    console.groupEnd();
+    return winner;
 }
+var trump_color;
 async function play_round(round) {
     console.group("play round " + round);
-    let trump_color = get_random_color();
-    console.log(trump_color);
+    trump_color = get_random_color();
+    console.log("trump color: " + trump_color);
     io.emit('game.round', round, trump_color);
     playingfield.shuffle();
     distribute_cards(round);
@@ -225,7 +247,7 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
     //socket.on('card.toPlayingstack', (color, number) => { card_to_playingstack(color, number); });
     socket.on('card.toPlayingstack', (color, number) => {
         console.log(color + " " + number);
-        trick.push(new Card(color, number));
+        trick[current_player] = new Card(color ,number); //position in trick matches position of player who played the card in playerList
         playingfield.to_playingstack(color, number);
         io.emit('card.update', color, number);
         go_on();

@@ -130,7 +130,7 @@ socket.on('card.waitingFor', (playerName) => {
 });
 socket.on('card.waiting', () => {
     console.log("card.waiting");
-    $('.hand > div').unbind("click")
+    $('.hand > div').unbind("click");
     $('.hand > div').click(function () {
         let card = $(this)[0].className.split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card[0], card[1]);
