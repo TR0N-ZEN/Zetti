@@ -1,6 +1,9 @@
 ////playingfield and player preparation
-var IDs = [0, 0, 0, 0, 0, 0];
-var ID;
+// var IDs = [0, 0, 0, 0, 0, 0];
+// var ID;
+const mod = require('./mod');
+const Player = require('./player').Player;
+var IDs = require('./player').IDs;
 var playerList = [];
 var already_voted = [];
 var round_starter = 0;
@@ -9,23 +12,6 @@ var trick = [];
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"];
 
-class Player {
-    constructor(name, socket_id) {
-        for (let i = 0; i < IDs.length; i++) {
-            if (IDs[i] == 0) {
-                IDs[i] = 1;
-                ID = i;
-                break;
-            }
-        }
-        this.name = name;
-        this.id = ID;
-        this.socket_id = socket_id;
-        this.points = 0;
-        this.guesses = 0;
-        this.hand = [];
-    }
-}
 class Card {
     constructor(color, number) {
         this.color = color;
@@ -63,16 +49,6 @@ for (let x = 1; x < 5; x++) {
 }
 
 ////game functionalities
-function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m -> r  surjective and not injective.
-    let r = m % n;
-    if (r == 0) {
-        return 0;
-    }
-    if (r < 0) {
-        return n + r;
-    }
-    return r;
-}
 
 //EMITTER---------------------------------------------------
 /*
@@ -103,7 +79,6 @@ async function play_trick() {
     if (last_winner === undefined) {
         start_player = round_starter;
     } else {
-        console.log(last_winner);
         start_player = last_winner;
     }
     console.log(start_player);
@@ -111,27 +86,14 @@ async function play_trick() {
         go_on = () => { };
         let current_player = mod(start_player + i, playerList.length);
         console.log("card.waitingFor " + playerList[current_player].name);
-        socket_id = playerList[current_player].socket_id;
+        let socket_id = playerList[current_player].socket_id;
         io.to(socket_id).emit('card.waiting');
         io.emit('card.waitingFor', playerList[current_player].name);
-        //io.to(socket_id).on('card.toPlayingstack', (color, number) => {
-        //    console.log(color + " " + number);
-        //    trick.push(new Card(color, number));
-        //    playingfield.to_playingstack(color, number);
-        //    io.emit('card.update', color, number);
-        //    go_on();
-        //});
-        //-> socket.on(card.toPlayingstack);
         await new Promise((resolve) => {
-            go_on = resolve;
+            go_on = resolve; // resolve can be triggered from outside by calling go_on();
         });
     }
-    console.groupEnd();
     return 0;
-    
-    //if (i == 0) { color_to_serve = trick[0].color; }
-        //determine who won and set last_winner to the winners index in playerList
-    //last_winner =
 }
 function distribute_cards(round) {
     console.log("distribute cards");
@@ -152,7 +114,7 @@ function get_random_color() {
     let index = Math.floor(Math.random() * 4);
     if (index == 4) { index = 3; }
     return colors[index];
-};
+}
 async function take_guesses() {
     console.group("take_guesses");
     console.groupEnd();
@@ -165,16 +127,19 @@ async function calculate_winner() {
 }
 async function play_round(round) {
     console.group("play round " + round);
-    playingfield.shuffle();
     let trump_color = get_random_color();
     console.log(trump_color);
+    io.emit('game.round', round, trump_color);
+    playingfield.shuffle();
     distribute_cards(round);
     //take guesses
-    take_guesses();
+    await take_guesses();
     for (let trick_number = 0; trick_number < round; trick_number++) {
         await play_trick();
         //console.log(trick);
         await calculate_winner();
+        console.log("last winner: " + playerList[last_winner].name);
+        console.groupEnd();
     }
     last_winner = undefined;
     round_starter = mod(round_starter + 1, playerList.length);
@@ -183,7 +148,6 @@ async function play_round(round) {
     if (round < (60 / playerList.length)) {
         play_round(++round);
     }
-    
 }
 
 //Server Setup-------------------------------------------------------------
@@ -192,7 +156,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.5'; //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.4'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(name, socketid) {
@@ -204,12 +168,11 @@ function login(name, socketid) {
         for (let a = 0; a < playerList.length; a++) {
             names[a] = playerList[a].name;
         }
-        console.log(names);
         io.emit('playerBoard.update', JSON.stringify(names));
-        console.log("IDs: " + IDs)
-        console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
         io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
         io.emit('vote.update', already_voted.length, playerList.length);
+        console.log(names);
+        console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
     } else {
         console.log("login.unsuccessful");
         io.to(socketid).emit('login.unsuccessful');
@@ -271,8 +234,8 @@ io.on('connection', function (socket) { //parameter of the callbackfunction here
 });
 app.use(express.static('client'));
 app.get('/', (req, res) => {
-    let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
-    //p = __dirname
+    //let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
+    let p = __dirname;
     if (playerList.length < 6) {
         res.sendFile( p + '/client/game.html');
     } else {
