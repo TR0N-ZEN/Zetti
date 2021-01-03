@@ -118,12 +118,15 @@ async function take_guesses() {
     console.group("take_guesses");
     for (let i = 0; i < playerList.length; i++) {
         let c_plyr = mod(round_starter + i, playerList.length);
+        console.log("guess.waitingFor " + playerList[c_plyr].name);
+        io.emit('guess.waitingFor', playerList[c_plyr].name);
         io.to(playerList[c_plyr].socket_id).emit('guess.request');
         await new Promise((resolve) => {
             ask_next = resolve; // resolve can be triggered from outside by calling go_on();
         });
     }
     console.groupEnd();
+    return 0;
 }
 async function calculate_winner() {
     console.log("calculate winner");
@@ -194,10 +197,12 @@ async function calculate_winner() {
 function points_update() {
     for (let i = 0; i < playerList.length; i++) {
         let delta;
-        if (playerList[i].guesses == playerList[i].rounds_won) {
-            delta = 20 + playerList[i].guesses*10;
+        let guesses = parseInt(playerList[i].guesses, 10);
+        let rounds_won = parseInt(playerList[i].rounds_won, 10);
+        if (guesses == rounds_won) {
+            delta = 20 + guesses*10;
         } else {
-            delta = playerList[i].guesses - playerList[i].rounds_won;
+            delta = guesses - rounds_won;
             if (delta > 0) { delta *= -1; }
             delta *= 10;
         }
@@ -217,6 +222,7 @@ async function play_round(round) {
     distribute_cards(round);
     //take guesses
     await take_guesses();
+    io.emit('guess.complete');
     for (let trick_number = 0; trick_number < round; trick_number++) {
         await play_trick();
         //console.log(trick);
@@ -321,7 +327,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
         go_on();
     });
     socket.on('guess.response', (guesses, index) => {
-        playerList[index].guesses = guesses;
+        playerList[parseInt(index, 10)].guesses = guesses;
         //...
         ask_next();
     });
