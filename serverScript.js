@@ -6,9 +6,6 @@ const Player = require('./player').Player;
 var IDs = require('./player').IDs;
 var playerList = [];
 var already_voted = [];
-var round_starter = 0;
-var last_winner = undefined;
-var trick = [];
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"];
 
@@ -74,13 +71,15 @@ for (let x = 1; x < 5; x++) {
 
 var go_on = () => { };
 var current_player = 0;
+var last_winner_index = undefined;
 var trick_starter;
+var trick = [];
 async function play_trick() {
     console.group("play trick");
-    if (last_winner === undefined) {
+    if (last_winner_index === undefined) {
         trick_starter = round_starter;
     } else {
-        trick_starter = last_winner;
+        trick_starter = last_winner_index;
     }
     console.log("start player: " + trick_starter);
     for (let i = 0; i < playerList.length; i++) {
@@ -93,7 +92,6 @@ async function play_trick() {
         await new Promise((resolve) => {
             go_on = resolve; // resolve can be triggered from outside by calling go_on();
         });
-        
     }
     return 0;
 }
@@ -123,30 +121,72 @@ async function take_guesses() {
 }
 async function calculate_winner() {
     console.log("calculate winner");
-    let starting_color = trick[trick_starter].color;
-    let high_card = trick[trick_starter];
-    let trump_played = false;
-    let winner;
-    if (starting_color == trump_color) {
-        for (let i = 0; i < playerList.length; i++) {
-            if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
+    var color_to_serve;
+    var high_card_index;
+    var high_card;
+    var trump_played = false;
+    for (let i = 0; i < playerList.length; i++) {
+        let c_player = mod(trick_starter + i, playerList.length);
+        console.log(trick[c_player].color);
+        if (trick[c_player].color != "N") {
+            color_to_serve = trick[c_player].color; //found color that should be served
+            if (color_to_serve == "Z") {
+                last_winner_index = c_player; //der Nils-Theo-Österreich Fall
+                console.log("der Nils-Theo-Österreich Fall");
+                return 0;
+            }
+            high_card_index = c_player;
+            high_card = trick[high_card_index];
+            console.log("color to be served: " + color_to_serve);
+            break; //breaks loop?
         }
-        winner = high_card_index;
-    } else {
+    }
+    if (color_to_serve === undefined) { //der Only-Enno Fall
+        last_winner_index = trick_starter;
+        console.log("der Only-Enno Fall");
+        return 0;
+    }
+    if (color_to_serve == trump_color) { //wenn mit Trumpf angespielt wird
+        console.log("wenn mit Trumpf angespielt wird");
         for (let i = 0; i < playerList.length; i++) {
-            if (trick[trick_starter + i].color == trump_color) { trump_played = true; }
-            if (trick[trick_starter + i].color == starting_color && !trump_played) {
-                if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
-            } else if (trick[trick_starter + i].color == trump_color) {
-                if (trick[trick_starter + i].number > high_card.number) { high_card = trick[trick_starter + i]; high_card_index = trick_starter + i; }
+            let c_player = mod(trick_starter + i, playerList.length);
+            if (trick[c_player].color == "Z") { 
+                last_winner_index = c_player;
+                return 0;
+            }
+            if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number), 10) { 
+                high_card_index = c_player;
+                high_card = trick[high_card_index];
             }
         }
-        winner = high_card_index;
+    } else { //eine ganz gediegene Runde
+        console.log("eine ganz gediegene Runde");
+        for (let i = 0; i < playerList.length; i++) {
+            let c_player = mod(trick_starter + i, playerList.length);
+            if (trick[c_player].color == "Z") { //der erste Zetti ist geflogen
+                console.log("der erste Zetti ist geflogen");
+                last_winner_index = c_player;
+                return 0;
+            }
+            if (trick[c_player].color == trump_color) { trump_played = true; }
+            if (!trump_played && trick[c_player].color == color_to_serve) {
+                if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) { 
+                    high_card_index = c_player;
+                    high_card = trick[high_card_index];
+                }
+            } else if (trick[c_player].color == trump_color) {
+                if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) { 
+                    high_card_index = c_player;
+                    high_card = trick[high_card_index]; }
+            }
+        }
     }
+    last_winner_index = high_card_index;
     console.groupEnd();
-    return winner;
+    return 0;
 }
-var trump_color;
+var round_starter = 0;
+var trump_color = "";
 async function play_round(round) {
     console.group("play round " + round);
     trump_color = get_random_color();
@@ -160,10 +200,11 @@ async function play_round(round) {
         await play_trick();
         //console.log(trick);
         await calculate_winner();
-        console.log("last winner: " + playerList[last_winner].name);
+        console.log("last winner: " + playerList[last_winner_index].name);
+        //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
     }
-    last_winner = undefined;
+    last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length);
     //calculate winner;
     console.groupEnd();
