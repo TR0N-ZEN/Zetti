@@ -37,7 +37,7 @@ $('.chat > button').click( () => {
  * guess
  *      .response
  * card
- *      .toPlayingstack
+ *      .toPlayingstack //in LISTENERS
 
  */
 $('#login form').submit(function (button) {
@@ -80,14 +80,15 @@ $('#take_guess > form').submit( function (button) {
  *      start
  *      round
  *      trick
- * guess
- *      .request
+ * guess.
+ *      request
  * card.
  *      distribute //cards on hand
  *      waiting -> emit('card.toPlayingstack', ...) -> card.update
  *      waitingFor
  *      update //card on stack
- * 
+ * points.
+ *      update
  * changeCSS
  * */ 
 
@@ -164,6 +165,9 @@ socket.on('card.update', (color, number) => {
     //$('.playingStack p:first').text(color + " " + number);
     let card_svg = $("." + color + "_" + number).html();
     playingStack.html(card_svg);
+});
+socket.on('points.update', (points) => {
+    infoPoints.text("Points: " + points.toString());
 });
 
 
