@@ -54,12 +54,14 @@ $('.chat .window > form').submit(function (button) {
 $('#ready_player > button').on('click', () => {
     socket.emit('vote', PlayerObject.id);
 });
-$('#take_guess > form').submit( function (button) {
+$('.take_guess > form').submit( function (button) {
     button.preventDefault();
-    socket.emit('guess.response', $('#take_guess > form > input').val(), index);
-    let width_in_px = $('#take_guess').css('width');
+    let guess_number = $('.take_guess > form > input').val();
+    socket.emit('guess.response', guess_number, index);
+    $('.info > div > #Guesses').text('Guesses: ' + guess_number);
+    let width_in_px = $('.take_guess').css('width');
     let width = "-" + width_in_px;
-    $('#take_guess').css("righ", width);
+    $('.take_guess').css("righ", width);
 });
 
 
@@ -81,7 +83,9 @@ $('#take_guess > form').submit( function (button) {
  *      round
  *      trick
  * guess.
+ *      waitingFor
  *      request
+ *      complete
  * card.
  *      distribute //cards on hand
  *      waiting -> emit('card.toPlayingstack', ...) -> card.update
@@ -130,10 +134,19 @@ socket.on('game.round', (round, trumpColor) => {
 socket.on('game.trick', () => {
     console.log("game.trick");
 }); // de: Stich <=> eng: trick
+socket.on('guess.waitingFor', (playerName) => {
+    $('.playerBoard > p').css("color", "white");
+    $("#" + playerName).css("color", "lightgreen");
+})
 socket.on('guess.request', () => {
-    let width_in_px = $('#take_guess').css('width');
+    let width_in_px = $('.take_guess').css('width');
     let width = width_in_px;
-    $('#take_guess').css("righ", width);
+    $('.take_guess').css("right", width);
+});
+socket.on('guess.complete', () => {
+    let width_in_px = $('.take_guess').css('width');
+    let width = "-" + width_in_px;
+    $('.take_guess').css("right", width);
 });
 socket.on('card.distribute', (JSON_cards) => {
     console.log("card.distribute");

@@ -1,4 +1,9 @@
 ﻿/*@media (min-aspect-ratio: 4/3) {*/
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
     #login {
         position: fixed;
         top: auto;
@@ -122,18 +127,28 @@
                     z-index: 7;
                     font-size: 1.1em;
                 }
-        #take_guess {
+        .take_guess {
             position: fixed;
-                right:  0;
-                bottom: 22vh;
-                height: 20vh;
-                width: 20vw;
-                z-index: 1;
-                display: grid;
-                grid-template-rows: 4fr 1fr;
-                transition-property: right;
-                transition-duration: 1s;
+            right: -20vw;
+            bottom: 64vh;
+            height: 10vh;
+            width: 20vw;
+            z-index: 1;
+            display: grid;
+            grid-template-rows: 4fr 1fr;
+            transition-property: right;
+            transition-duration: 1s;
         }
+            .take_guess > form {
+                height: inherit;
+                width: 100%;
+                display: grid;
+                grid-template-columns: 4fr 1fr;
+            }
+                .take_guess > form > input {
+                    padding-left: 3%;
+                    font-size:larger;
+                }
         .playerBoard {
             grid-area: playerBoard;
             background-color: black;
