@@ -63,9 +63,8 @@ for (let x = 1; x < 5; x++) {
  * card.
  *      distribute //cards on hand
  *      update //card on stack
- * waiting_for_card
- * waiting_for_player
- * 
+ * points
+ *      .update
  * changeCSS
  * */
 
@@ -119,11 +118,12 @@ async function take_guesses() {
     console.group("take_guesses");
     for (let i = 0; i < playerList.length; i++) {
         let c_plyr = mod(round_starter + i, playerList.length);
-        io.to(plyerList[c_plyr].socket_id).emit('guess.request');
+        io.to(playerList[c_plyr].socket_id).emit('guess.request');
         await new Promise((resolve) => {
             ask_next = resolve; // resolve can be triggered from outside by calling go_on();
         });
     }
+    console.groupEnd();
 }
 async function calculate_winner() {
     console.log("calculate winner");
@@ -191,6 +191,21 @@ async function calculate_winner() {
     console.groupEnd();
     return 0;
 }
+function points_update() {
+    for (let i = 0; i < playerList.length; i++) {
+        let delta;
+        if (playerList[i].guesses == playerList[i].rounds_won) {
+            delta = 20 + playerList[i].guesses*10;
+        } else {
+            delta = playerList[i].guesses - playerList[i].rounds_won;
+            if (delta > 0) { delta *= -1; }
+            delta *= 10;
+        }
+        console.log("delta for " + playerList[i].name + ": " + delta);
+        playerList[i].points += delta;
+        io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
+    }
+}
 var round_starter = 0;
 var trump_color = "";
 async function play_round(round) {
@@ -207,9 +222,11 @@ async function play_round(round) {
         //console.log(trick);
         await calculate_winner();
         console.log("last winner: " + playerList[last_winner_index].name);
+        ++playerList[last_winner_index].rounds_won;
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
     }
+    points_update();
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length);
     //calculate winner;
@@ -284,6 +301,9 @@ function disconnected() {
  * vote
  * card
  *      .toPlayingstack
+ * guess.
+ *      response
+ * disconnect
  */
 io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
     //console.log(Object.keys(io.sockets.sockets));
