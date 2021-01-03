@@ -25,6 +25,8 @@ $('.chat > button').click( () => {
     }
 });
 
+
+
 //EMITTER------------------------------------------------------------------------
 /* 
  * socket.emit(x, ...)
@@ -32,8 +34,11 @@ $('.chat > button').click( () => {
  * login
  * MessageFromClient
  * vote
+ * guess
+ *      .response
  * card
  *      .toPlayingstack
+
  */
 $('#login form').submit(function (button) {
     button.preventDefault(); // prevents default action of e/the button so page reloading
@@ -48,6 +53,13 @@ $('.chat .window > form').submit(function (button) {
 });
 $('#ready_player > button').on('click', () => {
     socket.emit('vote', PlayerObject.id);
+});
+$('#take_guess > form').submit( function (button) {
+    button.preventDefault();
+    socket.emit('guess.response', $('#take_guess > form > input').val(), index);
+    let width_in_px = $('#take_guess').css('width');
+    let width = "-" + width_in_px;
+    $('#take_guess').css("righ", width);
 });
 
 
@@ -68,6 +80,8 @@ $('#ready_player > button').on('click', () => {
  *      start
  *      round
  *      trick
+ * guess
+ *      .request
  * card.
  *      distribute //cards on hand
  *      waiting -> emit('card.toPlayingstack', ...) -> card.update
@@ -76,12 +90,15 @@ $('#ready_player > button').on('click', () => {
  * 
  * changeCSS
  * */ 
+
+ var index = 0;
 socket.on('login.successful', (JSON_PlayerObject) => {
     $('#login').slideUp();
     PlayerObject = JSON.parse(JSON_PlayerObject);
     infoName.append(PlayerObject.name);
     infoPoints.append(PlayerObject.points);
     infoGuesses.append(PlayerObject.guesses);
+    index = PlayerObject.index;
 });
 socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
@@ -112,6 +129,11 @@ socket.on('game.round', (round, trumpColor) => {
 socket.on('game.trick', () => {
     console.log("game.trick");
 }); // de: Stich <=> eng: trick
+socket.on('guess.request', () => {
+    let width_in_px = $('#take_guess').css('width');
+    let width = width_in_px;
+    $('#take_guess').css("righ", width);
+});
 socket.on('card.distribute', (JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);

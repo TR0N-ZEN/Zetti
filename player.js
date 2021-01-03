@@ -14,6 +14,7 @@ class Player {
         this.points = 0;
         this.guesses = 0;
         this.hand = [];
+        this.index = 0;
     }
 }
 

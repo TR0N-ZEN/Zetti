@@ -117,7 +117,13 @@ function get_random_color() {
 }
 async function take_guesses() {
     console.group("take_guesses");
-    
+    for (let i = 0; i < playerList.length; i++) {
+        let c_plyr = mod(round_starter + i, playerList.length);
+        io.to(plyerList[c_plyr].socket_id).emit('guess.request');
+        await new Promise((resolve) => {
+            ask_next = resolve; // resolve can be triggered from outside by calling go_on();
+        });
+    }
 }
 async function calculate_winner() {
     console.log("calculate winner");
@@ -225,6 +231,7 @@ const port = 80;
 function login(name, socketid) {
     if (playerList.length < 6) {
         playerList.push(new Player(name, socketid));
+        playerList[playerList.length - 1].index = playerList.length - 1;
         console.log("login.successful");
         io.to(socketid).emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
         let names = new Array(playerList.length);
@@ -292,6 +299,11 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
         playingfield.to_playingstack(color, number);
         io.emit('card.update', color, number);
         go_on();
+    });
+    socket.on('guess.response', (guesses, index) => {
+        playerList[index].guesses = guesses;
+        //...
+        ask_next();
     });
     socket.on('disconnect', (reason) => { disconnected(); });
 });

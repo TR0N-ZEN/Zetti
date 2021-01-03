@@ -28,9 +28,12 @@
         display: grid;
         grid-column-gap: 1vw;
         grid-row-gap: 2vh;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 4fr;
         grid-template-rows: 1fr 4fr 5fr;
-        grid-template-areas: "info" "playingField" "hand";
+        grid-template-areas:
+        "info info info"
+        "playerBoard playingField playingField"
+        "hand hand hand";
     }
         .info {
             grid-area: info;
@@ -108,19 +111,31 @@
                 background-color: #812929;
                 box-shadow: 0 0 1vmin #b71717;
                 z-index: initial;
-                transition-property: box-shadow, z-index;
+                font-size: 1em;
+                transition-property: box-shadow, z-index, width, height, font-size;
                 transition-duration: 1s;
             }
                 #ready_player > button:hover {
+                    width: 88%;
+                    height: 55%;
                     box-shadow: 0 0 6vmin #b71717;
                     z-index: 7;
+                    font-size: 1.1em;
                 }
+        #take_guess {
+            position: fixed;
+                right:  0;
+                bottom: 22vh;
+                height: 20vh;
+                width: 20vw;
+                z-index: 1;
+                display: grid;
+                grid-template-rows: 4fr 1fr;
+                transition-property: right;
+                transition-duration: 1s;
+        }
         .playerBoard {
-            position:fixed;
-            left:0;
-            top:20vh;
-            height: 60vh;
-            width:10vw;
+            grid-area: playerBoard;
             background-color: black;
             border: 0.5vh solid var(--semitransparent);
             border-radius: 5px;
