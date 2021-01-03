@@ -1,6 +1,4 @@
 ////playingfield and player preparation
-// var IDs = [0, 0, 0, 0, 0, 0];
-// var ID;
 const mod = require('./mod');
 const Player = require('./player').Player;
 var IDs = require('./player').IDs;
