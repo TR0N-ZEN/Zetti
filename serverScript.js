@@ -129,21 +129,15 @@ async function take_guesses() {
     return 0;
 }
 async function calculate_winner() {
-    console.log("calculate winner");
+    console.group("calculate winner");
     var color_to_serve;
     var high_card_index;
     var high_card;
-    var trump_played = false;
+    //color_to_serve
     for (let i = 0; i < playerList.length; i++) {
         let c_player = mod(trick_starter + i, playerList.length);
-        console.log(trick[c_player].color);
         if (trick[c_player].color != "N") {
             color_to_serve = trick[c_player].color; //found color that should be served
-            if (color_to_serve == "Z") {
-                last_winner_index = c_player; //der Nils-Theo-Österreich Fall
-                console.log("der Nils-Theo-Österreich Fall");
-                return 0;
-            }
             high_card_index = c_player;
             high_card = trick[high_card_index];
             console.log("color to be served: " + color_to_serve);
@@ -153,40 +147,34 @@ async function calculate_winner() {
     if (color_to_serve === undefined) { //der Only-Enno Fall
         last_winner_index = trick_starter;
         console.log("der Only-Enno Fall");
+        console.groupEnd();
         return 0;
     }
-    if (color_to_serve == trump_color) { //wenn mit Trumpf angespielt wird
-        console.log("wenn mit Trumpf angespielt wird");
-        for (let i = 0; i < playerList.length; i++) {
-            let c_player = mod(trick_starter + i, playerList.length);
-            if (trick[c_player].color == "Z") { 
-                last_winner_index = c_player;
-                return 0;
-            }
-            if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number), 10) { 
+    //color_to_serve END
+    for (let i = 0; i < playerList.length; i++) {
+        let c_player = mod(trick_starter + i, playerList.length);
+        if (trick[c_player].color == "Z") { //der erste Zetti ist geflogen
+            console.log("der erste Zetti ist geflogen");
+            last_winner_index = c_player;
+            console.groupEnd();
+            return 0;
+        }
+        if (trick[c_player].color == trump_color) {
+            console.log("Trump has been played.");
+            if (high_card.color != trump_color) {
+                console.log("Trump has been played for the first time.");
                 high_card_index = c_player;
                 high_card = trick[high_card_index];
+            } else if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) {
+                high_card_index = c_player;
+                high_card = trick[high_card_index];
+                console.log("Topped.");
             }
-        }
-    } else { //eine ganz gediegene Runde
-        console.log("eine ganz gediegene Runde");
-        for (let i = 0; i < playerList.length; i++) {
-            let c_player = mod(trick_starter + i, playerList.length);
-            if (trick[c_player].color == "Z") { //der erste Zetti ist geflogen
-                console.log("der erste Zetti ist geflogen");
-                last_winner_index = c_player;
-                return 0;
-            }
-            if (trick[c_player].color == trump_color) { trump_played = true; }
-            if (!trump_played && trick[c_player].color == color_to_serve) {
-                if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) { 
-                    high_card_index = c_player;
-                    high_card = trick[high_card_index];
-                }
-            } else if (trick[c_player].color == trump_color) {
-                if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) { 
-                    high_card_index = c_player;
-                    high_card = trick[high_card_index]; }
+        } else if (high_card.color == color_to_serve && trick[c_player].color == color_to_serve) {
+            if (parseInt(trick[c_player].number, 10) > parseInt(high_card.number, 10)) {
+                high_card_index = c_player;
+                high_card = trick[high_card_index];
+                console.log("Topped.");
             }
         }
     }
@@ -284,10 +272,10 @@ function vote(playerid) {
             setTimeout(() => { play_round(1); }, 2000);
         }
     } else { console.log("vote rejected"); console.groupEnd();}
-    
+
 }
 function disconnected() {
-    console.log('user disconnected'); 
+    console.log('user disconnected');
     for (let i = 0; i < playerList.length; i++) {
         if (io.of('/').sockets[playerList[i].socket_id] === undefined) {
             io.emit('MessageFromServer', playerList[i].name + " left.")
@@ -311,7 +299,7 @@ function disconnected() {
  *      response
  * disconnect
  */
-io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected 
+io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
     //console.log(Object.keys(io.sockets.sockets));
     console.log('a user connected');
     socket.on('toServerConsole', (text) => { console.log(text); });
@@ -328,7 +316,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     });
     socket.on('guess.response', (guesses, index) => {
         playerList[parseInt(index, 10)].guesses = guesses;
-        //...
+        console.log(playerList[index].name + "guessed from object " + playerList[index].guesses);
         ask_next();
     });
     socket.on('disconnect', (reason) => { disconnected(); });
@@ -338,7 +326,7 @@ app.get('/', (req, res) => {
     //let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
     let p = __dirname;
     if (playerList.length < 6) {
-        res.sendFile( p + '/client/game.html');
+        res.sendFile( p + '/client/index.html');
     } else {
         res.sendFile( p  + '/client/game_is_full.html');
     }
