@@ -270,8 +270,7 @@ function vote(playerid) {
             io.emit('game.start');
             setTimeout(() => { play_round(1); }, 2000);
         }
-    } else { console.log("vote rejected"); console.groupEnd();}
-
+    } else { console.log("vote rejected"); console.groupEnd(); }
 }
 function disconnected() {
     console.log('user disconnected');
