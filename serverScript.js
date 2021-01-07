@@ -185,12 +185,13 @@ function points_update() {
         let delta;
         let guesses = parseInt(playerList[i].guesses, 10);
         let rounds_won = parseInt(playerList[i].rounds_won, 10);
+        console.log("Guesses by " + playerList[i].name + ": " + guesses);
+        console.log("Rounds won by " + playerList[i].name + ": " + rounds_won);
         if (guesses == rounds_won) {
             delta = 20 + guesses*10;
         } else {
-            delta = guesses - rounds_won;
+            delta = (guesses - rounds_won)*10;
             if (delta > 0) { delta *= -1; }
-            delta *= 10;
         }
         console.log("delta for " + playerList[i].name + ": " + delta);
         playerList[i].points += delta;
@@ -314,7 +315,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     });
     socket.on('guess.response', (guesses, index) => {
         playerList[parseInt(index, 10)].guesses = guesses;
-        console.log(playerList[index].name + "guessed from object " + playerList[index].guesses);
+        console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
         ask_next();
     });
     socket.on('disconnect', (reason) => { disconnected(); });
