@@ -192,17 +192,28 @@
     }
     .card {
         position: fixed;
+        left: -14vw;
+        top: 100vh;
         transition: left 2s, top 2s;
         background-color: antiquewhite;
         height: 20vh;
         width: 14vh;
+        z-index: 2;
         border: none;
         border-radius: 5px;
     }
-        .toplayingstack {
-            left: 9vw;
-            top: 4vh;
-        }
+    .cardinhand {
+        transition: left 2s, top 2s;
+        top: 67vh;
+    }
+    .formanotherplayer {
+        left: 100vw;
+        top: 4vh;
+    }
+    .onplayingstack {
+        left: 66vw;
+        top: 24vh;
+    }
         #hand div a {
             display:block;
             width: 100%;
