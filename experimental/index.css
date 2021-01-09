@@ -1,0 +1,39 @@
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.box {
+    width: 50%;
+    height: 50%;
+    background-color: lime;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+}
+
+#click {
+    position: fixed;
+    left: 10vw;
+    top: 10vh;
+    transition: left 2s, top 2s;
+}
+
+#target {
+    position: fixed;
+    top: 50vh;
+    left: 40vw;
+    height: 20vh;
+    width: 20vw;
+    background-color: red;
+}
+
+#click.totarget {
+    /*position: fixed;*/
+    top: 50vh;
+    left: 40vw;
+    z-index: 3;
+}
