@@ -13,19 +13,43 @@ var cards = $('.wrapper > .card');
 var playingstack = $('.wrapper > #playingstack');
 
 var info = {
-    name: $('.wrapper .info #Name'),
-    round: $('.wrapper .info #Round'),
-    trump: $('.wrapper .info #Trump'),
-    points: $('.wrapper .info #Points'),
-    guesses: $('.wrapper .info #Guesses'),
-    chat: $('.chat'),
+    name: $('.wrapper > #info #Name'),
+    round: $('.wrapper > #info #Round'),
+    trump: $('.wrapper > #info #Trump'),
+    points: $('.wrapper > #info #Points'),
+    guesses: $('.wrapper > #info #Guesses'),
+    chat: $('.wrapper > #info > .chat')
 };
 var guesses = {
     take: $('.take_guess'),
     hide: () => {
-        let width_in_px = guesses.take.css('width');
-        guesses.take.css("right", "-" + width_in_px);
+        let distance_in_px = guesses.take.css('width');
+        guesses.take.css("right", "-" + distance_in_px);
+        guesses.take.css("display", "none");
+    },
+    show: () => {
+        let distance_in_px = guesses.take.css('width');
+        guesses.take.css("righ", "-" + distance_in_px);
+        guesses.take.css("display", "grid");
+        guesses.take.css("right", distance_in_px);
     }
+};
+
+//delay only works in async functions
+function delay(milliseconds) {
+    return new Promise( (resolve) => {
+        setTimeout( () => {
+            resolve();
+        }, milliseconds);
+    });
+}
+
+function make_card(color, number) {
+    let card = document.createElement('div');
+    let card_svg = $("#svgs > ." + color + "_" + number).html();
+    card.setAttribute("class", color + "_" + number + " card fromanotherplayer");
+    card.innerHTML = card_svg;
+    return card;
 };
 
 info.chat.click( () => {
@@ -60,8 +84,8 @@ $('#login form').submit(function (button) {
 });
 $('.chat.window > form').submit(function (button) {
     button.preventDefault(); // prevents page reloading
-    socket.emit('MessageFromClient', PlayerObject.name + ": " + $('.chat.window > form > #message').val());
-    $('.chat.window > form > #message').val('');
+    socket.emit('MessageFromClient', PlayerObject.name + ": " + chat.message.val());
+    chat.message.val('');
     return false;
 });
 $('#ready_player > button').on('click', () => {
@@ -113,7 +137,7 @@ $('.take_guess > form').submit(function (button) {
  * changeCSS
  * */
 
- var index = 0;
+var index = 0;
 socket.on('login.successful', (JSON_PlayerObject) => {
     $('#login').slideUp();
     PlayerObject = JSON.parse(JSON_PlayerObject);
@@ -124,6 +148,7 @@ socket.on('login.successful', (JSON_PlayerObject) => {
 });
 socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
+    //server send a different website saying there is no space for antoher player
 });
 socket.on('playerBoard.update', (JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
@@ -150,34 +175,34 @@ socket.on('game.round', (round, trumpColor) => {
     console.log("game.round :" + round.toString());
     info.round.text("Runde: " + round.toString());
     info.trump.text("Trumpf: " + trumpColor.toString());
-    playingstack.html("");
 });
 socket.on('game.trick', () => {
     console.log("game.trick");
+    $('wrapper > .card').remove();
 }); // de: Stich <=> eng: trick
 socket.on('guess.waitingFor', (playerName) => {
     $('.playerBoard > p').css("color", "white");
     $("#" + playerName).css("color", "lightgreen");
 })
 socket.on('guess.request', () => {
-    let width_in_px = $('.take_guess').css('width');
-    guesses.take.css("righ", "-" + width_in_px);
-    guesses.take.css("display", "grid");
-    guesses.take.css("right", width_in_px);
+    guesses.show();
 });
 socket.on('guess.complete', () => {
     guesses.hide();
 });
-socket.on('card.distribute', (JSON_cards) => {
+socket.on('card.distribute', async (JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
-    hand.html("");
     for (let a = 0; a < cards.length; a++) {
         let card_svg = $('#svgs > .' + cards[a].color + "_" + cards[a].number).html();
         let card = document.createElement('div');
-        card.setAttribute("class", cards[a].color + "_" + cards[a].number);
+        let classname = cards[a].color + "_" + cards[a].number;
+        card.setAttribute("class", classname + " card");
         card.innerHTML = card_svg;
-        //hand.append(card);
+        $('.wrapper').append(card);
+        await delay(200);
+        $(".wrapper > " + "." + classname + ".card").css("left", (a*(14+2)+20).toString()+"vw");
+        $(".wrapper > " + "." + classname + ".card").addClass("cardinhand");
     }
 });
 socket.on('card.waitingFor', (playerName) => {
@@ -188,31 +213,32 @@ var last_card;
 socket.on('card.waiting', () => {
     console.log("card.waiting");
     $('.card').unbind("click");
-    $('.card').css("transition", "left 3s, top 3s");
-    $('.card').click(function () {
+    $('.card').click( async function () {
         let card = $(this);
-        let card_name = $(this)[0].className.split("_");//.target.attributes.class.name;
+        let card_id =  $(this)[0].className.split(" ");
+        let card_name = card_id[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
-        //socket.emit('card.toPlayingstack', card[0], card[1]);
-        card.css("position", "fixed");
+        socket.emit('card.toPlayingstack', card_name[0], card_name[1], card_pos_on_stack); // => card.update
         let dest_left = playingstack.css("left");
         let dest_top = playingstack.css("top");
-        //card.css("transition", "left 3s, top 3s");
-        console.log(card.css("transition-property"));
-        console.log(card.css("transition-duration"));
-        setTimeout(() => {
-            card.css("left", dest_left);
-            card.css("top", dest_top);
-            console.log(card.css("left"));
-            console.log(card.css("top"));
-        }, 2000);
+        await delay(400);
+        card.css("left", dest_left);
+        card.css("top", dest_top);
+        card.css("z-index", card_pos_on_stack);
+        //alternative to the two lines above:
+        //card.addClass("onplayingstack");
     });
 });
-socket.on('card.update', (color, number) => {
+socket.on('card.update', async (color, number) => {
     console.log("card.update: " + color + " " + number);
-    //$('.playingStack p:first').text(color + " " + number);
-    let card_svg = $("." + color + "_" + number).html();
-    playingstack.html(card_svg);
+    let card = make_card(color, number);
+    $(".wrapper").append(card);
+    await delay(300);
+    let dest_left = playingstack.css("left");
+    let dest_top = playingstack.css("top");
+    $(card.className).css("left", dest_left);
+    $(card.className).css("top", dest_top);
+    //$(card.className).addClass("onplayingstack");
 });
 socket.on('points.update', (points) => {
     info.points.text("Points: " + points.toString());
