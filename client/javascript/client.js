@@ -1,13 +1,16 @@
 const socket = io();
 var chat = {
     hidden: false,
-    window: $('.info .chat .window'),
-    WindowList: $('.chat .window > ul')
+    window: $('.chat.window'),
+    form: $('.chat.window > form'),
+    list: $('.chat.window > ul'),
+    message: $('.chat.window > form #message')
 };
-var playerBoard = $('.playerBoard');
-var hand = $('.wrapper .hand');
-var cards = $('.wrapper .hand div');
-var playingStack = $('.playingStack');
+var playerboard = $('.wrapper > #playerboard');
+var playingfield = $('.wrapper > #playingfield');
+var hand = $('.wrapper > #hand');
+var cards = $('.wrapper > .card');
+var playingstack = $('.wrapper > #playingstack');
 
 var info = {
     name: $('.wrapper .info #Name'),
@@ -15,7 +18,7 @@ var info = {
     trump: $('.wrapper .info #Trump'),
     points: $('.wrapper .info #Points'),
     guesses: $('.wrapper .info #Guesses'),
-    chat: $('.info .chat')
+    chat: $('.chat'),
 };
 var guesses = {
     take: $('.take_guess'),
@@ -25,14 +28,12 @@ var guesses = {
     }
 };
 
-$('.chat > button').click( () => {
-    //$('.info .chat .window').slideToggle("fast", "swing");
+info.chat.click( () => {
     if (chat.hidden) {
         chat.window.css('right', 0);
         chat.hidden = false;
     } else {
-        let width_in_px = $('.info .chat .window').css('width');
-        chat.window.css('right', "-" + width_in_px);
+        chat.window.css('right', "-" + chat.window.css('width'));
         chat.hidden = true;
     }
 });
@@ -57,10 +58,10 @@ $('#login form').submit(function (button) {
     socket.emit('login', $('#login form #loginName').val());
     return false;
 });
-$('.chat .window > form').submit(function (button) {
+$('.chat.window > form').submit(function (button) {
     button.preventDefault(); // prevents page reloading
-    socket.emit('MessageFromClient', PlayerObject.name + ": " + $('.chat .window form #message').val());
-    $('.chat .window form #message').val('');
+    socket.emit('MessageFromClient', PlayerObject.name + ": " + $('.chat.window > form > #message').val());
+    $('.chat.window > form > #message').val('');
     return false;
 });
 $('#ready_player > button').on('click', () => {
@@ -126,27 +127,30 @@ socket.on('login.unsuccessful', () => {
 });
 socket.on('playerBoard.update', (JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
-    playerBoard.html("");
+    playerboard.html("");
     for (let a = 0; a < names.length; a++) {
-        playerBoard.append('<p id="' + names[a] + '">' + names[a] + '</p>');
+        playerboard.append('<p id="' + names[a] + '">' + names[a] + '</p>');
     }
 })
 socket.on('vote.update', (votes, amount_of_players) => {
     $('#votes').text(votes.toString() + " / " + amount_of_players.toString());
 });
 socket.on('MessageFromServer', (message) => {
-    chat.WindowList.prepend($('<li>').text(message));
+    chat.list.append($('<li>').text(message));
 });
 socket.on('game.start', () => {
     console.log("game.start");
     $('#ready_player').css("transform", "translateY(-40vh)");
+    playingfield.css("left", "34vw");
+    playingstack.css("left", "66vw");
+    hand.css("top", "56vh");
     setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
 });
 socket.on('game.round', (round, trumpColor) => {
     console.log("game.round :" + round.toString());
-    info.round.text("Round: " + round.toString());
-    info.trump.text("Trump: " + trumpColor.toString());
-    playingStack.html("");
+    info.round.text("Runde: " + round.toString());
+    info.trump.text("Trumpf: " + trumpColor.toString());
+    playingstack.html("");
 });
 socket.on('game.trick', () => {
     console.log("game.trick");
@@ -169,32 +173,46 @@ socket.on('card.distribute', (JSON_cards) => {
     let cards = JSON.parse(JSON_cards);
     hand.html("");
     for (let a = 0; a < cards.length; a++) {
-        let card_svg = $('.card .' + cards[a].color + "_" + cards[a].number).html();
+        let card_svg = $('#svgs > .' + cards[a].color + "_" + cards[a].number).html();
         let card = document.createElement('div');
         card.setAttribute("class", cards[a].color + "_" + cards[a].number);
         card.innerHTML = card_svg;
-        hand.append(card);
+        //hand.append(card);
     }
 });
 socket.on('card.waitingFor', (playerName) => {
     $('.playerBoard > p').css("color", "white");
     $("#" + playerName).css("color", "lightgreen");
 });
+var last_card;
 socket.on('card.waiting', () => {
     console.log("card.waiting");
-    $('.hand > div').unbind("click");
-    $('.hand > div').click(function () {
-        let card = $(this)[0].className.split("_");//.target.attributes.class.name;
-        console.log("You clicked: " + card[0], card[1]);
-        socket.emit('card.toPlayingstack', card[0], card[1]);
-        $(this).css("display", "none");
+    $('.card').unbind("click");
+    $('.card').css("transition", "left 3s, top 3s");
+    $('.card').click(function () {
+        let card = $(this);
+        let card_name = $(this)[0].className.split("_");//.target.attributes.class.name;
+        console.log("You clicked: " + card_name[0], card_name[1]);
+        //socket.emit('card.toPlayingstack', card[0], card[1]);
+        card.css("position", "fixed");
+        let dest_left = playingstack.css("left");
+        let dest_top = playingstack.css("top");
+        //card.css("transition", "left 3s, top 3s");
+        console.log(card.css("transition-property"));
+        console.log(card.css("transition-duration"));
+        setTimeout(() => {
+            card.css("left", dest_left);
+            card.css("top", dest_top);
+            console.log(card.css("left"));
+            console.log(card.css("top"));
+        }, 2000);
     });
 });
 socket.on('card.update', (color, number) => {
     console.log("card.update: " + color + " " + number);
     //$('.playingStack p:first').text(color + " " + number);
     let card_svg = $("." + color + "_" + number).html();
-    playingStack.html(card_svg);
+    playingstack.html(card_svg);
 });
 socket.on('points.update', (points) => {
     info.points.text("Points: " + points.toString());

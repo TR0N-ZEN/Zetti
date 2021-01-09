@@ -15,7 +15,7 @@ class Player {
         this.guesses = 0;
         this.hand = [];
         this.index = 0;
-        this.rounds_won = 0;
+        this.tricks_won = 0;
     }
 }
 

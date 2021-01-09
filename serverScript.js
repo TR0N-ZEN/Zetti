@@ -1,3 +1,4 @@
+//message from ubuntu
 ////playingfield and player preparation
 const mod = require('./mod');
 const Player = require('./player').Player;
@@ -87,7 +88,9 @@ async function play_trick() {
         io.to(socket_id).emit('card.waiting');
         io.emit('card.waitingFor', playerList[current_player].name);
         await new Promise((resolve) => {
-            go_on = resolve; // resolve can be triggered from outside by calling go_on();
+            setTimeout(() => {
+                go_on = resolve; // resolve can be triggered from outside by calling go_on();
+            }, 1500)
         });
     }
     return 0;
@@ -184,13 +187,13 @@ function points_update() {
     for (let i = 0; i < playerList.length; i++) {
         let delta;
         let guesses = parseInt(playerList[i].guesses, 10);
-        let rounds_won = parseInt(playerList[i].rounds_won, 10);
+        let tricks_won = parseInt(playerList[i].tricks_won, 10);
         console.log("Guesses by " + playerList[i].name + ": " + guesses);
-        console.log("Rounds won by " + playerList[i].name + ": " + rounds_won);
-        if (guesses == rounds_won) {
+        console.log("Rounds won by " + playerList[i].name + ": " + tricks_won);
+        if (guesses == tricks_won) {
             delta = 20 + guesses*10;
         } else {
-            delta = (guesses - rounds_won)*10;
+            delta = (guesses - tricks_won)*10;
             if (delta > 0) { delta *= -1; }
         }
         console.log("delta for " + playerList[i].name + ": " + delta);
@@ -215,17 +218,22 @@ async function play_round(round) {
         //console.log(trick);
         await calculate_winner();
         console.log("last winner: " + playerList[last_winner_index].name);
-        ++playerList[last_winner_index].rounds_won;
+        ++playerList[last_winner_index].tricks_won;
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
     }
     points_update();
+    for (let i = 0; i < playerList.length; i++) {
+        playerList[i].ticks_won = 0;
+    }
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length);
     //calculate winner;
     console.groupEnd();
     if (round < (60 / playerList.length)) {
-        play_round(++round);
+        setTimeout(() => {
+            play_round(++round);
+        }, 10000);
     }
 }
 
@@ -235,7 +243,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.4'; //enter your current ip address inorder to avoid errors
+const IPaddress = 'localhost';//'192.168.178.4'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(name, socketid) {
