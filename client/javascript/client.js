@@ -24,7 +24,9 @@ var guesses = {
     hide: () => {
         let distance_in_px = guesses.take.css('width');
         guesses.take.css("right", "-" + distance_in_px);
-        guesses.take.css("display", "none");
+        setTimeout( () => {
+            guesses.take.css("display", "none");
+        }, 2000);//hardcoded
     },
     show: () => {
         let distance_in_px = guesses.take.css('width');
@@ -43,8 +45,8 @@ function delay(milliseconds) {
     });
 }
 
-function make_card(color, number, from) {
-    let card_svg = $("#svgs > ." + color + "_" + number).html();
+function make_card(/*string*/color, /*number*/number, /*string*/from) {
+    let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
     if (from == "me") {
         from = " inhand";
     } else if (from == "oponent") {
@@ -53,12 +55,12 @@ function make_card(color, number, from) {
         from = "";
     }
     let card = document.createElement('div');
-    card.setAttribute("class", color + "_" + number + " card" + from);
+    card.setAttribute("class", color + "_" + number.toString() + " card" + from);
     card.innerHTML = card_svg;
     return card;
 };
-function card_slideup(color, number) {
-    $('.wrapper > ' + '.' + color + '_' + number + '.card').addClass("inhand"); //hardcoded
+function card_slideup(/*string*/color, /*number*/number) {
+    $('.wrapper > ' + '.' + color + '_' + number.toString() + '.card').addClass("inhand"); //hardcoded
 }
 
 info.chat.click( () => {
@@ -197,9 +199,11 @@ socket.on('guess.waitingFor', (/*string*/playerName) => {
 socket.on('guess.request', () => {
     guesses.show();
 });
+/*
 socket.on('guess.complete', () => {
     guesses.hide();
 });
+*/
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
@@ -209,13 +213,13 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
     }
     $('#hand > div').addClass("card_frame");
     for (let a = 0; a < cards.length; a++) {
-        let card = make_card(cards[a].color, cards[a].number, "");
+        let card = make_card(/*string*/cards[a].color, /*number*/cards[a].number, "");
         $('.wrapper').append(card);
         let pos = $('#hand > div').slice(a, a+1).position().left + hand.position().left;
         console.log(pos);
-        $('.wrapper > ' + '.' + cards[a].color + '_' + cards[a].number + '.card').css("left", pos + "px");
+        $('.wrapper > ' + '.' + cards[a].color + '_' + cards[a].number.toString() + '.card').css("left", pos + "px");
         //await delay(1100);//not the most beautiful way
-        setTimeout(card_slideup, 1100, cards[a].color, cards[a].number);
+        setTimeout(card_slideup, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
     }
 });
 socket.on('card.waitingFor', (/*string*/playerName) => {
@@ -231,7 +235,7 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
         let card_id =  $(this)[0].className.split(" ");
         let card_name = card_id[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
-        socket.emit('card.toPlayingstack', card_name[0], parseInt(card_name[1],10)); // => card.update
+        socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10)); // => card.update
         await delay(400);
         card.addClass("onplayingstack"); //hardcoded
         card.css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded

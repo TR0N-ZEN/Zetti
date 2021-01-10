@@ -203,11 +203,11 @@ function points_update() {
 }
 var round_starter = 0;
 var trump_color = "";
-async function play_round(round) {
+async function play_round(/*number*/round) {
     console.group("play round " + round);
     trump_color = get_random_color();
     console.log("trump color: " + trump_color);
-    io.emit('game.round', round, trump_color);
+    io.emit('game.round', /*number*/round, /*string*/trump_color);
     playingfield.shuffle();
     distribute_cards(round);
     await take_guesses();
@@ -235,7 +235,7 @@ async function play_round(round) {
     console.groupEnd();
     if (round < (60 / playerList.length)) {
         setTimeout(() => {
-            play_round(++round);
+            play_round(/*number*/++round);
         }, 10000);
     }
 }
@@ -269,12 +269,12 @@ function login(name, socketid) {
         io.to(socketid).emit('login.unsuccessful');
     }
 }
-function vote(playerid) {
+function vote(/*number*/playerid) {
     console.group("vote");
     if (!already_voted.includes(playerid)) {
         console.log("vote accepted");
         already_voted.push(playerid);
-        io.emit('vote.update', already_voted.length, playerList.length);
+        io.emit('vote.update', /*number*/already_voted.length, /*number*/playerList.length);
         console.groupEnd();
         if (already_voted.length == playerList.length) {
             console.log("start game");
@@ -314,11 +314,11 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
     socket.on('login', (/*string*/name) => { login(name, socket.id); });
     socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
-    socket.on('vote', (/*string*/playerid) => { vote(playerid); });
+    socket.on('vote', (/*number*/playerid) => { vote(playerid); });
     socket.on('card.toPlayingstack', (/*string*/color, /*number*/number) => {
         console.log(color + " " + number);
         trick[current_player] = new Card(color, number); //position in trick matches position of player who played the card in playerList
-        socket.broadcast.emit('card.update', color, number.toString(), playingfield.card_pos_on_stack);
+        socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/playingfield.card_pos_on_stack);
         go_on(); //resolves Promise in async play_trick()'s loop
     });
     socket.on('guess.response', (/*number*/guesses, /*number*/index) => { //both numbers in decimal
