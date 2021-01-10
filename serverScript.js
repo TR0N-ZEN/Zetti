@@ -17,6 +17,7 @@ class Card {
 var playingfield = {
     deck: new Array(60),
     playingstack: new Array(),
+    card_pos_on_stack: 0,
     shuffle: function () {
         for (let i = this.deck.length - 1; i > 0; i--) {
             j = Math.floor(Math.random() * i);
@@ -85,7 +86,8 @@ async function play_trick() {
         current_player = mod(trick_starter + i, playerList.length);
         console.log("card.waitingFor " + playerList[current_player].name);
         let socket_id = playerList[current_player].socket_id;
-        io.to(socket_id).emit('card.waiting');
+        playingfield.card_pos_on_stack = i;
+        io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
         io.emit('card.waitingFor', playerList[current_player].name);
         await new Promise((resolve) => {
             setTimeout(() => {
@@ -210,10 +212,10 @@ async function play_round(round) {
     io.emit('game.round', round, trump_color);
     playingfield.shuffle();
     distribute_cards(round);
-    //take guesses
     await take_guesses();
     io.emit('guess.complete');
     for (let trick_number = 0; trick_number < round; trick_number++) {
+        io.emit("game.trick");
         await play_trick();
         //console.log(trick);
         await calculate_winner();
@@ -317,13 +319,13 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
         console.log(color + " " + number);
         trick[current_player] = new Card(color ,number); //position in trick matches position of player who played the card in playerList
         playingfield.to_playingstack(color, number);
-        io.emit('card.update', color, number);
-        go_on();
+        socket.broadcast.emit('card.update', color, number, playingfield.card_pos_on_stack);
+        go_on(); //resolves Promise in async play_trick()'s loop
     });
     socket.on('guess.response', (guesses, index) => {
         playerList[parseInt(index, 10)].guesses = guesses;
         console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
-        ask_next();
+        ask_next(); //resolves Promise in async take_guesses()'s loop
     });
     socket.on('disconnect', (reason) => { disconnected(); });
 });
