@@ -205,7 +205,7 @@
         position: fixed;
         left: -14vw;
         top: 100vh;
-        transition: left 0.5s, top 0.5s;
+        transition: left 1s, top 1s;
         background-color: antiquewhite;
         height: 20vh;
         width: 14vh;
@@ -213,13 +213,18 @@
         border: none;
         border-radius: 5px;
     }
-    .cardinhand {       
+    .inhand {  
+        position: fixed;
         top: 67vh;
         z-index: 2;
     }
-    .formanotherplayer {
+    .fromanotherplayer {
         left: 100vw;
         top: 26vh;
+    }
+    .nexttoplayingstack {
+        left: 100vw;
+        top: 24vh;
     }
     .onplayingstack {
         left: 66vw;
