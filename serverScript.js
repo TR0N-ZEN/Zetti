@@ -196,6 +196,7 @@ function points_update() {
         playerList[i].points += delta;
         io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
         playerList[i].guesses = 0;
+        playerList[i].tricks_won = 0;
         console.log("Guesses by " + playerList[i].name + ":\t" + guesses.toString());
         console.log("Rounds won by " + playerList[i].name + ":\t " + tricks_won.toString());
         console.log("delta for " + playerList[i].name + ":\t" + delta.toString());
@@ -212,24 +213,21 @@ async function play_round(/*number*/round) {
     distribute_cards(round);
     await take_guesses();
     io.emit('guess.complete');
-    for (let trick_number = 0; trick_number < round; trick_number++) {
+    for (let trick_number = 1; trick_number <= round; trick_number++) {
         await play_trick();
-        await calculate_winner();
+        await calculate_winner(); //of each trick
         console.log("last winner: " + playerList[last_winner_index].name);
         ++playerList[last_winner_index].tricks_won;
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
         await new Promise((resolve) => {
             setTimeout( () => {
-                io.emit("game.trick");
+                io.emit("game.trick"); //for clearing playingfield from cards on clients
                 resolve();
             }, 5000);
         });
     }
-    points_update();
-    for (let i = 0; i < playerList.length; i++) {
-        playerList[i].ticks_won = 0;
-    }
+    points_update(); //calculate points after each round
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
     console.groupEnd();
@@ -249,7 +247,7 @@ let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 const IPaddress = '192.168.178.4';//'localhost';// //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
-function login(name, socketid) {
+function login(/*string*/name, /*string*/socketid) {
     if (playerList.length < 6) {
         playerList.push(new Player(name, socketid));
         playerList[playerList.length - 1].index = playerList.length - 1;
