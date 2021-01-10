@@ -25,9 +25,6 @@ var playingfield = {
             this.deck[i] = this.deck[j];
             this.deck[j] = k;
         }
-    },
-    to_playingstack: function (color, number) {
-        this.playingstack.push(new Card(color, number));
     }
 }
 for (color of colors) {
@@ -188,19 +185,20 @@ async function calculate_winner() {
 function points_update() {
     for (let i = 0; i < playerList.length; i++) {
         let delta;
-        let guesses = parseInt(playerList[i].guesses, 10);
-        let tricks_won = parseInt(playerList[i].tricks_won, 10);
-        console.log("Guesses by " + playerList[i].name + ": " + guesses);
-        console.log("Rounds won by " + playerList[i].name + ": " + tricks_won);
+        let guesses = playerList[i].guesses;
+        let tricks_won = playerList[i].tricks_won;
         if (guesses == tricks_won) {
             delta = 20 + guesses*10;
         } else {
             delta = (guesses - tricks_won)*10;
             if (delta > 0) { delta *= -1; }
         }
-        console.log("delta for " + playerList[i].name + ": " + delta);
         playerList[i].points += delta;
         io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
+        playerList[i].guesses = 0;
+        console.log("Guesses by " + playerList[i].name + ":\t" + guesses.toString());
+        console.log("Rounds won by " + playerList[i].name + ":\t " + tricks_won.toString());
+        console.log("delta for " + playerList[i].name + ":\t" + delta.toString());
     }
 }
 var round_starter = 0;
@@ -216,7 +214,6 @@ async function play_round(round) {
     io.emit('guess.complete');
     for (let trick_number = 0; trick_number < round; trick_number++) {
         await play_trick();
-        //console.log(trick);
         await calculate_winner();
         console.log("last winner: " + playerList[last_winner_index].name);
         ++playerList[last_winner_index].tricks_won;
@@ -234,8 +231,7 @@ async function play_round(round) {
         playerList[i].ticks_won = 0;
     }
     last_winner_index = undefined;
-    round_starter = mod(round_starter + 1, playerList.length);
-    //calculate winner;
+    round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
     console.groupEnd();
     if (round < (60 / playerList.length)) {
         setTimeout(() => {
@@ -250,7 +246,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = 'localhost';//'192.168.178.4'; //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.4';//'localhost';// //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(name, socketid) {
@@ -315,20 +311,18 @@ function disconnected() {
 io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
     //console.log(Object.keys(io.sockets.sockets));
     console.log('a user connected');
-    socket.on('toServerConsole', (text) => { console.log(text); });
-    socket.on('login', (name) => { login(name, socket.id); });
-    socket.on('MessageFromClient', (message) => { io.emit('MessageFromServer', message); });
-    socket.on('vote', (playerid) => { vote(playerid); });
-    //socket.on('card.toPlayingstack', (color, number) => { card_to_playingstack(color, number); });
-    socket.on('card.toPlayingstack', (color, number) => {
+    socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
+    socket.on('login', (/*string*/name) => { login(name, socket.id); });
+    socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
+    socket.on('vote', (/*string*/playerid) => { vote(playerid); });
+    socket.on('card.toPlayingstack', (/*string*/color, /*number*/number) => {
         console.log(color + " " + number);
-        trick[current_player] = new Card(color ,number); //position in trick matches position of player who played the card in playerList
-        playingfield.to_playingstack(color, number);
-        socket.broadcast.emit('card.update', color, number, playingfield.card_pos_on_stack);
+        trick[current_player] = new Card(color, number); //position in trick matches position of player who played the card in playerList
+        socket.broadcast.emit('card.update', color, number.toString(), playingfield.card_pos_on_stack);
         go_on(); //resolves Promise in async play_trick()'s loop
     });
-    socket.on('guess.response', (guesses, index) => {
-        playerList[parseInt(index, 10)].guesses = guesses;
+    socket.on('guess.response', (/*number*/guesses, /*number*/index) => { //both numbers in decimal
+        playerList[index].guesses = guesses;
         console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
         ask_next(); //resolves Promise in async take_guesses()'s loop
     });
