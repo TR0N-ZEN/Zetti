@@ -215,7 +215,6 @@ async function play_round(round) {
     await take_guesses();
     io.emit('guess.complete');
     for (let trick_number = 0; trick_number < round; trick_number++) {
-        io.emit("game.trick");
         await play_trick();
         //console.log(trick);
         await calculate_winner();
@@ -223,6 +222,12 @@ async function play_round(round) {
         ++playerList[last_winner_index].tricks_won;
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
+        await new Promise((resolve) => {
+            setTimeout( () => {
+                io.emit("game.trick");
+                resolve();
+            }, 5000);
+        });
     }
     points_update();
     for (let i = 0; i < playerList.length; i++) {
