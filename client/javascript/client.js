@@ -44,10 +44,17 @@ function delay(milliseconds) {
     });
 }
 
-function make_card(color, number) {
-    let card = document.createElement('div');
+function make_card(color, number, from) {
     let card_svg = $("#svgs > ." + color + "_" + number).html();
-    card.setAttribute("class", color + "_" + number + " card fromanotherplayer");
+    if (from == "me") {
+        from = "cardinhand";
+    } else if (from == "oponent") {
+        from = "fromanotherplayer";
+    } else {
+        from = "";
+    }
+    let card = document.createElement('div');
+    card.setAttribute("class", color + "_" + number + " card " + from);
     card.innerHTML = card_svg;
     return card;
 };
@@ -165,23 +172,24 @@ socket.on('MessageFromServer', (message) => {
 });
 socket.on('game.start', () => {
     console.log("game.start");
-    $('#ready_player').css("transform", "translateY(-40vh)");
-    playingfield.css("left", "34vw");
-    playingstack.css("left", "66vw");
-    hand.css("top", "56vh");
+    $('#ready_player').css("transform", "translateY(-40vh)"); //hardcoded
+    playingfield.css("left", "34vw"); //hardcoded
+    playingstack.css("left", "66vw"); //hardcoded
+    hand.css("top", "56vh"); //hardcoded
     setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
 });
 socket.on('game.round', (round, trumpColor) => {
+    $('#hand > .card_frame').remove();
     console.log("game.round :" + round.toString());
     info.round.text("Runde: " + round.toString());
     info.trump.text("Trumpf: " + trumpColor.toString());
 });
 socket.on('game.trick', () => {
     console.log("game.trick");
-    $('wrapper > .card').remove();
+    $('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 socket.on('guess.waitingFor', (playerName) => {
-    $('.playerBoard > p').css("color", "white");
+    $('.playerboard > p').css("color", "white");
     $("#" + playerName).css("color", "lightgreen");
 })
 socket.on('guess.request', () => {
@@ -194,23 +202,28 @@ socket.on('card.distribute', async (JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
     for (let a = 0; a < cards.length; a++) {
-        let card_svg = $('#svgs > .' + cards[a].color + "_" + cards[a].number).html();
-        let card = document.createElement('div');
-        let classname = cards[a].color + "_" + cards[a].number;
-        card.setAttribute("class", classname + " card");
-        card.innerHTML = card_svg;
+        let card_frame = document.createElement('div');
+        hand.append(card_frame);
+    }
+    $("#hand > div").addClass("card_frame");
+    for (let a = 0; a < cards.length; a++) {
+        let card = make_card(cards[a].color, cards[a].number, "");
         $('.wrapper').append(card);
-        await delay(200);
-        $(".wrapper > " + "." + classname + ".card").css("left", (a*(14+2)+20).toString()+"vw");
-        $(".wrapper > " + "." + classname + ".card").addClass("cardinhand");
+        let pos = $("#hand > div").slice(a, a+1).position().left + hand.position().left;
+        console.log(pos);
+        $(".wrapper > " + "." + cards[a].color + "_" + cards[a].number + ".card").css("left", pos + "px");
+        //await delay(1100);//not the most beautiful way
+        setTimeout( () => {
+            $(".wrapper > " + "." + cards[a].color + "_" + cards[a].number + ".card").addClass("cardinhand"); //hardcoded
+        },1100);
     }
 });
 socket.on('card.waitingFor', (playerName) => {
-    $('.playerBoard > p').css("color", "white");
+    $('.playerboard > p').css("color", "white");
     $("#" + playerName).css("color", "lightgreen");
 });
 var last_card;
-socket.on('card.waiting', () => {
+socket.on('card.waiting', (card_level_on_stack) => {
     console.log("card.waiting");
     $('.card').unbind("click");
     $('.card').click( async function () {
@@ -218,27 +231,19 @@ socket.on('card.waiting', () => {
         let card_id =  $(this)[0].className.split(" ");
         let card_name = card_id[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
-        socket.emit('card.toPlayingstack', card_name[0], card_name[1], card_pos_on_stack); // => card.update
-        let dest_left = playingstack.css("left");
-        let dest_top = playingstack.css("top");
+        socket.emit('card.toPlayingstack', card_name[0], card_name[1]); // => card.update
         await delay(400);
-        card.css("left", dest_left);
-        card.css("top", dest_top);
-        card.css("z-index", card_pos_on_stack);
-        //alternative to the two lines above:
-        //card.addClass("onplayingstack");
+        card.addClass("onplayingstack"); //hardcoded
+        card.css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded
+        card.css("z-index", (card_level_on_stack+2).toString());
     });
 });
-socket.on('card.update', async (color, number) => {
+socket.on('card.update', async (color, number, card_level_on_stack) => {
     console.log("card.update: " + color + " " + number);
-    let card = make_card(color, number);
+    let card = make_card(color, number, "oponent");
     $(".wrapper").append(card);
-    await delay(300);
-    let dest_left = playingstack.css("left");
-    let dest_top = playingstack.css("top");
-    $(card.className).css("left", dest_left);
-    $(card.className).css("top", dest_top);
-    //$(card.className).addClass("onplayingstack");
+    $(".wrapper > ." + color + "_" + number + ".card.fromanotherplayer").css("z-index", (card_level_on_stack+2).toString()).css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded
+    $(".wrapper > ." + color + "_" + number + ".card.fromanotherplayer").addClass("onplayingstack");
 });
 socket.on('points.update', (points) => {
     info.points.text("Points: " + points.toString());

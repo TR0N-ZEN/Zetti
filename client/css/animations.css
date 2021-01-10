@@ -13,9 +13,22 @@
     }
 }
 
+@keyframes orange-blue-border {
+    from {border-color: orange;}
+    to {border-color: blue;}
+}
+
 .wrapper > .grid-box {
     animation-name: orange-blue-shadow;
     animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-direction: alternate;
+}
+
+.wrapper > #hand > .card_frame {
+    animation-name: orange-blue-border;
+        animation-duration: 4s;
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+        border-radius: 5px;
 }
