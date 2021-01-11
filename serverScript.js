@@ -28,18 +28,18 @@ var playingfield = {
     }
 }
 for (color of colors) {
-    for (let x = 1; x < 14; x++) {
-        playingfield.deck[cardIndex] = new Card(color, x);
-        cardIndex++;
+    for (let i = 1; i < 14; i++) {
+        playingfield.deck[cardIndex] = new Card(color, i);
+        ++cardIndex;
     }
 }
-for (let x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card("Z", 14); //Zauberer
-    cardIndex++;
+for (let i = 1; i < 5; i++) {
+    playingfield.deck[cardIndex] = new Card("Z", i); //Zauberer; each card needs to have unique properties
+    ++cardIndex;
 }
-for (let x = 1; x < 5; x++) {
-    playingfield.deck[cardIndex] = new Card("N", 0); //Narren
-    cardIndex++;
+for (let i = 1; i < 5; i++) {
+    playingfield.deck[cardIndex] = new Card("N", i); //Narren each card needs to have unique properties
+    ++cardIndex;
 }
 
 ////game functionalities
@@ -87,7 +87,7 @@ async function play_trick() {
         io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
         io.emit('card.waitingFor', playerList[current_player].name);
         await new Promise((resolve) => {
-            setTimeout(() => {
+            setTimeout( () => {
                 go_on = resolve; // resolve can be triggered from outside by calling go_on();
             }, 1500)
         });
@@ -107,9 +107,6 @@ function distribute_cards(round) {
     }
 }
 function get_random_color() {
-    //let index = Math.floor(Math.random() * 60);
-    //if (index == 60) { index = 59; }
-    //return playingfield.deck[index].color;
     let index = Math.floor(Math.random() * 4);
     if (index == 4) { index = 3; }
     return colors[index];
@@ -121,7 +118,7 @@ async function take_guesses() {
         console.log("guess.waitingFor " + playerList[c_plyr].name);
         io.emit('guess.waitingFor', playerList[c_plyr].name);
         io.to(playerList[c_plyr].socket_id).emit('guess.request');
-        await new Promise((resolve) => {
+        await new Promise( (resolve) => {
             ask_next = resolve; // resolve can be triggered from outside by calling go_on();
         });
     }
@@ -133,7 +130,6 @@ async function calculate_winner() {
     var color_to_serve;
     var high_card_index;
     var high_card;
-    //color_to_serve
     for (let i = 0; i < playerList.length; i++) {
         let c_player = mod(trick_starter + i, playerList.length);
         if (trick[c_player].color != "N") {
