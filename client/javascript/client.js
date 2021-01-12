@@ -26,11 +26,13 @@ var guesses = {
         guesses.take.css("right", "-" + distance_in_px);
         setTimeout( () => {
             guesses.take.css("display", "none");
+            guesses.take.css("transition", "");
         }, 2000);//hardcoded
     },
     show: () => {
         let distance_in_px = guesses.take.css('width');
         guesses.take.css("righ", "-" + distance_in_px);
+        guesses.take.css("transition", "right 1s");
         guesses.take.css("display", "grid");
         guesses.take.css("right", distance_in_px);
     }
@@ -59,7 +61,7 @@ function make_card(/*string*/color, /*number*/number, /*string*/from) {
     card.innerHTML = card_svg;
     return card;
 };
-function card_slideup(/*string*/color, /*number*/number) {
+function slideup_card(/*string*/color, /*number*/number) {
     $('.wrapper > ' + '.' + color + '_' + number.toString() + '.card').addClass("inhand"); //hardcoded
 }
 
@@ -219,7 +221,7 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
         console.log(pos);
         $('.wrapper > ' + '.' + cards[a].color + '_' + cards[a].number.toString() + '.card').css("left", pos + "px");
         //await delay(1100);//not the most beautiful way
-        setTimeout(card_slideup, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
+        setTimeout(slideup_card, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
     }
 });
 socket.on('card.waitingFor', (/*string*/playerName) => {
@@ -229,14 +231,14 @@ socket.on('card.waitingFor', (/*string*/playerName) => {
 var last_card;
 socket.on('card.waiting', (/*number*/card_level_on_stack) => {
     console.log("card.waiting");
-    $('.card.inhand').unbind("click");
     $('.card.inhand').click( async function () {
+        $('.card.inhand').unbind("click");
         let card = $(this);
-        let card_id =  $(this)[0].className.split(" ");
-        let card_name = card_id[0].split("_");//.target.attributes.class.name;
+        let card_fullclassname =  $(this)[0].className.split(" ");
+        let card_name = card_fullclassname[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
         socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10)); // => card.update
-        await delay(400);
+        await delay(100);
         card.addClass("onplayingstack"); //hardcoded
         card.css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded
         card.css("z-index", (card_level_on_stack+2).toString());
@@ -245,17 +247,17 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
 socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/card_level_on_stack) => {
     console.log("card.update: " + color + " " + number.toString());
     let card = make_card(color, number.toString(), "oponent");
-    $('.wrapper').append(card);
+    let crd = $('.wrapper').append(card);
     await delay(200);
+    console.log(crd + "\n" + '.' + color + '_' + number.toString() + '.card.fromanotherplayer');
     $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').css("z-index", card_level_on_stack+2);
-    console.log($('.wrapper > .' + color + '_' + number.toString()+ '.card.fromanotherplayer').css("z-index"));
     //$('.wrapper > .' + color + '_' + number + '.card.fromanotherplayer').css("z-index", (card_level_on_stack+2).toString()).css("left", (66+card_level_on_stack*2).toString() + "vw").css("top", "24vh"); //hardcoded
     //$('.wrapper > .' + color + '_' + number + '.card.fromanotherplayer').css("z-index", (card_level_on_stack+2).toString()).css("transform", "translateX(" + (-34+card_level_on_stack*2).toString() + "vw)").css("top", "24vh"); //hardcoded
     $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').addClass("onplayingstack");
     $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer.onplayingstack').css("left", 66 + card_level_on_stack*2 + "vw");
 });
 socket.on('points.update', (/*number*/points) => {
-    info.points.text("Points: " + points.toString());
+    info.points.text("Punkte : " + points.toString());
 });
 
 
