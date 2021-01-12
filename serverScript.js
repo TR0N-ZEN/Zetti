@@ -114,10 +114,10 @@ function get_random_color() {
 async function take_guesses() {
     console.group("take_guesses");
     for (let i = 0; i < playerList.length; i++) {
-        let c_plyr = mod(round_starter + i, playerList.length);
-        console.log("guess.waitingFor " + playerList[c_plyr].name);
-        io.emit('guess.waitingFor', playerList[c_plyr].name);
-        io.to(playerList[c_plyr].socket_id).emit('guess.request');
+        let the_asked_one = mod(round_starter + i, playerList.length);
+        console.log("guess.waitingFor " + playerList[the_asked_one].name);
+        io.emit('guess.waitingFor', playerList[the_asked_one].name);
+        io.to(playerList[the_asked_one].socket_id).emit('guess.request');
         await new Promise( (resolve) => {
             ask_next = resolve; // resolve can be triggered from outside by calling go_on();
         });
@@ -178,7 +178,7 @@ async function calculate_winner() {
     console.groupEnd();
     return 0;
 }
-function points_update() {
+function update_points() {
     for (let i = 0; i < playerList.length; i++) {
         let delta;
         let guesses = playerList[i].guesses;
@@ -191,7 +191,7 @@ function points_update() {
         }
         playerList[i].points += delta;
         io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
-        playerList[i].guesses = 0;
+        //playerList[i].guesses = 0;
         playerList[i].tricks_won = 0;
         console.log("Guesses by " + playerList[i].name + ":\t" + guesses.toString());
         console.log("Rounds won by " + playerList[i].name + ":\t " + tricks_won.toString());
@@ -223,7 +223,7 @@ async function play_round(/*number*/round) {
             }, 5000);
         });
     }
-    points_update(); //calculate points after each round
+    update_points(); //calculate points after each round
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
     console.groupEnd();
@@ -240,7 +240,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.4';//'localhost';// //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.5';//'localhost';// //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid) {
