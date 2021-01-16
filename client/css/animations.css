@@ -18,6 +18,15 @@
     to {border-color: blue;}
 }
 
+@keyframes appear-border {
+    from {border-color: rgba(255, 255, 255, 0);}
+    to {border-color: rgb(255, 255, 255);}
+}
+@keyframes disappear-border {
+    from {border-color: rgb(255, 255, 255);}
+    to {border-color: rgba(255, 255, 255, 0);}
+}
+
 .wrapper > .grid-box {
     animation-name: orange-blue-shadow;
     animation-duration: 4s;
@@ -25,10 +34,21 @@
     animation-direction: alternate;
 }
 
-.wrapper > #hand > .card_frame {
-    animation-name: orange-blue-border;
-        animation-duration: 4s;
-        animation-iteration-count: infinite;
-        animation-direction: alternate;
-        border-radius: 5px;
+.appear_border {
+    border: 5px solid rgb(255, 255, 255); /*after the animation*/
+    animation-name: appear-border;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-timing-function: ease;
+    border-radius: 5px;
+}
+.disappear_border {
+    border: 5px solid rgba(255, 255, 255, 0); /*after the animation*/
+    animation-name: disappear-border;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-timing-function: ease;
+    border-radius: 5px;
 }

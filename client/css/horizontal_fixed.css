@@ -198,14 +198,13 @@
         #hand > .card_frame {
             height: 20vh;
             width: 14vh;
-            border: 0.1vh solid white;
-            transition: left 350ms, top 350ms;
+            /*border: 5px solid rgb(255, 255, 255);*/
         }
     .card {
         position: fixed;
         left: -14vw;
         top: 100vh;
-        transition: left 350ms, top 350ms;
+        transition: left 450ms, top 450ms;
         background-color: antiquewhite;
         height: 20vh;
         width: 14vh;
@@ -217,6 +216,11 @@
         position: fixed;
         top: 67vh;
         z-index: 2;
+        transition: box-shadow 1s, transform 1s, left 450ms, top 450ms;
+    }
+    .inhand:hover {
+        box-shadow: 0 0 10px rgb(190, 133, 25);
+        transform: scale(1.05);
     }
     .fromanotherplayer {
         left: 100vw;
