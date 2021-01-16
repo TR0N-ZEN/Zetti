@@ -66,7 +66,8 @@ function delay(milliseconds) {
  *      start
  *      round.start
  *      round.end
- *      trick
+ *      trick.start
+ *      trick.end
  * card.
  *      distribute //cards on hand
  *      update //card on stack
@@ -99,7 +100,7 @@ async function play_trick() {
         await new Promise((resolve) => {
             setTimeout( () => {
                 go_on = resolve; // resolve can be triggered from outside by calling go_on(); in fact resolved by call in listener io.on("card.toPlayingstack")
-            }, 1500);
+            }, 100);
         });
     }
     return 0;
@@ -219,12 +220,15 @@ async function play_round(/*number*/round) {
     await delay(1500);
     distribute_cards(round);
     await take_guesses();
+    /*
     let guesses_array = new Array(playerList.length);
     for (let i = 0; i < playerList.length; i++) {
         guesses_array[i] = playerList[i].guesses;
     }
     io.emit('guess.complete', JSON.stringify(guesses_array));
+    */
     for (let trick_number = 1; trick_number <= round; trick_number++) {
+        io.emit("game.trick.start");
         await play_trick();
         await calculate_winner(); //of each trick
         console.log("last winner: " + playerList[last_winner_index].name);
@@ -233,9 +237,9 @@ async function play_round(/*number*/round) {
         console.groupEnd();
         await new Promise((resolve) => {
             setTimeout( () => {
-                io.emit("game.trick"); //for clearing playingfield from cards on clients
+                io.emit("game.trick.end"); //for clearing playingfield from cards on clients
                 resolve();
-            }, 5000);
+            }, 3000);
         });
     }
     update_points(); //calculate points after each round
@@ -331,9 +335,10 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
         socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/playingfield.card_pos_on_stack);
         go_on(); //resolves Promise in async play_trick()'s loop
     });
-    socket.on('guess.response', (/*number*/guesses, /*number*/index) => { //both numbers in decimal
-        playerList[index].guesses = guesses;
+    socket.on('guess.response', (/*number*/guess, /*number*/index) => { //both numbers in decimal
+        playerList[index].guesses = guess;
         console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
+        io.emit('guess.update', /*string*/playerList[index].name, /*number*/guess);
         ask_next(); //resolves Promise in async take_guesses()'s loop
     });
     socket.on('disconnect', (reason) => { disconnected(); });

@@ -158,7 +158,8 @@ $('.take_guess > form').submit(function (button) {
  *      start
  *      round.start
  *      round.end
- *      trick
+ *      trick.start
+ *      trick.end
  * guess.
  *      waitingFor
  *      request
@@ -190,7 +191,7 @@ socket.on('playerBoard.update', (/*string*/JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
     playerboard_table.html("");
     for (let a = 0; a < names.length; a++) {
-        playerboard_table.append('<tr> <td id="' + names[a] + '">' + names[a] + '</td>' + '<td>' + '--' + '<td>' + '</tr>');
+        playerboard_table.append('<tr id="' + names[a] + '"> <td>' + names[a] + '</td>' + '<td>--<td>' + '</tr>');
     }
 })
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
@@ -217,25 +218,28 @@ socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
 });
 socket.on('game.round.end', async () => {
     console.log("game.round.end");
-    $('#playerboard > table > tr').each(function (index) {
-        $($($('#playerboard > table > tr')[index]).children()[1]).html(" ");
-        console.log($($($('#playerboard > table > tr')[index]).children()[1]).html());
+    $('#playerboard > table > tr').each(function () {
+        $(this).children()[1].innerText = "";
+        console.log($(this).children()[1].innerText);
     });
     $('#hand > .card_frame').removeClass("appear_border").addClass("disappear_border");
     await delay(1100);
 }); 
-socket.on('game.trick', () => {
+socket.on('game.trick.end', () => {
     console.log("game.trick");
     $('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 socket.on('guess.waitingFor', (/*string*/playerName) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
-    $('#' + playerName).css("color", "lightgreen");
-})
+    $($('#' + playerName).children()[0]).css("color", "lightgreen");
+});
+socket.on('guess.update', (/*string*/playerName, /*number*/guess) => {
+    $('#' + playerName).children()[1].innerText = guess.toString();
+});
 socket.on('guess.request', () => { 
     guesses.show();
 });
-
+/*
 socket.on('guess.complete', (guesses_JSON) => {
     let guesses_array = JSON.parse(guesses_JSON);
     console.log(guesses_array);
@@ -243,7 +247,7 @@ socket.on('guess.complete', (guesses_JSON) => {
         $('#playerboard > table > tr:eq( ' + i + ' ) > td:eq( 1 )').html(guesses_array[i]);
     }
 });
-
+*/
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
@@ -263,7 +267,7 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
 });
 socket.on('card.waitingFor', (/*string*/playerName) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
-    $('#' + playerName).css("color", "lightgreen");
+    $($('#' + playerName).children()[0]).css("color", "lightgreen");
 });
 var last_card;
 socket.on('card.waiting', (/*number*/card_level_on_stack) => {
