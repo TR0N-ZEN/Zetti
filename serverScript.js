@@ -33,13 +33,22 @@ for (color of colors) {
         ++cardIndex;
     }
 }
-for (let i = 1; i < 5; i++) {
+for (let i = 0; i < 4; i++) {
     playingfield.deck[cardIndex] = new Card("Z", i); //Zauberer; each card needs to have unique properties
     ++cardIndex;
 }
-for (let i = 1; i < 5; i++) {
+for (let i = 0; i < 4; i++) {
     playingfield.deck[cardIndex] = new Card("N", i); //Narren each card needs to have unique properties
     ++cardIndex;
+}
+
+//delay only works in async functions
+function delay(milliseconds) {
+    return new Promise( (resolve) => {
+        setTimeout( () => {
+            resolve();
+        }, milliseconds);
+    });
 }
 
 ////game functionalities
@@ -55,7 +64,8 @@ for (let i = 1; i < 5; i++) {
  *      update
  * game.
  *      start
- *      round
+ *      round.start
+ *      round.end
  *      trick
  * card.
  *      distribute //cards on hand
@@ -89,7 +99,7 @@ async function play_trick() {
         await new Promise((resolve) => {
             setTimeout( () => {
                 go_on = resolve; // resolve can be triggered from outside by calling go_on(); in fact resolved by call in listener io.on("card.toPlayingstack")
-            }, 1500)
+            }, 1500);
         });
     }
     return 0;
@@ -204,8 +214,9 @@ async function play_round(/*number*/round) {
     console.group("play round " + round);
     trump_color = get_random_color();
     console.log("trump color: " + trump_color);
-    io.emit('game.round', /*number*/round, /*string*/trump_color);
+    io.emit('game.round.start', /*number*/round, /*string*/trump_color);
     playingfield.shuffle();
+    await delay(1500);
     distribute_cards(round);
     await take_guesses();
     io.emit('guess.complete');
@@ -227,10 +238,11 @@ async function play_round(/*number*/round) {
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
     console.groupEnd();
+    io.emit('game.round.end')
     if (round < (60 / playerList.length)) {
         setTimeout(() => {
             play_round(/*number*/++round);
-        }, 10000);
+        }, 6000);
     }
 }
 

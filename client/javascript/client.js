@@ -155,7 +155,8 @@ $('.take_guess > form').submit(function (button) {
  * MessageFromServer
  * game.
  *      start
- *      round
+ *      round.start
+ *      round.end
  *      trick
  * guess.
  *      waitingFor
@@ -207,12 +208,17 @@ socket.on('game.start', async () => {
     removeTransition();
     setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
 });
-socket.on('game.round', (/*number*/round, /*string*/trumpColor) => {
+socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
     $('#hand > .card_frame').remove();
-    console.log("game.round :" + round.toString());
+    console.log("game.round.start :" + round.toString());
     info.round.text("Runde: " + round.toString());
     info.trump.text("Trumpf: " + trumpColor);
 });
+socket.on('game.round.end', async () => {
+    console.log("game.round.end");
+    $('#hand > .card_frame').removeClass("appear_border").addClass("disappear_border");
+    await delay(1100);
+}); 
 socket.on('game.trick', () => {
     console.log("game.trick");
     $('.onplayingstack').remove();
@@ -221,7 +227,7 @@ socket.on('guess.waitingFor', (/*string*/playerName) => {
     $('#playerboard > p').css("color", "white");
     $('#' + playerName).css("color", "lightgreen");
 })
-socket.on('guess.request', () => {
+socket.on('guess.request', () => { 
     guesses.show();
 });
 /*
@@ -234,14 +240,13 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
     let cards = JSON.parse(JSON_cards);
     for (let a = 0; a < cards.length; a++) {
         let card_frame = document.createElement('div');
-        hand.append(card_frame);
+        hand.append(card_frame); //fade in by keyframe animation
     }
-    $('#hand > div').addClass("card_frame");
+    $('#hand > div').addClass("card_frame").addClass("appear_border");
     for (let a = 0; a < cards.length; a++) {
         let card = make_card(/*string*/cards[a].color, /*number*/cards[a].number, "");
         $('.wrapper').append(card);
         let pos = $('#hand > div').slice(a, a+1).position().left + hand.position().left;
-        console.log(pos);
         $('.wrapper > ' + '.' + cards[a].color + '_' + cards[a].number.toString() + '.card').css("left", pos + "px");
         //await delay(1100);//not the most beautiful way
         setTimeout(slideup_card, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
@@ -262,6 +267,7 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
         console.log("You clicked: " + card_name[0], card_name[1]);
         socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10)); // => card.update
         await delay(100);
+        card.removeClass("inhand");
         card.addClass("onplayingstack"); //hardcoded
         card.css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded
         card.css("z-index", (card_level_on_stack+2).toString());
