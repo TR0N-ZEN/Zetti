@@ -88,7 +88,7 @@ async function play_trick() {
         io.emit('card.waitingFor', playerList[current_player].name);
         await new Promise((resolve) => {
             setTimeout( () => {
-                go_on = resolve; // resolve can be triggered from outside by calling go_on();
+                go_on = resolve; // resolve can be triggered from outside by calling go_on(); in fact resolved by call in listener io.on("card.toPlayingstack")
             }, 1500)
         });
     }
@@ -240,7 +240,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.5';//'localhost';// //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.4';//'localhost';// //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid) {
