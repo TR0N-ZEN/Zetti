@@ -238,7 +238,7 @@ async function play_round(/*number*/round) {
     last_winner_index = undefined;
     round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
     console.groupEnd();
-    io.emit('game.round.end')
+    io.emit('game.round.end');
     if (round < (60 / playerList.length)) {
         setTimeout(() => {
             play_round(/*number*/++round);
