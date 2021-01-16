@@ -233,8 +233,9 @@ socket.on('guess.waitingFor', (/*string*/playerName) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
     $($('#' + playerName).children()[0]).css("color", "lightgreen");
 });
-socket.on('guess.update', (/*string*/playerName, /*number*/guess) => {
-    $('#' + playerName).children()[1].innerText = guess.toString();
+socket.on('guess.update', (/*string*/playerName, /*number*/guess, /*number*/won) => {
+    console.log("Won: " + won);
+    $('#' + playerName).children()[1].innerText = won.toString() + " / " + guess.toString();
 });
 socket.on('guess.request', () => { 
     guesses.show();

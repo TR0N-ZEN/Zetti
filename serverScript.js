@@ -202,7 +202,7 @@ function update_points() {
         }
         playerList[i].points += delta;
         io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
-        //playerList[i].guesses = 0;
+        playerList[i].guesses = 0;
         playerList[i].tricks_won = 0;
         console.log("Guesses by " + playerList[i].name + ":\t" + guesses.toString());
         console.log("Rounds won by " + playerList[i].name + ":\t " + tricks_won.toString());
@@ -233,6 +233,7 @@ async function play_round(/*number*/round) {
         await calculate_winner(); //of each trick
         console.log("last winner: " + playerList[last_winner_index].name);
         ++playerList[last_winner_index].tricks_won;
+        io.emit('guess.update', playerList[last_winner_index].name, playerList[last_winner_index].guesses, playerList[last_winner_index].tricks_won);
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
         await new Promise((resolve) => {
@@ -338,7 +339,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     socket.on('guess.response', (/*number*/guess, /*number*/index) => { //both numbers in decimal
         playerList[index].guesses = guess;
         console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
-        io.emit('guess.update', /*string*/playerList[index].name, /*number*/guess);
+        io.emit('guess.update', /*string*/playerList[index].name, /*number*/guess, 0);
         ask_next(); //resolves Promise in async take_guesses()'s loop
     });
     socket.on('disconnect', (reason) => { disconnected(); });
