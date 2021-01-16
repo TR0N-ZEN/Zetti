@@ -47,6 +47,22 @@ function delay(milliseconds) {
     });
 }
 
+const resizeObserver = new ResizeObserver( async (entries) => {
+    await delay(100);//cause until 1s after the first window resize the animation in css that positions #hand has finished
+    $(".card").each(function (index_card) {
+        // let distance = $("#hand > .card_frame").filter(function (index_card_frame) {
+        //     return index_card === index_card_frame;
+        // }).offset();
+        let distance = $($("#hand > .card_frame")[index_card]).offset();
+        $(this).offset(distance);
+        console.log($(this));
+        console.log(distance);
+        console.log($(this).css("top") + " " + $(this).css("left"));
+    });
+});
+resizeObserver.observe(document.querySelector("#hand"));
+
+
 function make_card(/*string*/color, /*number*/number, /*string*/from) {
     let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
     if (from == "me") {
@@ -75,6 +91,11 @@ info.chat.click( () => {
     }
 });
 
+function removeTransition() {
+    playingfield.css("transition", "none");
+    playingstack.css("transition", "none");
+    hand.css("transition", "none");
+}
 
 
 //EMITTER------------------------------------------------------------------------
@@ -176,12 +197,14 @@ socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
 socket.on('MessageFromServer', (/*string*/message) => {
     chat.list.append($('<li>').text(message));
 });
-socket.on('game.start', () => {
+socket.on('game.start', async () => {
     console.log("game.start");
     $('#ready_player').css("transform", "translateY(-40vh)"); //hardcoded
     playingfield.css("left", "34vw"); //hardcoded
     playingstack.css("left", "66vw"); //hardcoded
     hand.css("top", "56vh"); //hardcoded
+    await delay(2500);
+    removeTransition();
     setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
 });
 socket.on('game.round', (/*number*/round, /*string*/trumpColor) => {

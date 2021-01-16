@@ -58,7 +58,7 @@
         z-index: 9;
         display: grid;
         grid-template-rows: 4fr 1fr;
-        transition: right 1s;
+        transition: right 350ms;
     }
         .chat.window > ul {
             padding-left: 3%;
@@ -77,7 +77,7 @@
         display: flex;
         width: 30vw;
         height: 20vh;
-        position: absolute;
+        position: fixed;
         top: 20vh;
         left: 35vw;
         z-index: 9;
@@ -88,7 +88,7 @@
         border-radius: 2vmin;
         transform: translateY(0vh);
         transition-property: transform;
-        transition-duration: 1s;
+        transition-duration: 350ms;
         transition-timing-function: ease-in;
     }
         #votes {
@@ -108,7 +108,7 @@
             z-index: initial;
             font-size: 1em;
             transition-property: box-shadow, z-index, width, height, font-size;
-            transition-duration: 1s;
+            transition-duration: 350ms;
         }
             #ready_player > button:hover {
                 width: 88%;
@@ -127,7 +127,7 @@
         display: grid;
         grid-template-rows: 4fr 1fr;
         transition-property: right;
-        transition-duration: 1s;
+        transition-duration: 350ms;
     }
         .take_guess > form {
             height: inherit;
@@ -199,13 +199,13 @@
             height: 20vh;
             width: 14vh;
             border: 0.1vh solid white;
-            transition: left 1s, top 1s;
+            transition: left 350ms, top 350ms;
         }
     .card {
         position: fixed;
         left: -14vw;
         top: 100vh;
-        transition: left 1s, top 1s;
+        transition: left 350ms, top 350ms;
         background-color: antiquewhite;
         height: 20vh;
         width: 14vh;
