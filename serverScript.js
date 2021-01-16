@@ -219,7 +219,11 @@ async function play_round(/*number*/round) {
     await delay(1500);
     distribute_cards(round);
     await take_guesses();
-    io.emit('guess.complete');
+    let guesses_array = new Array(playerList.length);
+    for (let i = 0; i < playerList.length; i++) {
+        guesses_array[i] = playerList[i].guesses;
+    }
+    io.emit('guess.complete', JSON.stringify(guesses_array));
     for (let trick_number = 1; trick_number <= round; trick_number++) {
         await play_trick();
         await calculate_winner(); //of each trick

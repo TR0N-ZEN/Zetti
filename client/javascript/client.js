@@ -7,6 +7,7 @@ var chat = {
     message: $('.chat.window > form #message')
 };
 var playerboard = $('.wrapper > #playerboard');
+var playerboard_table = $('.wrapper > #playerboard > table');
 var playingfield = $('.wrapper > #playingfield');
 var hand = $('.wrapper > #hand');
 var playingstack = $('.wrapper > #playingstack');
@@ -130,7 +131,7 @@ $('.take_guess > form').submit(function (button) {
     guesses.hide();
     let guess_number = parseInt($('.take_guess > form > input').val(), 10); // type number in deximal
     $('.take_guess > form > input').val("");
-    socket.emit('guess.response', /*number*/guess_number, /*number*/index);
+    socket.emit('guess.response', /*number*/guess_number, /*number*/player_index);
     info.guesses.text('Guesses: ' + guess_number.toString());
     let width_in_px = guesses.take.css('width');
     guesses.take.css("righ", "-" + width_in_px);
@@ -172,14 +173,14 @@ $('.take_guess > form').submit(function (button) {
  * changeCSS
  * */
 
-var index = 0;
+var player_index = 0;
 socket.on('login.successful', (/*string*/JSON_PlayerObject) => {
     $('#login').slideUp();
     PlayerObject = JSON.parse(JSON_PlayerObject);
     info.name.append(PlayerObject.name);
     info.points.append(PlayerObject.points);
     info.guesses.append(PlayerObject.guesses);
-    index = PlayerObject.index;
+    player_index = PlayerObject.index;
 });
 socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
@@ -187,9 +188,9 @@ socket.on('login.unsuccessful', () => {
 });
 socket.on('playerBoard.update', (/*string*/JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
-    playerboard.html("");
+    playerboard_table.html("");
     for (let a = 0; a < names.length; a++) {
-        playerboard.append('<p id="' + names[a] + '">' + names[a] + '</p>');
+        playerboard_table.append('<tr> <td id="' + names[a] + '">' + names[a] + '</td>' + '<td>' + '--' + '<td>' + '</tr>');
     }
 })
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
@@ -216,6 +217,10 @@ socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
 });
 socket.on('game.round.end', async () => {
     console.log("game.round.end");
+    $('#playerboard > table > tr').each(function (index) {
+        $($($('#playerboard > table > tr')[index]).children()[1]).html(" ");
+        console.log($($($('#playerboard > table > tr')[index]).children()[1]).html());
+    });
     $('#hand > .card_frame').removeClass("appear_border").addClass("disappear_border");
     await delay(1100);
 }); 
@@ -224,17 +229,21 @@ socket.on('game.trick', () => {
     $('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 socket.on('guess.waitingFor', (/*string*/playerName) => {
-    $('#playerboard > p').css("color", "white");
+    $('#playerboard > table > tr > td:first-of-type').css("color", "white");
     $('#' + playerName).css("color", "lightgreen");
 })
 socket.on('guess.request', () => { 
     guesses.show();
 });
-/*
-socket.on('guess.complete', () => {
-    guesses.hide();
+
+socket.on('guess.complete', (guesses_JSON) => {
+    let guesses_array = JSON.parse(guesses_JSON);
+    console.log(guesses_array);
+    for (let i = 0; i < guesses_array.length; i++) {
+        $('#playerboard > table > tr:eq( ' + i + ' ) > td:eq( 1 )').html(guesses_array[i]);
+    }
 });
-*/
+
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
@@ -253,7 +262,7 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
     }
 });
 socket.on('card.waitingFor', (/*string*/playerName) => {
-    $('#playerboard > p').css("color", "white");
+    $('#playerboard > table > tr > td:first-of-type').css("color", "white");
     $('#' + playerName).css("color", "lightgreen");
 });
 var last_card;
