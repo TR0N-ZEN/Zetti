@@ -166,11 +166,11 @@
     #playingstack {
         background-color: antiquewhite;
         position: fixed;
-        top: 24vh;
+        top: 19vh;
         left: 100vw;/*left: 66vw;*/
         transition: left 2s, top 2s;
-        height: 20vh;
-        width: 14vh;
+        height: 30vh;
+        width: 21vh;
         border: none;
         border-radius: 5px;
     }
@@ -196,8 +196,8 @@
         overflow: hidden;
     }
         #hand > .card_frame {
-            height: 20vh;
-            width: 14vh;
+            height: 30vh;
+            width: 21vh;
             /*border: 5px solid rgb(255, 255, 255);*/
         }
     .card {
@@ -206,15 +206,15 @@
         top: 100vh;
         transition: left 450ms, top 450ms;
         background-color: antiquewhite;
-        height: 20vh;
-        width: 14vh;
+        height: 30vh;
+        width: 21vh;
         z-index: 2;
         border: none;
         border-radius: 5px;
     }
     .inhand {  
         position: fixed;
-        top: 67vh;
+        top: 62vh;
         z-index: 2;
         transition: box-shadow 1s, transform 1s, left 450ms, top 450ms;
     }
@@ -232,6 +232,6 @@
     }
     .onplayingstack {
         left: 66vw;
-        top: 24vh;
+        top: 19vh;
     }
 /* }*/
