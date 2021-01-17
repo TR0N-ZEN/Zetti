@@ -97,11 +97,7 @@ async function play_trick() {
         playingfield.card_pos_on_stack = i;
         io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
         io.emit('card.waitingFor', playerList[current_player].name);
-        await new Promise((resolve) => {
-            setTimeout( () => {
-                go_on = resolve; // resolve can be triggered from outside by calling go_on(); in fact resolved by call in listener io.on("card.toPlayingstack")
-            }, 100);
-        });
+        await new Promise((resolve) => { go_on = resolve; });
     }
     return 0;
 }
@@ -148,7 +144,7 @@ async function calculate_winner() {
             high_card_index = c_player;
             high_card = trick[high_card_index];
             console.log("color to be served: " + color_to_serve);
-            break; //breaks loop?
+            break;
         }
     }
     if (color_to_serve === undefined) { //der Only-Enno Fall

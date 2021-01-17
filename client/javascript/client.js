@@ -291,7 +291,7 @@ socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/car
     console.log("card.update: " + color + " " + number.toString());
     let card = make_card(color, number.toString(), "oponent");
     let crd = $('.wrapper').append(card);
-    await delay(200);
+    await delay(100);
     console.log(crd + "\n" + '.' + color + '_' + number.toString() + '.card.fromanotherplayer');
     $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').css("z-index", card_level_on_stack+2);
     //$('.wrapper > .' + color + '_' + number + '.card.fromanotherplayer').css("z-index", (card_level_on_stack+2).toString()).css("left", (66+card_level_on_stack*2).toString() + "vw").css("top", "24vh"); //hardcoded
