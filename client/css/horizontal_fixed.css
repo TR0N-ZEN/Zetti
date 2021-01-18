@@ -1,4 +1,17 @@
 /*@media (min-aspect-ratio: 4/3) {*/
+    :root {
+        --left-first-coloumn: 2vw;
+        --left-second-coloumn: 34vw;
+        --top-first-row: 2vh;
+        --top-second-row: 14vh;
+        --top-third-row: 56vh;
+        --card-height: 30vh;
+        --card-width: 21vh;
+        --top-playingstack: 19vh;
+        --left-playingstack: 66vw;
+        --top-hand: 56vh;
+        --top-in-hand: 62vh;
+    }
     * {
         margin: 0;
         padding: 0;
@@ -28,8 +41,8 @@
         }
     #info {
         position: fixed;
-        left: 2vw;
-        top: 2vh;
+        left: var(--left-first-coloumn);
+        top: var(--top-first-row);
         width: 96vw;
         height: 10vh;
         display: grid;
@@ -141,8 +154,8 @@
             }
     #playerboard {
         position: fixed;
-        left: 2vw;
-        top: 14vh;
+        left: var(--left-first-coloumn);
+        top: var(--top-second-row);
         width: 30vw;
         height: 40vh;
         background-color: black;
@@ -153,8 +166,8 @@
     }
     #playingfield {
         position: fixed;
-        left: 100vw;/*left: 34vw;*/
-        top: 14vh;
+        left: 100vw;/*left: var(--left-second-coloumn;*/
+        top: var(--top-second-row);
         transition: left 2s, top 2s;
         width: 64vw;
         height: 40vh;
@@ -166,11 +179,11 @@
     #playingstack {
         background-color: antiquewhite;
         position: fixed;
-        top: 19vh;
-        left: 100vw;/*left: 66vw;*/
+        top: var(--top-playingstack);
+        left: 100vw;/*left: var(--left-playinstack);*/
         transition: left 2s, top 2s;
-        height: 30vh;
-        width: 21vh;
+        height: var(--card-height);
+        width: var(--card-width);
         border: none;
         border-radius: 5px;
     }
@@ -180,14 +193,11 @@
         }
     #hand {
         position: fixed;
-        left: 2vw;
+        left: var(--left-first-coloumn);
         top: 100vh;/*top: 56vh;*/
         transition: left 2s, top 2s;
         width: 96vw;
         height: 42vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         box-shadow: 0 0 5px white;
         display: flex;
         flex-direction: row;
@@ -196,9 +206,8 @@
         overflow: hidden;
     }
         #hand > .card_frame {
-            height: 30vh;
-            width: 21vh;
-            /*border: 5px solid rgb(255, 255, 255);*/
+            height: var(--card-height);
+            width: var(--card-width);
         }
     .card {
         position: fixed;
@@ -206,15 +215,15 @@
         top: 100vh;
         transition: left 450ms, top 450ms;
         background-color: antiquewhite;
-        height: 30vh;
-        width: 21vh;
+        height: var(--card-height);
+        width: var(--card-width);
         z-index: 2;
         border: none;
         border-radius: 5px;
     }
-    .inhand {  
+    .inhand {
         position: fixed;
-        top: 62vh;
+        top: var(--top-in-hand);
         z-index: 2;
         transition: box-shadow 1s, transform 1s, left 450ms, top 450ms;
     }
@@ -223,15 +232,20 @@
         transform: scale(1.05);
     }
     .fromanotherplayer {
+        position: fixed;
+        transition: left 450ms, top 450ms;
         left: 100vw;
         top: 26vh;
     }
     .nexttoplayingstack {
+        position: fixed;
         left: 100vw;
-        top: 24vh;
-    }
-    .onplayingstack {
-        left: 66vw;
         top: 19vh;
+    }
+    /*
+    .onplayingstack {
+        position: fixed;
+        left: var(--left-playingstack);
+        top: var(--top-playingstack);
     }
 /* }*/

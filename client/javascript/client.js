@@ -1,4 +1,17 @@
 const socket = io();
+
+var left_first_coloumn = "2vw";
+var left_second_coloumn = "34vw";
+var top_first_row = "2vh";
+var top_second_row = "14vh";
+var top_third_row = "56vh";
+var card_height = "30vh";
+var card_width = "21vh";
+var top_playingstack = "19vh";
+var left_playingstack = "66vw";
+var top_hand = "56vh";
+var top_in_hand = "62vh";
+
 var chat = {
     hidden: false,
     window: $('.chat.window'),
@@ -28,7 +41,7 @@ var guesses = {
         setTimeout( () => {
             guesses.take.css("display", "none");
             guesses.take.css("transition", "");
-        }, 2000);//hardcoded
+        }, 500);//hardcoded
     },
     show: () => {
         let distance_in_px = guesses.take.css('width');
@@ -64,19 +77,12 @@ const resizeObserver = new ResizeObserver( async (entries) => {
 resizeObserver.observe(document.querySelector("#hand"));
 
 
-function make_card(/*string*/color, /*number*/number, /*string*/from) {
+function make_card(/*string*/color, /*number*/number) {
     let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
-    if (from == "me") {
-        from = " inhand";
-    } else if (from == "oponent") {
-        from = " fromanotherplayer";
-    } else {
-        from = "";
-    }
     let card = document.createElement('div');
-    card.setAttribute("class", color + "_" + number.toString() + " card" + from);
+    card.setAttribute("class", color + "_" + number.toString() + " card");
     card.innerHTML = card_svg;
-    return card;
+    return $( card );
 };
 function slideup_card(/*string*/color, /*number*/number) {
     $('.wrapper > ' + '.' + color + '_' + number.toString() + '.card').addClass("inhand"); //hardcoded
@@ -187,28 +193,32 @@ socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
     //server send a different website saying there is no space for antoher player
 });
+
 socket.on('playerBoard.update', (/*string*/JSON_namesArray) => {
     let names = JSON.parse(JSON_namesArray);
     playerboard_table.html("");
     for (let a = 0; a < names.length; a++) {
         playerboard_table.append('<tr id="' + names[a] + '"> <td>' + names[a] + '</td>' + '<td>--<td>' + '</tr>');
     }
-})
+});
+
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
     $('#votes').text(votes.toString() + " / " + amount_of_players.toString());
 });
+
 socket.on('MessageFromServer', (/*string*/message) => {
     chat.list.append($('<li>').text(message));
 });
+
 socket.on('game.start', async () => {
     console.log("game.start");
-    $('#ready_player').css("transform", "translateY(-40vh)"); //hardcoded
-    playingfield.css("left", "34vw"); //hardcoded
-    playingstack.css("left", "66vw"); //hardcoded
-    hand.css("top", "56vh"); //hardcoded
-    await delay(2500);
+    $('#ready_player').css("top", "-100vh"); //hardcoded
+    playingfield.css("left", left_second_coloumn); //hardcoded
+    playingstack.css("left", left_playingstack); //hardcoded
+    hand.css("top", top_hand); //hardcoded
+    await delay(2500); //hardcoded; deppendent on animation-duration of top_in_hand
     removeTransition();
-    setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000);
+    setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
 });
 socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
     $('#hand > .card_frame').remove();
@@ -223,12 +233,13 @@ socket.on('game.round.end', async () => {
         console.log($(this).children()[1].innerText);
     });
     $('#hand > .card_frame').removeClass("appear_border").addClass("disappear_border");
-    await delay(1100);
+    await delay(1100); //hardcoded; deppendent on animation-duration of disappear_border
 }); 
 socket.on('game.trick.end', () => {
     console.log("game.trick");
     $('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
+
 socket.on('guess.waitingFor', (/*string*/playerName) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
     $($('#' + playerName).children()[0]).css("color", "lightgreen");
@@ -240,15 +251,7 @@ socket.on('guess.update', (/*string*/playerName, /*number*/guess, /*number*/won)
 socket.on('guess.request', () => { 
     guesses.show();
 });
-/*
-socket.on('guess.complete', (guesses_JSON) => {
-    let guesses_array = JSON.parse(guesses_JSON);
-    console.log(guesses_array);
-    for (let i = 0; i < guesses_array.length; i++) {
-        $('#playerboard > table > tr:eq( ' + i + ' ) > td:eq( 1 )').html(guesses_array[i]);
-    }
-});
-*/
+
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
     console.log("card.distribute");
     let cards = JSON.parse(JSON_cards);
@@ -258,11 +261,10 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
     }
     $('#hand > div').addClass("card_frame").addClass("appear_border");
     for (let a = 0; a < cards.length; a++) {
-        let card = make_card(/*string*/cards[a].color, /*number*/cards[a].number, "");
+        let card = $( make_card(/*string*/cards[a].color, /*number*/cards[a].number, ""));
         $('.wrapper').append(card);
         let pos = $('#hand > div').slice(a, a+1).position().left + hand.position().left;
         $('.wrapper > ' + '.' + cards[a].color + '_' + cards[a].number.toString() + '.card').css("left", pos + "px");
-        //await delay(1100);//not the most beautiful way
         setTimeout(slideup_card, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
     }
 });
@@ -280,25 +282,31 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
         let card_name = card_fullclassname[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
         socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10)); // => card.update
-        await delay(100);
         card.removeClass("inhand");
-        card.addClass("onplayingstack"); //hardcoded
-        card.css("left", (66+card_level_on_stack*2).toString() + "vw"); //hardcoded
+        card.addClass("onplayingstack");
+        await delay(90);
         card.css("z-index", (card_level_on_stack+2).toString());
+        card.css("top", parseInt(top_playingstack, 10) + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
+        card.css("left", (parseInt(left_playingstack, 10)+card_level_on_stack*2).toString() + "vw"); //hardcoded
     });
 });
 socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/card_level_on_stack) => {
     console.log("card.update: " + color + " " + number.toString());
-    let card = make_card(color, number.toString(), "oponent");
+    let card = make_card(color, number.toString());
+    console.log(card);
     let crd = $('.wrapper').append(card);
-    await delay(100);
-    console.log(crd + "\n" + '.' + color + '_' + number.toString() + '.card.fromanotherplayer');
-    $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').css("z-index", card_level_on_stack+2);
-    //$('.wrapper > .' + color + '_' + number + '.card.fromanotherplayer').css("z-index", (card_level_on_stack+2).toString()).css("left", (66+card_level_on_stack*2).toString() + "vw").css("top", "24vh"); //hardcoded
-    //$('.wrapper > .' + color + '_' + number + '.card.fromanotherplayer').css("z-index", (card_level_on_stack+2).toString()).css("transform", "translateX(" + (-34+card_level_on_stack*2).toString() + "vw)").css("top", "24vh"); //hardcoded
-    $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').addClass("onplayingstack");
-    $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer.onplayingstack').css("left", 66 + card_level_on_stack*2 + "vw");
+    //.addClass("fromanotherplayer");
+    console.log(crd);
+    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').css("z-index", card_level_on_stack+2);
+    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').addClass("onplayingstack");
+    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer.onplayingstack').css("left", 66 + card_level_on_stack*2 + "vw");
+    card.addClass( ["fromanotherplayer", "onplayingstack"] );
+    await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 
+    card.css("z-index", card_level_on_stack+2);
+    card.css("top", parseInt(top_playingstack, 10) + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
+    card.css("left", parseInt(left_playingstack, 10) + card_level_on_stack*2 + "vw");
 });
+
 socket.on('points.update', (/*number*/points) => {
     info.points.text("Punkte : " + points.toString());
 });
