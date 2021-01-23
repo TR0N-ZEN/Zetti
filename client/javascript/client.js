@@ -65,7 +65,8 @@ resizeObserver.observe(document.querySelector("#hand"));
 
 
 function make_card(/*string*/color, /*number*/number, /*string*/from) {
-    let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
+    //let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
+    let card_svg = $("#jpgs > ." + color + "_" + number.toString()).html();
     if (from == "me") {
         from = " inhand";
     } else if (from == "oponent") {
