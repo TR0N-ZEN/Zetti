@@ -18,8 +18,8 @@
         box-sizing: border-box;
     }
     img {
-        height: 20vh;
-        width: 14vh;
+        height: inherit;
+        width: inherit;
     }
     #login {
         position: fixed;
