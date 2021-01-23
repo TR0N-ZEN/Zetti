@@ -73,6 +73,8 @@ function delay(milliseconds) {
  *      update //card on stack
  * points
  *      .update
+ * guess
+ *      .update
  * changeCSS
  * */
 
@@ -97,11 +99,7 @@ async function play_trick() {
         playingfield.card_pos_on_stack = i;
         io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
         io.emit('card.waitingFor', playerList[current_player].name);
-        await new Promise((resolve) => {
-            setTimeout( () => {
-                go_on = resolve; // resolve can be triggered from outside by calling go_on(); in fact resolved by call in listener io.on("card.toPlayingstack")
-            }, 100);
-        });
+        await new Promise((resolve) => { go_on = resolve; });
     }
     return 0;
 }
@@ -148,7 +146,7 @@ async function calculate_winner() {
             high_card_index = c_player;
             high_card = trick[high_card_index];
             console.log("color to be served: " + color_to_serve);
-            break; //breaks loop?
+            break;
         }
     }
     if (color_to_serve === undefined) { //der Only-Enno Fall
@@ -220,17 +218,10 @@ async function play_round(/*number*/round) {
     await delay(1500);
     distribute_cards(round);
     await take_guesses();
-    /*
-    let guesses_array = new Array(playerList.length);
-    for (let i = 0; i < playerList.length; i++) {
-        guesses_array[i] = playerList[i].guesses;
-    }
-    io.emit('guess.complete', JSON.stringify(guesses_array));
-    */
     for (let trick_number = 1; trick_number <= round; trick_number++) {
         io.emit("game.trick.start");
         await play_trick();
-        await calculate_winner(); //of each trick
+        await calculate_winner();
         console.log("last winner: " + playerList[last_winner_index].name);
         ++playerList[last_winner_index].tricks_won;
         io.emit('guess.update', /*string*/playerList[last_winner_index].name, /*number*/playerList[last_winner_index].guesses, /*number*/playerList[last_winner_index].tricks_won);
@@ -261,7 +252,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.4';//'localhost';// //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.3';//'localhost';// //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid) {
@@ -338,7 +329,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     });
     socket.on('guess.response', (/*number*/guess, /*number*/index) => { //both numbers in decimal
         playerList[index].guesses = guess;
-        console.log(playerList[index].name + " guessed from object " + playerList[index].guesses);
+        console.log(playerList[index].name + " guessed from object: " + playerList[index].guesses);
         io.emit('guess.update', /*string*/playerList[index].name, /*number*/guess, 0);
         ask_next(); //resolves Promise in async take_guesses()'s loop
     });
