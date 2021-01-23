@@ -4,6 +4,10 @@
         padding: 0;
         box-sizing: border-box;
     }
+    img {
+        height: 20vh;
+        width: 14vh;
+    }
     #login {
         position: fixed;
         top: auto;

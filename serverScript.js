@@ -233,7 +233,7 @@ async function play_round(/*number*/round) {
         await calculate_winner(); //of each trick
         console.log("last winner: " + playerList[last_winner_index].name);
         ++playerList[last_winner_index].tricks_won;
-        io.emit('guess.update', playerList[last_winner_index].name, playerList[last_winner_index].guesses, playerList[last_winner_index].tricks_won);
+        io.emit('guess.update', /*string*/playerList[last_winner_index].name, /*number*/playerList[last_winner_index].guesses, /*number*/playerList[last_winner_index].tricks_won);
         //console.log("last winner: " + playerList[last_winner].name);
         console.groupEnd();
         await new Promise((resolve) => {
