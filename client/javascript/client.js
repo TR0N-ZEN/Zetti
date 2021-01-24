@@ -1,5 +1,10 @@
 const socket = io();
 
+$( document ).ready(function() {
+    console.log( "Loaded entire website." );
+    $("#loading").slideUp();
+});
+
 var left_first_coloumn = "2vw";
 var left_second_coloumn = "34vw";
 var top_first_row = "2vh";
@@ -13,42 +18,56 @@ var top_hand = "56vh";
 var top_in_hand = "62vh";
 
 var chat = {
-    hidden: false,
+    visible: true,
     window: $('.chat.window'),
     form: $('.chat.window > form'),
     list: $('.chat.window > ul'),
-    message: $('.chat.window > form #message')
+    message: $('.chat.window > form #message'),
+    hide: () => {
+        chat.window.css('right', "-" + chat.window.css('width'));
+        chat.visible = false;
+    },
+    show: () => {
+        chat.window.css('right', 0);
+        chat.visible = false;
+    }
 };
-var playerboard = $('.wrapper > #playerboard');
-var playerboard_table = $('.wrapper > #playerboard > table');
+var playerboard = {
+    object: $('.wrapper > #playerboard'),
+    table: $('.wrapper > #playerboard > table')
+} 
 var playingfield = $('.wrapper > #playingfield');
 var hand = $('.wrapper > #hand');
 var playingstack = $('.wrapper > #playingstack');
+
 
 var info = {
     name: $('.wrapper > #info #Name'),
     round: $('.wrapper > #info #Round'),
     trump: $('.wrapper > #info #Trump'),
     points: $('.wrapper > #info #Points'),
-    guesses: $('.wrapper > #info #Guesses'),
+    guess: $('.wrapper > #info #Guess'),
     chat: $('.wrapper > #info > .chat')
 };
-var guesses = {
-    take: $('.take_guess'),
+var guess = {
+    object: $('.take_guess'),
+    visible: false,
     hide: () => {
-        let distance_in_px = guesses.take.css('width');
-        guesses.take.css("right", "-" + distance_in_px);
+        guess.visible = false;
+        let distance_in_px = guess.object.css('width');
+        guess.object.css("right", "-" + distance_in_px);
         setTimeout( () => {
-            guesses.take.css("display", "none");
-            guesses.take.css("transition", "");
+            guess.object.css("display", "none");
+            guess.object.css("transition", "");
         }, 500);//hardcoded
     },
     show: () => {
-        let distance_in_px = guesses.take.css('width');
-        guesses.take.css("righ", "-" + distance_in_px);
-        guesses.take.css("transition", "right 1s");
-        guesses.take.css("display", "grid");
-        guesses.take.css("right", distance_in_px);
+        guess.visible = true;
+        let distance_in_px = guess.object.css('width');
+        guess.object.css("righ", "-" + distance_in_px);
+        guess.object.css("transition", "right 1s");
+        guess.object.css("display", "grid");
+        guess.object.css("right", distance_in_px);
     }
 };
 
@@ -63,15 +82,18 @@ function delay(milliseconds) {
 
 const resizeObserver = new ResizeObserver( async (entries) => {
     await delay(100);//cause until 1s after the first window resize the animation in css that positions #hand has finished
+    if (!guess.visible) {
+        guess.hide();
+    }
+    if (!chat.visible) {
+        chat.hide();
+    }
     $(".card").each(function (index_card) {
-        // let distance = $("#hand > .card_frame").filter(function (index_card_frame) {
-        //     return index_card === index_card_frame;
-        // }).offset();
         let distance = $($("#hand > .card_frame")[index_card]).offset();
         $(this).offset(distance);
-        console.log($(this));
-        console.log(distance);
-        console.log($(this).css("top") + " " + $(this).css("left"));
+        // console.log($(this));
+        // console.log(distance);
+        // console.log($(this).css("top") + " " + $(this).css("left"));
     });
 });
 resizeObserver.observe(document.querySelector("#hand"));
@@ -97,12 +119,10 @@ function slideup_card(/*string*/color, /*number*/number) {
 }
 
 info.chat.click( () => {
-    if (chat.hidden) {
-        chat.window.css('right', 0);
-        chat.hidden = false;
+    if (!chat.visible) {
+        chat.show();
     } else {
-        chat.window.css('right', "-" + chat.window.css('width'));
-        chat.hidden = true;
+        chat.hide();
     }
 });
 
@@ -111,7 +131,6 @@ function removeTransition() {
     playingstack.css("transition", "none");
     hand.css("transition", "none");
 }
-
 
 //EMITTER------------------------------------------------------------------------
 /*
@@ -142,15 +161,15 @@ $('#ready_player > button').on('click', () => {
 });
 $('.take_guess > form').submit(function (button) {
     button.preventDefault();
-    guesses.hide();
+    guess.hide();
     let guess_number = parseInt($('.take_guess > form > input').val(), 10); // type number in deximal
     $('.take_guess > form > input').val("");
     socket.emit('guess.response', /*number*/guess_number, /*number*/player_index);
-    info.guesses.text('Guesses: ' + guess_number.toString());
-    let width_in_px = guesses.take.css('width');
-    guesses.take.css("righ", "-" + width_in_px);
+    info.guess.text('Zu holen: ' + guess_number.toString());
+    let width_in_px = guess.object.css('width');
+    guess.object.css("righ", "-" + width_in_px);
     setTimeout(() => {
-        guesses.take.css("display", "grid");
+        guess.object.css("display", "grid");
     }, 1000);
 });
 
@@ -164,7 +183,9 @@ $('.take_guess > form').submit(function (button) {
  *      successful
  *      unsuccessful
  * playerBoard:
- *      update
+ *      update.
+ *          names
+ *          points
  * vote.
  *      update
  * MessageFromServer
@@ -194,19 +215,27 @@ socket.on('login.successful', (/*string*/JSON_PlayerObject) => {
     PlayerObject = JSON.parse(JSON_PlayerObject);
     info.name.append(PlayerObject.name);
     info.points.append(PlayerObject.points);
-    info.guesses.append(PlayerObject.guesses);
-    player_index = PlayerObject.index;
+    info.guess.append(PlayerObject.guess);
+    player_index = PlayerObject.index; //actually the index in playerList on server
+    player_id = PlayerObject.id; //unique identifier number
 });
 socket.on('login.unsuccessful', () => {
     $('#login').slideUp();
     //server send a different website saying there is no space for antoher player
 });
 
-socket.on('playerBoard.update', (/*string*/JSON_namesArray) => {
+socket.on('playerBoard.update.names', (/*string*/JSON_namesArray, /*string*/ JSON_idsArray) => {
     let names = JSON.parse(JSON_namesArray);
-    playerboard_table.html("");
+    let ids = JSON.parse(JSON_idsArray);
+    playerboard.table.html("");
     for (let a = 0; a < names.length; a++) {
-        playerboard_table.append('<tr id="' + names[a] + '"> <td>' + names[a] + '</td>' + '<td>--<td>' + '</tr>');
+        playerboard.table.append('<tr id="' + ids[a] + '"> <td>' + names[a] + '</td>' + '<td>--<td>' + '<td>--<td>' + '</tr>');
+    }
+});
+socket.on('playerBoard.update.points', (/*string*/JSON_pointsArray) => {
+    let points = JSON.parse(JSON_pointsArray);
+    for (let i = 0; i < points.length; i++) {
+        $($('.playerboard > table > tr')[i]).children()[2].innerText = points[i];
     }
 });
 
@@ -248,16 +277,16 @@ socket.on('game.trick.end', () => {
     $('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 
-socket.on('guess.waitingFor', (/*string*/playerName) => {
+socket.on('guess.waitingFor', (/*string*/playerID) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
-    $($('#' + playerName).children()[0]).css("color", "lightgreen");
+    $($('#' + playerID).children()[0]).css("color", "lightgreen");
 });
-socket.on('guess.update', (/*string*/playerName, /*number*/guess, /*number*/won) => {
+socket.on('guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
     console.log("Won: " + won);
-    $('#' + playerName).children()[1].innerText = won.toString() + " / " + guess.toString();
+    $('#' + playerID).children()[1].innerText = won.toString() + " / " + guess.toString();
 });
 socket.on('guess.request', () => { 
-    guesses.show();
+    guess.show();
 });
 
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
@@ -276,11 +305,10 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
         setTimeout(slideup_card, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
     }
 });
-socket.on('card.waitingFor', (/*string*/playerName) => {
+socket.on('card.waitingFor', (/*string*/playerID) => {
     $('#playerboard > table > tr > td:first-of-type').css("color", "white");
-    $($('#' + playerName).children()[0]).css("color", "lightgreen");
+    $($('#' + playerID).children()[0]).css("color", "lightgreen");
 });
-var last_card;
 socket.on('card.waiting', (/*number*/card_level_on_stack) => {
     console.log("card.waiting");
     $('.card.inhand').click( async function () {
@@ -289,10 +317,10 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
         let card_fullclassname =  $(this)[0].className.split(" ");
         let card_name = card_fullclassname[0].split("_");//.target.attributes.class.name;
         console.log("You clicked: " + card_name[0], card_name[1]);
-        socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10)); // => card.update
+        socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10), /*index*/ player_index); // => card.update
         card.removeClass("inhand");
         card.addClass("onplayingstack");
-        await delay(90);
+        await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 
         card.css("z-index", (card_level_on_stack+2).toString());
         card.css("top", parseInt(top_playingstack, 10) + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
         card.css("left", (parseInt(left_playingstack, 10)+card_level_on_stack*2).toString() + "vw"); //hardcoded
@@ -303,11 +331,7 @@ socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/car
     let card = make_card(color, number.toString());
     console.log(card);
     let crd = $('.wrapper').append(card);
-    //.addClass("fromanotherplayer");
     console.log(crd);
-    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').css("z-index", card_level_on_stack+2);
-    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer').addClass("onplayingstack");
-    // $('.wrapper > .' + color + '_' + number.toString() + '.card.fromanotherplayer.onplayingstack').css("left", 66 + card_level_on_stack*2 + "vw");
     card.addClass( ["fromanotherplayer", "onplayingstack"] );
     await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 
     card.css("z-index", card_level_on_stack+2);
