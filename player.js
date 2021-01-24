@@ -12,7 +12,7 @@ class Player {
         }
         this.socket_id = socket_id;
         this.points = 0;
-        this.guesses = 0;
+        this.guess = 0;
         this.hand = [];
         this.index = 0;
         this.tricks_won = 0;

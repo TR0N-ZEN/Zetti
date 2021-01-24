@@ -21,17 +21,30 @@
         height: inherit;
         width: inherit;
     }
-    #login {
+    #loading {
         position: fixed;
-        top: auto;
-        left: auto;
-        z-index: 11;
+        top: 0;
+        left: 0;
+        z-index: 12;
         width: 100vw;
         height: 100vh;
         display: flex;
         align-items:center;
         justify-content: center;
         background-color:black;
+        color: white;
+    }
+    #login {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 11;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items:center;
+        justify-content: center;
+        background-color:rgb(24, 24, 24);
     }
         #login > form {
             width: 30%;
@@ -165,8 +178,17 @@
         background-color: black;
         border: 0.5vh solid var(--semitransparent);
         border-radius: 5px;
+        /*
         display: flex;
         flex-flow: column;
+        */
+    }
+    #playerboard > table > tr > td:nth-child(2){
+        width: 7rem;
+        right: 1rem;
+    }#playerboard > table > tr > td:nth-child(3){
+        width: 4rem;
+        right: 1rem;
     }
     #playingfield {
         position: fixed;
