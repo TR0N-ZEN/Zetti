@@ -203,16 +203,20 @@ function update_points() {
         io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
         playerList[i].guess = 0;
         playerList[i].tricks_won = 0;
-        console.log(playerList[i].name + "\n\tguessed: " + guess.toString() + "\n\twon: " + tricks_won.toString() +  "\n\tdelta_in_points: " + delta.toString());
+        playerList[i].hand = [];
+        console.group(playerList[i].name);
+        console.log("guessed: " + guess.toString() + "\nwon: " + tricks_won.toString() +  "\ndelta_in_points: " + delta.toString());
+        console.groupEnd();
     }
     let points = new Array(playerList.length);
     for (let i = 0; i < playerList.length; i++) {
-        points[i] = playerList.length.points[i];
+        points[i] = playerList[i].points;
     }
     io.emit("playerBoard.update.points", JSON.stringify(points));
 }
 var round_starter = 0;
 var trump_color = "";
+var round = 1;
 async function play_round(/*number*/round) {
     console.group("play round " + round);
     trump_color = get_random_color();
@@ -247,6 +251,9 @@ async function play_round(/*number*/round) {
         setTimeout(() => {
             play_round(/*number*/++round);
         }, 6000);
+    } else {
+        console.log("END");
+        //showresume();
     }
 }
 
@@ -338,10 +345,10 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
     socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
         console.log(color + " " + number);
         trick[current_player] = new Card(color, number); //position in trick matches position of player who played the card in playerList
-        for (let i = 0; i < playerList.length; i++) {
-            if (playerList[playerINDEX].hand[i] === trick[current_player]) {
-                playerList[playerINDEX].hand[i].splice(i, 1);
+        for (let i = 0; i < playerList[playerINDEX].hand.length; i++) {
+            if (playerList[playerINDEX].hand[i].color == color && playerList[playerINDEX].hand[i].number == number) {
                 console.log(playerList[playerINDEX].hand[i]);
+                playerList[playerINDEX].hand.splice(i, 1);
             }
         }
         socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/playingfield.card_pos_on_stack);
