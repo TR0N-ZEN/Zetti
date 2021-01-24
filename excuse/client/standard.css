@@ -5,6 +5,8 @@
     --theviolet:#BB5E96;
     --semitransparent:#ffffffef;
     --milkglass:#ffffff6b;
+    --blue: #3399ff;
+    --orange: #ff5e00bb;
 }
 
 * {
@@ -19,7 +21,7 @@ body {
     color: black;
     font-family:sans-serif;
     overflow-wrap:break-word;
-    background-color:grey;
+    background-color:var(--orange);
     font-size: 2.5vmin;
 }
 h2 {
@@ -42,6 +44,10 @@ h2 {
 
 .grid-box {
     padding: 1vmin;
+}
+/*
+.grid-box {
+    padding: 1vmin;
     z-index: 0;
     transform: scale(1);
     box-shadow: none;
@@ -53,30 +59,45 @@ h2 {
     transform: scale(1.03);
     box-shadow: 0 0 5px black;
 }
+*/
 .memo {
     grid-area: memo;
     background-color: white;
-    
 }
 .memo > p {
     margin-left: 2vw;
 }
 .changelog {
+    overflow-y: scroll;
     grid-area: changelog;
     background-color: white;
 }
 .changelog > div {
-    background: #3399ff;
+    background: var(--blue);
     padding-left: 1vw;
+    padding-right: 0.5vw;
+    border-radius: 10px;
+    padding: 1vmin;
+    z-index: 0;
+    transform: scale(1);
+    box-shadow: none;
+    transition-property: box-shadow z-index transform;
+    transition-duration: 1s;
 }
-.changelog  ul {
+.changelog > div:hover {
+    z-index: 2;
+    transform: scale(1.03);
+    box-shadow: 0 0 5px black;
+}
+.changelog ul {
     list-style-position: inside;
-    list-style-type: circle;
-    padding-left: 1.5vw;
-    
+    list-style-type: none;
 }
 
 ul > li {
+    padding-left: 1vw;
+    padding-right: 1vw;
+    border-radius: 10px;
     background: #cce5ff;
     margin: 2px;
 }

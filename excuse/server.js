@@ -9,6 +9,7 @@ const port = 80;
 
 app.use(express.static('client'));
 app.get('/', function (req, res) {
+    console.log(__dirname);
     res.sendFile(__dirname + 'client/index.html');
 });
 
