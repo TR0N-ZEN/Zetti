@@ -7,6 +7,9 @@ var playerList = [];
 var already_voted = [];
 var cardIndex = 0;
 var colors = ["red", "green", "blue", "yellow"];
+var game_is_running = false;
+var recently_left = []; //can only be filled if game is running
+//add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 
 class Card {
     constructor(color, number) {
@@ -252,7 +255,9 @@ async function play_round(/*number*/round) {
             play_round(/*number*/++round);
         }, 6000);
     } else {
-        console.log("END");
+        console.log("END\n20 seconds until process terminates");
+        await delay(20000);
+        console.log("process terminating");
         //showresume();
     }
 }
@@ -263,11 +268,20 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.3';//'localhost';// //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.3';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid) {
-    if (playerList.length < 6) {
+    if (recently_left.length != 0) {
+        for (let a = 0; a < recently_left.length; a++) {
+            if (name == recently_left[a].name) {
+                for (let b = 0; b < playerList.length; b++) {
+                    playerList[recently_left[a].index].socket_id = socketid;
+                }
+            }
+        }
+    }
+    else if (playerList.length < 6 && playerList) {
         playerList.push(new Player(name, socketid));
         playerList[playerList.length - 1].index = playerList.length - 1;
         console.log("login.successful");
@@ -283,7 +297,8 @@ function login(/*string*/name, /*string*/socketid) {
         io.emit('vote.update', already_voted.length, playerList.length);
         console.log(names);
         console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
-    } else {
+    }
+    else {
         console.log("login.unsuccessful");
         io.to(socketid).emit('login.unsuccessful');
     }
@@ -297,6 +312,7 @@ function vote(/*number*/playerid) {
         io.emit('vote.update', /*number*/already_voted.length, /*number*/playerList.length);
         console.groupEnd();
         if (already_voted.length == playerList.length) {
+            game_is_running = true;
             console.log("start game");
             io.emit('game.start');
             setTimeout(() => { play_round(1); }, 2000);
@@ -307,18 +323,23 @@ function disconnected() {
     console.log('user disconnected');
     for (let i = 0; i < playerList.length; i++) {
         if (io.of('/').sockets[playerList[i].socket_id] === undefined) {
-            io.emit('MessageFromServer', playerList[i].name + " left.")
-            already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
-            IDs[playerList[i].id] = 0;
-            playerList.splice(i, 1);
-            let names = new Array(playerList.length);
-            let ids = new Array(playerList.length);
-            for (let a = 0; a < playerList.length; a++) {
-                names[a] = playerList[a].name;
-                ids[a] = playerList[a].id;
+            if (game_is_running) {
+                recently_left.push(playerList[i]);
             }
-            io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-            io.emit('vote.update', already_voted.length, playerList.length);
+            else {
+                io.emit('MessageFromServer', playerList[i].name + " left.")
+                already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
+                IDs[playerList[i].id] = 0;
+                playerList.splice(i, 1);
+                let names = new Array(playerList.length);
+                let ids = new Array(playerList.length);
+                for (let a = 0; a < playerList.length; a++) {
+                    names[a] = playerList[a].name;
+                    ids[a] = playerList[a].id;
+                }
+                io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
+                io.emit('vote.update', already_voted.length, playerList.length);
+            }
             break;
         }
     }
@@ -366,7 +387,7 @@ app.use(express.static('client'));
 app.get('/', (req, res) => {
     //let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
     let p = __dirname;
-    if (playerList.length < 6) {
+    if (playerList.length < 6 || recently_left.length != 0) {
         res.sendFile( p + '/client/index.html');
     } else {
         res.sendFile( p  + '/client/game_is_full.html');
