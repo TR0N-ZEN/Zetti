@@ -3,6 +3,8 @@
 const mod = require('./mod');
 const Player = require('./player').Player;
 var IDs = require('./player').IDs;
+const Card = require('./card').Card;
+const Field = require('./field').Field;
 var playerList = [];
 var already_voted = [];
 var cardIndex = 0;
@@ -11,27 +13,9 @@ var game_is_running = false;
 var recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 
-class Card {
-	constructor(color, number) {
-		this.color = color;
-		this.number = number;
-	}
-}
-var playingfield = {
-	deck: new Array(60),
-	playingstack: new Array(),
-	card_pos_on_stack: 0,
-	shuffle: function () {
-		for (let i = this.deck.length - 1; i > 0; i--)
-		{
-			j = Math.floor(Math.random() * i);
-			let k = this.deck[i];
-			this.deck[i] = this.deck[j];
-			this.deck[j] = k;
-		}
-		return 0;
-	}
-}
+
+var playingfield = new Field(60);
+
 for (color of colors) {
 	for (let i = 1; i < 14; i++) {
 		playingfield.deck[cardIndex] = new Card(color, i);
@@ -90,66 +74,63 @@ var current_player = 0;
 var last_winner_index = undefined;
 var trick_starter;
 var trick = [];
-async function play_trick()
-{
+async function play_trick(/*array*/players, /*number*/trick_starter_index)
+{ // sideeffects only on: playingfield.card_pos_on_stack
+	// this function is waiting for resolves triggered in 'io.on('card.toPlayingstack')' by function call 'go_on()'
 	console.group("play trick");
-	if (last_winner_index === undefined) {
-		trick_starter = round_starter;
-	} else {
-		trick_starter = last_winner_index;
-	}
-	console.log("start player: " + trick_starter);
-	for (let i = 0; i < playerList.length; i++) {
+	// Requesting the players to put a card to the table.
+	for (let i = 0; i < players.length; i++)
+	{
 		go_on = () => { };
-		current_player = mod(trick_starter + i, playerList.length);
-		let socket_id = playerList[current_player].socket_id;
-		playingfield.card_pos_on_stack = i;
-		console.log("card.waitingFor " + playerList[current_player].name);
-		io.emit('card.waitingFor', playerList[current_player].id);
+		current = mod(trick_starter_index + i, players.length);
+		playingfield.card_pos_on_stack = i; // sideeffect for visual representation for clients
+		console.log("card.waitingFor " + players[current].name);
+		io.emit('card.waitingFor', players[current].id);
+		let socket_id = players[current].socket_id;
 		io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
-		//card put on playingfield.stack in io.on('card.toPlayingstack')
-		await new Promise((resolve) => { go_on = resolve; });
+		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
 	}
 	return 0;
 }
-function distribute_cards(round, deck, playerList)
+function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/players)
 {
 	console.log("distribute cards");
-	for (let i = 0; i < playerList.length; i++) {
-		let socket_id = playerList[i].socket_id;
-		for (let j = 0; j < round; j++) {
-			playerList[i].hand.push(deck[i * round + j]);
+	for (let i = 0; i < players.length; i++) {
+		let socket_id = players[i].socket_id;
+		for (let j = 0; j < amount_per_player; j++) {
+			players[i].hand.push(deck[i * amount_per_player + j]);
 		}
-		//console.log("to " + playerList[i].name + ": " + cards_to_distribute);
-		io.to(socket_id).emit('card.distribute', JSON.stringify(playerList[i].hand));
+		//console.log("to " + players[i].name + ": " + cards_to_distribute);
+		io.to(socket_id).emit('card.distribute', JSON.stringify(players[i].hand));
 	}
 }
-function get_random_color()
+function get_random_element(/*array*/array)
 {
-	let index = Math.floor(Math.random() * 4);
-	if (index == 4) { index = 3; }
-	return colors[index];
+	let index = Math.floor(Math.random() * array.length);
+	if (index == array.length) { index = array.length - 1; }
+	return array[index];
 }
-async function take_guesses(playerList, round_starter)
+async function take_guesses(/*array*/players, /*number*/starter_index)
 {
 	console.group("take_guesses");
-	for (let i = 0; i < playerList.length; i++) {
-		let the_asked_one = mod(round_starter + i, playerList.length);
-		console.log("guess.waitingFor " + playerList[the_asked_one].name);
-		io.emit('guess.waitingFor', playerList[the_asked_one].id);
-		io.to(playerList[the_asked_one].socket_id).emit('guess.request');
+	for (let i = 0; i < players.length; i++)
+	{
+		let the_asked_one = mod(starter_index + i, players.length);
+		console.log("guess.waitingFor " + players[the_asked_one].name);
+		io.emit('guess.waitingFor', players[the_asked_one].id);
+		io.to(players[the_asked_one].socket_id).emit('guess.request');
 		await new Promise( (resolve) => {
-				ask_next = resolve; // resolve can be triggered from outside by calling go_on();
+			ask_next = resolve; // resolve can be triggered from outside by calling go_on() in 'io.on("guess.response")';
 		});
   }
 	console.groupEnd();
 	return 0;
 }
-function to_serve(playerList, trick_starter, trick)
+function to_serve(/*array*/players, /*number*/trick_starter_index, /*array*/trick)
 {
-	for (let i = 0; i < playerList.length; i++)
+	for (let i = 0; i < players.length; i++)
 	{
-		let c_player = mod(trick_starter + i, playerList.length);
+		let c_player = mod(trick_starter_index + i, players.length);
 		if (trick[c_player].color != "N")
 		{
 			return trick[c_player].color; //found color that should be served
@@ -162,15 +143,15 @@ function to_serve(playerList, trick_starter, trick)
 		return "N";
 	}
 }
-function calculate_winner(playerList, trick, trick_starter, trump_color)
+function calculate_winner(/*array*/players, /*array*/trick, /*number*/trick_starter_index, /*string*/trump_color)
 {
 	console.group("calculate winner");
-	var color_to_serve = to_serve(playerList, trick_starter, trick);
+	var color_to_serve = to_serve(players, trick_starter_index, trick);
 	var high_card_index = 0;
 	var high_card = trick[high_card_index];
-	for (let i = 0; i < playerList.length; i++)
+	for (let i = 0; i < players.length; i++)
 	{
-		let c_player = mod(trick_starter + i, playerList.length);
+		let c_player = mod(trick_starter_index + i, players.length);
 		switch(trick[c_player].color) {
 			case("Z"):
 				console.log("der erste Zetti ist geflogen");
@@ -209,12 +190,12 @@ function calculate_winner(playerList, trick, trick_starter, trump_color)
 	last_winner_index = high_card_index;
 	return last_winner_index;
 }
-function update_points(playerList)
+function update_points(/*array*/players)
 {
-	for (let i = 0; i < playerList.length; i++) {
+	for (let i = 0; i < players.length; i++) {
 		let delta;
-		let guess = playerList[i].guess;
-		let tricks_won = playerList[i].tricks_won;
+		let guess = players[i].guess;
+		let tricks_won = players[i].tricks_won;
 		if (guess == tricks_won)
 		{
 			delta = 20 + guess*10;
@@ -224,44 +205,46 @@ function update_points(playerList)
 			delta = (guess - tricks_won)*10;
 			if (delta > 0) { delta *= -1; }
 		}
-		playerList[i].points += delta;
-		io.to(playerList[i].socket_id).emit('points.update', playerList[i].points);
-		playerList[i].guess = 0;
-		playerList[i].tricks_won = 0;
-		playerList[i].hand = [];
-		console.group(playerList[i].name);
+		players[i].points += delta;
+		io.to(players[i].socket_id).emit('points.update', players[i].points);
+		players[i].guess = 0;
+		players[i].tricks_won = 0;
+		players[i].hand = [];
+		console.group(players[i].name);
 		console.log("guessed: " + guess.toString() + "\nwon: " + tricks_won.toString() +  "\ndelta_in_points: " + delta.toString());
 		console.groupEnd();
 	}
-	let points = new Array(playerList.length);
-	for (let i = 0; i < playerList.length; i++) {
-		points[i] = playerList[i].points;
+	let points = new Array(players.length);
+	for (let i = 0; i < players.length; i++) {
+		points[i] = players[i].points;
 	}
 	io.emit("playerBoard.update.points", JSON.stringify(points));
 }
 
-var round_starter = 0;
-var trump_color = "";
-var round = 1;
 
-async function play_round(/*number*/round)
+
+async function play_round(/*number*/round, /*array*/players, /*object*/playingfield, /*number*/round_starter)
 {
 	console.group("play round " + round);
-	trump_color = get_random_color();
+	trump_color = get_random_element(colors);
 	console.log("trump color: " + trump_color);
 	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
 	playingfield.shuffle();
-	await delay(1500); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
-	distribute_cards(round, playingfield.deck, playerList);
-	await take_guesses(playerList, round_starter); // sideeffects on playerlist[i].guesses
+	//await delay(1500); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
+	distribute_cards(round, playingfield.deck, players);
+	await take_guesses(players, round_starter); // sideeffects on players[i].guesses
+	var winner_index = undefined;
 	for (let trick_number = 1; trick_number <= round; trick_number++)
 	{
 		io.emit("game.trick.start");
-		await play_trick(); // appends cards to playingfield.playingstack
-		var winner_index = calculate_winner(playerList, trick, trick_starter);
-		console.log("winner: " + playerList[winner_index].name);
-		++playerList[winner_index].tricks_won;
-		io.emit('guess.update', /*number*/playerList[winner_index].id, /*number*/playerList[winner_index].guess, /*number*/playerList[winner_index].tricks_won);
+		// Who is starting to put a card to the field?
+		if (winner_index === undefined) { trick_starter = round_starter; }
+		else { trick_starter = winner_index; }
+		await play_trick(players, trick_starter); // appends cards to playingfield.playingstack
+		winner_index = calculate_winner(players, trick, trick_starter, trump_color);
+		console.log("winner: " + players[winner_index].name);
+		++players[winner_index].tricks_won;
+		io.emit('guess.update', /*number*/players[winner_index].id, /*number*/players[winner_index].guess, /*number*/players[winner_index].tricks_won);
 		console.groupEnd();
 		await new Promise((resolve) => {
 			setTimeout( () => {
@@ -270,15 +253,15 @@ async function play_round(/*number*/round)
 			}, 3000);
 		});
 	}
-	update_points(playerList); //calculate points after each round
-	last_winner_index = undefined;
-	round_starter = mod(round_starter + 1, playerList.length); //rule of starter of first trick in a round is passed in a circle
+	update_points(players); //calculate points after each round
 	console.groupEnd();
 	io.emit('game.round.end');
-	if (round < (60 / playerList.length))
+	if (round < (60 / players.length))
 	{
+		last_winner_index = undefined;
+		round_starter = mod(round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
 		setTimeout(() => {
-				play_round(/*number*/++round);
+				play_round(/*number*/++round, /*array*/players, /*objetc*/playingfield, /*number*/round_starter);
 		}, 6000);
 	}
 	else
@@ -299,7 +282,7 @@ let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 const IPaddress = '192.168.178.3';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
-function login(/*string*/name, /*string*/socketid)
+function login(/*string*/name, /*string*/socketid, playerList, already_voted)
 {
 	if (recently_left.length != 0) {
 		for (let a = 0; a < recently_left.length; a++) {
@@ -331,12 +314,12 @@ function login(/*string*/name, /*string*/socketid)
 	}
 	else
 	{
-			console.log("login.unsuccessful");
-			io.to(socketid).emit('login.unsuccessful');
+		console.log("login.unsuccessful");
+		io.to(socketid).emit('login.unsuccessful');
 	}
 	console.log("IDs: " + IDs);
 }
-function vote(/*number*/playerid)
+function vote(/*number*/playerid, playerList, already_voted)
 {
 	console.group("vote");
 	if (!already_voted.includes(playerid))
@@ -402,16 +385,16 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket.id); });
+	socket.on('login', (/*string*/name) => { login(name, socket.id, playerList, already_voted); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
-	socket.on('vote', (/*number*/playerid) => { vote(playerid); });
+	socket.on('vote', (/*number*/playerid) => { vote(playerid, playerList, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
 		console.log(color + " " + number);
-		trick[current_player] = new Card(color, number); //position in trick matches position of player who played the card in playerList
+		trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
 		for (let i = 0; i < playerList[playerINDEX].hand.length; i++)
 		{
-			if (playerList[playerINDEX].hand[i].color == color && playerList[playerINDEX].hand[i].number == number) {
-				console.log(playerList[playerINDEX].hand[i]);
+			if (playerList[playerINDEX].hand[i].color == color && playerList[playerINDEX].hand[i].number == number)
+			{
 				playerList[playerINDEX].hand.splice(i, 1);
 			}
 		}
@@ -430,14 +413,8 @@ app.use(express.static('client'));
 app.get('/', (req, res) => {
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
 	let p = __dirname;
-	if (playerList.length < 6 || recently_left.length != 0)
-	{
-		res.sendFile( p + '/client/index.html');
-	}
-	else
-	{
-		res.sendFile( p  + '/client/game_is_full.html');
-	}
+	if (playerList.length < 6 || recently_left.length != 0) { res.sendFile( p + '/client/index.html'); }
+	else { res.sendFile( p  + '/client/game_is_full.html'); }
 });
 httpsserver.listen(port, IPaddress, () => {
   console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
@@ -447,7 +424,4 @@ httpsserver.listen(port, IPaddress, () => {
 
 
 //DEBUGING------------------------------------------------------
-function changeCSS(element, property, value)
-{
-  io.emit('changeCSS', element,  property, value);
-}
+function changeCSS(element, property, value) { io.emit('changeCSS', element,  property, value); }
