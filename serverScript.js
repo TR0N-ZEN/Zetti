@@ -5,12 +5,12 @@ const Player = require('./player').Player;
 var IDs = require('./player').IDs;
 const Card = require('./card').Card;
 const Field = require('./field').Field;
-var playerList = [];
-var already_voted = [];
+const playerList = [];
+const already_voted = [];
 var cardIndex = 0;
-var colors = ["red", "green", "blue", "yellow"];
+const colors = ["red", "green", "blue", "yellow"];
 var game_is_running = false;
-var recently_left = []; //can only be filled if game is running
+const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 
 
@@ -116,11 +116,11 @@ async function take_guesses(/*array*/players, /*number*/starter_index)
 	for (let i = 0; i < players.length; i++)
 	{
 		let the_asked_one = mod(starter_index + i, players.length);
-		console.log("guess.waitingFor " + players[the_asked_one].name);
+		console.log("guess.waitingFor: " + players[the_asked_one].name);
 		io.emit('guess.waitingFor', players[the_asked_one].id);
 		io.to(players[the_asked_one].socket_id).emit('guess.request');
 		await new Promise( (resolve) => {
-			ask_next = resolve; // resolve can be triggered from outside by calling go_on() in 'io.on("guess.response")';
+			take_next_guess = resolve; // resolve can be triggered from outside by function call 'take_next_guess()' in 'io.on('guess.response')';
 		});
   }
 	console.groupEnd();
@@ -221,8 +221,6 @@ function update_points(/*array*/players)
 	io.emit("playerBoard.update.points", JSON.stringify(points));
 }
 
-
-
 async function play_round(/*number*/round, /*array*/players, /*object*/playingfield, /*number*/round_starter)
 {
 	console.group("play round " + round);
@@ -232,15 +230,15 @@ async function play_round(/*number*/round, /*array*/players, /*object*/playingfi
 	playingfield.shuffle();
 	//await delay(1500); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
 	distribute_cards(round, playingfield.deck, players);
-	await take_guesses(players, round_starter); // sideeffects on players[i].guesses
-	var winner_index = undefined;
+	await take_guesses(players, round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
+	var winner_index = undefined; //needs to be available between iterations of the following looped block
 	for (let trick_number = 1; trick_number <= round; trick_number++)
 	{
 		io.emit("game.trick.start");
 		// Who is starting to put a card to the field?
-		if (winner_index === undefined) { trick_starter = round_starter; }
+		if (trick_number == 1) { trick_starter = round_starter; }
 		else { trick_starter = winner_index; }
-		await play_trick(players, trick_starter); // appends cards to playingfield.playingstack
+		await play_trick(players, trick_starter); // appends cards to 'playingfield.playingstack' in "io.on('card.toPlayingstack')"
 		winner_index = calculate_winner(players, trick, trick_starter, trump_color);
 		console.log("winner: " + players[winner_index].name);
 		++players[winner_index].tricks_won;
@@ -258,10 +256,9 @@ async function play_round(/*number*/round, /*array*/players, /*object*/playingfi
 	io.emit('game.round.end');
 	if (round < (60 / players.length))
 	{
-		last_winner_index = undefined;
 		round_starter = mod(round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
 		setTimeout(() => {
-				play_round(/*number*/++round, /*array*/players, /*objetc*/playingfield, /*number*/round_starter);
+				play_round(/*number*/++round, /*array*/players, /*object*/playingfield, /*number*/round_starter);
 		}, 6000);
 	}
 	else
@@ -405,7 +402,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		playerList[index].guess = guess;
 		console.log(playerList[index].name + " guessed from object: " + playerList[index].guess);
 		io.emit('guess.update', /*number*/playerList[index].id, /*number*/guess, 0);
-		ask_next(); //resolves Promise in async take_guesses()'s loop
+		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
 	socket.on('disconnect', (reason) => { disconnected(); });
 });
