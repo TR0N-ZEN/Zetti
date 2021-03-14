@@ -5,31 +5,14 @@ const Player = require('./player').Player;
 var IDs = require('./player').IDs;
 const Card = require('./card').Card;
 const Field = require('./field').Field;
+const playingfield = require('./zetti_field').playingfield;
 const playerList = [];
 const already_voted = [];
-var cardIndex = 0;
 const colors = ["red", "green", "blue", "yellow"];
 var game_is_running = false;
 const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 
-
-var playingfield = new Field(60);
-
-for (color of colors) {
-	for (let i = 1; i < 14; i++) {
-		playingfield.deck[cardIndex] = new Card(color, i);
-		++cardIndex;
-	}
-}
-for (let i = 0; i < 4; i++) {
-	playingfield.deck[cardIndex] = new Card("Z", i); //Zauberer; each card needs to have unique properties
-	++cardIndex;
-}
-for (let i = 0; i < 4; i++) {
-	playingfield.deck[cardIndex] = new Card("N", i); //Narren each card needs to have unique properties
-	++cardIndex;
-}
 
 //delay only works in async functions
 function delay(milliseconds) {
@@ -70,8 +53,6 @@ function delay(milliseconds) {
  * */
 
 var go_on = () => { };
-var current_player = 0;
-var last_winner_index = undefined;
 var trick_starter;
 var trick = [];
 async function play_trick(/*array*/players, /*number*/trick_starter_index)
@@ -152,12 +133,13 @@ function calculate_winner(/*array*/players, /*array*/trick, /*number*/trick_star
 	for (let i = 0; i < players.length; i++)
 	{
 		let c_player = mod(trick_starter_index + i, players.length);
-		switch(trick[c_player].color) {
+		switch(trick[c_player].color)
+		{
 			case("Z"):
 				console.log("der erste Zetti ist geflogen");
-				last_winner_index = c_player;
+				winner_index = c_player;
 				console.groupEnd();
-				return last_winner_index;
+				return winner_index;
 			case(trump_color):
 				console.log("Trump has been played.");
 				if (high_card.color != trump_color)
@@ -187,8 +169,8 @@ function calculate_winner(/*array*/players, /*array*/trick, /*number*/trick_star
 		}
 	}
 	console.groupEnd();
-	last_winner_index = high_card_index;
-	return last_winner_index;
+	winner_index = high_card_index;
+	return winner_index;
 }
 function update_points(/*array*/players)
 {
@@ -228,7 +210,7 @@ async function play_round(/*number*/round, /*array*/players, /*object*/playingfi
 	console.log("trump color: " + trump_color);
 	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
 	playingfield.shuffle();
-	//await delay(1500); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
+	//await delay(15000); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
 	distribute_cards(round, playingfield.deck, players);
 	await take_guesses(players, round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	var winner_index = undefined; //needs to be available between iterations of the following looped block
@@ -276,7 +258,7 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.3';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.4';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid, playerList, already_voted)
@@ -330,7 +312,7 @@ function vote(/*number*/playerid, playerList, already_voted)
 			game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { play_round(1); }, 2000);
+			setTimeout(() => { play_round(1, playerList, playingfield, 0); }, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }

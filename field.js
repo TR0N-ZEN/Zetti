@@ -6,7 +6,7 @@ class Field {
 		this.shuffle = function() {
 			for (let i = this.deck.length - 1; i > 0; i--)
 			{
-				j = Math.floor(Math.random() * i);
+				let j = Math.floor(Math.random() * i);
 				let k = this.deck[i];
 				this.deck[i] = this.deck[j];
 				this.deck[j] = k;
