@@ -261,7 +261,7 @@ let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 const IPaddress = '192.168.178.4';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
-function login(/*string*/name, /*string*/socketid, playerList, already_voted)
+function login(/*string*/name, /*string*/socketid)
 {
 	if (recently_left.length != 0) {
 		for (let a = 0; a < recently_left.length; a++) {
@@ -272,7 +272,7 @@ function login(/*string*/name, /*string*/socketid, playerList, already_voted)
 			}
 		}
 	}
-	else if (playerList.length < 6 && playerList)
+	else if (playerList.length < 6)
 	{
 		playerList.push(new Player(name, socketid));
 		playerList[playerList.length - 1].index = playerList.length - 1;
@@ -298,7 +298,7 @@ function login(/*string*/name, /*string*/socketid, playerList, already_voted)
 	}
 	console.log("IDs: " + IDs);
 }
-function vote(/*number*/playerid, playerList, already_voted)
+function vote(/*number*/playerid)
 {
 	console.group("vote");
 	if (!already_voted.includes(playerid))
@@ -364,9 +364,9 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket.id, playerList, already_voted); });
+	socket.on('login', (/*string*/name) => { login(name, socket.id); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
-	socket.on('vote', (/*number*/playerid) => { vote(playerid, playerList, already_voted); });
+	socket.on('vote', (/*number*/playerid) => { vote(playerid); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
 		console.log(color + " " + number);
 		trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
