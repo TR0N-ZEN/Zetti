@@ -9,19 +9,46 @@ class Player {
 		this.hand = [];
 		this.index = 0;
 		this.tricks_won = 0;
-		this.getID = function(){
-			for (let i = 0; i < IDs.length; i++)
+		this.id = Player.getID(IDs);
+	}
+	static getID(ids) {
+		for (let i = 0; i < ids.length; i++)
+		{
+			if (ids[i] == 0)
 			{
-				if (IDs[i] == 0)
-				{
-					IDs[i] = 1;
-					this.id = i;
-					break;
-				}
+				ids[i] = 1;
+				return i;
 			}
 		}
-		this.id = this.getID();
 	}
+	static index_by_socket_id (socket_id, playerList){
+  	for (let index = 0; index < playerList.length; index++) {
+     if ( playerList[index].socket_id == socket_id ) { return index; }
+    }
+  }
+    static delete_by_socket_id(socket_id, playerList) {
+    	let index = this.index_by_socket_id(socket_id, playerList);
+      if (typeof(index) !== 'undefined') {
+          playerList.splice(index, 1);
+          return true;
+      }
+      return false;
+    }
+    static index_by_id (player_id, playerList) {
+      for (let index = 0; index < playerList.length; index++) {
+				if ( playerList[index].id == player_id ) { return index; }
+      }
+    }
+    static delete_by_id (id, playerList) //maybe need to delete keyword 'static'
+		{
+        let index = this.index_by_id(id, playerList);
+        if (typeof(index) !== 'undefined')
+        {
+            playerList.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
 }
 
 module.exports.Player = Player;

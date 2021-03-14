@@ -258,38 +258,41 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.4';//'85.214.165.83'; //enter your current ip address inorder to avoid errors
+const IPaddress = '192.168.178.4';
+// os.networkInterfaces()["wlp4s0"][0]["address"] - for dev on laptop
+// '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80;
 //-------------------------------------------------------------------------
-function login(/*string*/name, /*string*/socketid)
+function login(/*string*/name, /*string*/socketid) // still heavy sideffect use on playerList, recently_left, already_voted
 {
-	if (recently_left.length != 0) {
-		for (let a = 0; a < recently_left.length; a++) {
-			if (name == recently_left[a].name) {
-				for (let b = 0; b < playerList.length; b++) {
-					playerList[recently_left[a].index].socket_id = socketid;
-				}
-			}
-		}
-	}
-	else if (playerList.length < 6)
+	if (recently_left.length != 0 && playerList.length == 6)
 	{
-		playerList.push(new Player(name, socketid));
-		playerList[playerList.length - 1].index = playerList.length - 1;
+		recently_left.foreach(player => {
+			if (player.name == name) {
+				let idx = Player.index_by_id(player.id, playerList);
+				playerList[idx].socket_id = socketid;
+				return 0;
+			}
+		});
+	}
+	if (playerList.length < 6)
+	{
+		let length = playerList.push(new Player(name, socketid));
+		playerList[length - 1].index = length - 1;
 		console.log("login.successful");
-		io.to(socketid).emit('login.successful', JSON.stringify(playerList[playerList.length - 1]));
-		let names = new Array(playerList.length);
-		let ids = new Array(playerList.length);
-		for (let a = 0; a < playerList.length; a++)
+		io.to(socketid).emit('login.successful', JSON.stringify(playerList[length - 1]));
+		let names = new Array(length);
+		let ids = new Array(length);
+		for (let a = 0; a < length; a++)
 		{
 			names[a] = playerList[a].name;
 			ids[a] = playerList[a].id;
 		}
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-		io.emit('MessageFromServer', playerList[playerList.length - 1].name + " logged in.");
-		io.emit('vote.update', already_voted.length, playerList.length);
+		io.emit('MessageFromServer', playerList[length - 1].name + " logged in.");
+		io.emit('vote.update', already_voted.length, length);
 		console.log(names);
-		console.log("New Player " + playerList[playerList.length - 1].name + " logged in.");
+		console.log("New Player " + name + " logged in.");
 	}
 	else
 	{
@@ -297,15 +300,15 @@ function login(/*string*/name, /*string*/socketid)
 		io.to(socketid).emit('login.unsuccessful');
 	}
 	console.log("IDs: " + IDs);
+	return 0;
 }
-function vote(/*number*/playerid)
+function vote(/*number*/playerid) // still heavy sideffect use on playerList, recently_left, already_voted
 {
 	console.group("vote");
 	if (!already_voted.includes(playerid))
 	{
 		console.log("vote accepted");
-		already_voted.push(playerid);
-		io.emit('vote.update', /*number*/already_voted.length, /*number*/playerList.length);
+		io.emit('vote.update', /*number*/already_voted.push(playerid), /*number*/playerList.length);
 		console.groupEnd();
 		if (already_voted.length == playerList.length)
 		{
@@ -317,17 +320,14 @@ function vote(/*number*/playerid)
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
-function disconnected()
+function disconnected() // still heavy sideffect use on playerList, recently_left, already_voted
 {
 	console.log('user disconnected');
 	for (let i = 0; i < playerList.length; i++)
 	{
 		if (io.of('/').sockets[playerList[i].socket_id] === undefined)
 		{
-			if (game_is_running)
-			{
-				recently_left.push(playerList[i]);
-			}
+			if (game_is_running) { recently_left.push(playerList[i]); }
 			else
 			{
 				io.emit('MessageFromServer', playerList[i].name + " left.")

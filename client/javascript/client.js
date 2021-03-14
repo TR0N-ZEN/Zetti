@@ -29,7 +29,7 @@ $( document ).ready(function() {
         },
         show: () => {
             chat.window.css('right', 0);
-            chat.visible = false;
+            chat.visible = true;
         }
     };
     var playerboard = {
@@ -82,12 +82,8 @@ $( document ).ready(function() {
 
     const resizeObserver = new ResizeObserver( async (entries) => {
         await delay(100);//cause until 1s after the first window resize the animation in css that positions #hand has finished
-        if (!guess.visible) {
-            guess.hide();
-        }
-        if (!chat.visible) {
-            chat.hide();
-        }
+        if (!guess.visible) { guess.hide(); }
+        if (!chat.visible) { chat.hide(); }
         $(".card").each(function (index_card) {
             let distance = $($("#hand > .card_frame")[index_card]).offset();
             $(this).offset(distance);
@@ -119,11 +115,8 @@ $( document ).ready(function() {
     }
 
     info.chat.click( () => {
-        if (!chat.visible) {
-            chat.show();
-        } else {
-            chat.hide();
-        }
+        if (!chat.visible) { chat.show(); }
+				else { chat.hide(); }
     });
 
     function removeTransition() {
