@@ -178,10 +178,7 @@ function update_points(/*array*/players)
 		let delta;
 		let guess = players[i].guess;
 		let tricks_won = players[i].tricks_won;
-		if (guess == tricks_won)
-		{
-			delta = 20 + guess*10;
-		}
+		if (guess == tricks_won) { delta = 20 + guess*10; }
 		else
 		{
 			delta = (guess - tricks_won)*10;
@@ -268,7 +265,8 @@ function login(/*string*/name, /*string*/socketid) // still heavy sideffect use 
 	if (recently_left.length != 0 && playerList.length == 6)
 	{
 		recently_left.foreach(player => {
-			if (player.name == name) {
+			if (player.name == name)
+			{
 				let idx = Player.index_by_id(player.id, playerList);
 				playerList[idx].socket_id = socketid;
 				return 0;
@@ -291,8 +289,8 @@ function login(/*string*/name, /*string*/socketid) // still heavy sideffect use 
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
 		io.emit('MessageFromServer', playerList[length - 1].name + " logged in.");
 		io.emit('vote.update', already_voted.length, length);
-		console.log(names);
 		console.log("New Player " + name + " logged in.");
+		console.table(names);
 	}
 	else
 	{
