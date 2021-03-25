@@ -4,11 +4,10 @@ const mod = require('./mod');
 const Player = require('./player').Player;
 var IDs = require('./player').IDs;
 const Card = require('./card').Card;
-const Field = require('./field').Field;
-const playingfield = require('./zetti_field').playingfield;
+const Zetti_field= require('./zetti_field').Zetti_field;
+const playingfield = new Zetti_field();
 const playerList = [];
 const already_voted = [];
-const colors = ["red", "green", "blue", "yellow"];
 var game_is_running = false;
 const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
@@ -53,8 +52,6 @@ function delay(milliseconds) {
  * */
 
 var go_on = () => { };
-var trick_starter;
-var trick = [];
 async function play_trick(/*array*/players, /*number*/trick_starter_index)
 { // sideeffects only on: playingfield.card_pos_on_stack
 	// this function is waiting for resolves triggered in 'io.on('card.toPlayingstack')' by function call 'go_on()'
@@ -91,6 +88,7 @@ function get_random_element(/*array*/array)
 	if (index == array.length) { index = array.length - 1; }
 	return array[index];
 }
+var take_next_guess = () => { };
 async function take_guesses(/*array*/players, /*number*/starter_index)
 {
 	console.group("take_guesses");
@@ -203,25 +201,25 @@ function update_points(/*array*/players)
 async function play_round(/*number*/round, /*array*/players, /*object*/playingfield, /*number*/round_starter)
 {
 	console.group("play round " + round);
-	trump_color = get_random_element(colors);
+	trump_color = get_random_element(Zetti_field.colors);
 	console.log("trump color: " + trump_color);
 	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
 	playingfield.shuffle();
 	//await delay(15000); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
 	distribute_cards(round, playingfield.deck, players);
 	await take_guesses(players, round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
-	var winner_index = undefined; //needs to be available between iterations of the following looped block
+	playingfield.winner_index = undefined; //needs to be available between iterations of the following looped block
 	for (let trick_number = 1; trick_number <= round; trick_number++)
 	{
 		io.emit("game.trick.start");
 		// Who is starting to put a card to the field?
-		if (trick_number == 1) { trick_starter = round_starter; }
-		else { trick_starter = winner_index; }
-		await play_trick(players, trick_starter); // appends cards to 'playingfield.playingstack' in "io.on('card.toPlayingstack')"
-		winner_index = calculate_winner(players, trick, trick_starter, trump_color);
-		console.log("winner: " + players[winner_index].name);
-		++players[winner_index].tricks_won;
-		io.emit('guess.update', /*number*/players[winner_index].id, /*number*/players[winner_index].guess, /*number*/players[winner_index].tricks_won);
+		if (trick_number == 1) { playingfield.trick_starter = round_starter; }
+		else { playingfield.trick_starter = playingfield.winner_index; }
+		await play_trick(players, playingfield.trick_starter); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
+		playingfield.winner_index = calculate_winner(players, playingfield.trick, playingfield.trick_starter, trump_color);
+		console.log("winner: " + players[playingfield.winner_index].name);
+		++players[playingfield.winner_index].tricks_won;
+		io.emit('guess.update', /*number*/players[playingfield.winner_index].id, /*number*/players[playingfield.winner_index].guess, /*number*/players[playingfield.winner_index].tricks_won);
 		console.groupEnd();
 		await new Promise((resolve) => {
 			setTimeout( () => {
@@ -367,7 +365,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('vote', (/*number*/playerid) => { vote(playerid); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
 		console.log(color + " " + number);
-		trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
+		playingfield.trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
 		for (let i = 0; i < playerList[playerINDEX].hand.length; i++)
 		{
 			if (playerList[playerINDEX].hand[i].color == color && playerList[playerINDEX].hand[i].number == number)

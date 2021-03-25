@@ -1,27 +1,36 @@
 const Card = require('./card').Card;
 const Field = require('./field').Field;
-const colors = ["red", "green", "blue", "yellow"];
 
-var playingfield = new Field(60);
-cardIndex = 0;
-
-for (color of colors)
+class Zetti_field extends Field 
 {
-	for (let i = 1; i < 14; i++)
+	static colors = ["red", "green", "blue", "yellow"];
+	constructor()
 	{
-		playingfield.deck[cardIndex] = new Card(color, i);
-		++cardIndex;
+		super(60)
+		cardIndex = 0
+		for (color of Zetti_field.colors)
+		{
+			for (let i = 1; i < 14; i++)
+			{
+				this.deck[cardIndex] = new Card(color, i);
+				++cardIndex;
+			}
+		}
+		for (let i = 0; i < 4; i++)
+		{
+			this.deck[cardIndex] = new Card("Z", i); // Zauberer; each card needs to have unique properties
+			++cardIndex;
+		}
+		for (let i = 0; i < 4; i++)
+		{
+			this.deck[cardIndex] = new Card("N", i); // Narren each card needs to have unique properties
+			++cardIndex;
+		}
+		this.trick = this.playing_stack; // array of Cards
+		this.trick_starter = 0; // to know who starts a trick
+		this.winner_index = undefined; // to know who starts a trick if it isn't the first in the round
 	}
 }
-for (let i = 0; i < 4; i++)
-{
-	playingfield.deck[cardIndex] = new Card("Z", i); // Zauberer; each card needs to have unique properties
-	++cardIndex;
-}
-for (let i = 0; i < 4; i++)
-{
-	playingfield.deck[cardIndex] = new Card("N", i); // Narren each card needs to have unique properties
-	++cardIndex;
-}
 
-module.exports.playingfield = playingfield;
+
+module.exports.Zetti_field = Zetti_field;
