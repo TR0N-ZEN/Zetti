@@ -29,6 +29,8 @@ class Zetti_field extends Field
 		this.trick = this.playing_stack; // array of Cards
 		this.trick_starter = 0; // to know who starts a trick
 		this.winner_index = undefined; // to know who starts a trick if it isn't the first in the round
+		this.current_round = 1;
+		this.total_rounds = 0;
 	}
 }
 

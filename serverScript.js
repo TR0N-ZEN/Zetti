@@ -231,11 +231,11 @@ async function play_round(/*number*/round, /*array*/players, /*object*/playingfi
 	update_points(players); //calculate points after each round
 	console.groupEnd();
 	io.emit('game.round.end');
-	if (round < (60 / players.length))
+	if (playingfield.current_round < playingfield.total_rounds)
 	{
 		round_starter = mod(round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
 		setTimeout(() => {
-				play_round(/*number*/++round, /*array*/players, /*object*/playingfield, /*number*/round_starter);
+				play_round(/*number*/++playingfield.current_round, /*array*/players, /*object*/playingfield, /*number*/round_starter);
 		}, 6000);
 	}
 	else
@@ -311,7 +311,7 @@ function vote(/*number*/playerid) // still heavy sideffect use on playerList, re
 			game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { play_round(1, playerList, playingfield, 0); }, 2000);
+			setTimeout(() => { playingfield.total_rounds = 60 / players.length; play_round(1, playerList, playingfield, 0); }, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
@@ -361,7 +361,21 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('login', (/*string*/name) => { login(name, socket.id); });
-	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
+	socket.on('MessageFromClient', (/*string*/message) => {
+		if (message[0] == "#") {
+			switch(message.slice(1))
+			{
+				case("SetRounds"):
+					var str = message.slice(11);
+					var nr = parseInt(str);
+					if (nr < 60 / playerList.length) { playingfield.total_rounds = nr; }
+					io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+				case("GetRounds"):
+					io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+			}
+		}
+		else { io.emit('MessageFromServer', message); }
+	});
 	socket.on('vote', (/*number*/playerid) => { vote(playerid); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
 		console.log(color + " " + number);
