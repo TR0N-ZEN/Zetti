@@ -1,5 +1,6 @@
 //message from ubuntu
 ////playingfield and player preparation
+const os = require('os');
 const mod = require('./mod');
 const Player = require('./player').Player;
 var IDs = require('./player').IDs;
@@ -12,9 +13,9 @@ var game_is_running = false;
 const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 const game_url = '/';
-const IPaddress = '192.168.178.4'; // address for the http server
-// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"] - for dev on laptop
-// const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"] - for dev on laptop
+// const IPaddress = '192.168.178.4'; // address for the http server
+const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
+// const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
 // const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80; // port for http server
 
@@ -206,7 +207,7 @@ function update_points(/*array*/players)
 async function play_round(/*number*/round, /*array*/players, /*object*/playingfield, /*number*/round_starter)
 {
 	console.group("play round " + round);
-	trump_color = get_random_element(Zetti_field.colors);
+	trump_color = get_random_element(playingfield.colors);
 	console.log("trump color: " + trump_color);
 	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
 	playingfield.shuffle();
