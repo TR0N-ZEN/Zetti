@@ -260,35 +260,35 @@ const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 //-------------------------------------------------------------------------
-function login(/*string*/name, /*string*/socketid) // still heavy sideffect use on playerList, recently_left, already_voted
+function login(/*string*/name, /*string*/socketid, /*array*/players,/*array*/votes, /*array*/ disconnected_players)
 {
-	if (recently_left.length != 0 && playerList.length == 6)
+	if (disconnected_players.length != 0)
 	{
-		recently_left.foreach(player => {
+		disconnected_players.foreach(player => {
 			if (player.name == name)
 			{
-				let idx = Player.index_by_id(player.id, playerList);
-				playerList[idx].socket_id = socketid;
+				let idx = Player.index_by_id(player.id, players);
+				players[idx].socket_id = socketid;
 				return 0;
 			}
 		});
 	}
-	if (playerList.length < 6)
+	if (players.length < 6)
 	{
-		let length = playerList.push(new Player(name, socketid));
-		playerList[length - 1].index = length - 1;
+		let length = players.push(new Player(name, socketid));
+		players[length - 1].index = length - 1;
 		console.log("login.successful");
-		io.to(socketid).emit('login.successful', JSON.stringify(playerList[length - 1]));
+		io.to(socketid).emit('login.successful', JSON.stringify(players[length - 1]));
 		let names = new Array(length);
 		let ids = new Array(length);
 		for (let a = 0; a < length; a++)
 		{
-			names[a] = playerList[a].name;
-			ids[a] = playerList[a].id;
+			names[a] = players[a].name;
+			ids[a] = players[a].id;
 		}
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-		io.emit('MessageFromServer', playerList[length - 1].name + " logged in.");
-		io.emit('vote.update', already_voted.length, length);
+		io.emit('MessageFromServer', players[length - 1].name + " logged in.");
+		io.emit('vote.update', votes.length, length);
 		console.log("New Player " + name + " logged in.");
 		console.table(names);
 	}
@@ -300,47 +300,47 @@ function login(/*string*/name, /*string*/socketid) // still heavy sideffect use 
 	console.log("IDs: " + IDs);
 	return 0;
 }
-function vote(/*number*/playerid) // still heavy sideffect use on playerList, recently_left, already_voted
+function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 {
 	console.group("vote");
-	if (!already_voted.includes(playerid))
+	if (!votes.includes(playerid))
 	{
 		console.log("vote accepted");
-		io.emit('vote.update', /*number*/already_voted.push(playerid), /*number*/playerList.length);
+		io.emit('vote.update', /*number*/votes.push(playerid), /*number*/players.length);
 		console.groupEnd();
-		if (already_voted.length == playerList.length)
+		if (votes.length == players.length)
 		{
 			game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { playingfield.total_rounds = 60 / players.length; play_round(1, playerList, playingfield, 0); }, 2000);
+			setTimeout(() => { playingfield.total_rounds = 60 / players.length; play_round(1, players, playingfield, 0); }, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
-function disconnected() // still heavy sideffect use on playerList, recently_left, already_voted
+function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players)
 {
 	console.log('user disconnected');
-	for (let i = 0; i < playerList.length; i++)
+	for (let i = 0; i < players.length; i++)
 	{
-		if (io.of('/').sockets[playerList[i].socket_id] === undefined)
+		if (io.of('/').sockets[players[i].socket_id] === undefined)
 		{
-			if (game_is_running) { recently_left.push(playerList[i]); }
+			if (game_is_running) { disconnected_players.push(players[i]); }
 			else
 			{
-				io.emit('MessageFromServer', playerList[i].name + " left.")
-				already_voted.splice(already_voted.indexOf(playerList[i].id), 1);
-				IDs[playerList[i].id] = 0;
-				playerList.splice(i, 1);
-				let names = new Array(playerList.length);
-				let ids = new Array(playerList.length);
-				for (let a = 0; a < playerList.length; a++)
+				io.emit('MessageFromServer', players[i].name + " left.")
+				votes.splice(votes.indexOf(players[i].id), 1);
+				IDs[players[i].id] = 0;
+				players.splice(i, 1);
+				let names = new Array(players.length);
+				let ids = new Array(players.length);
+				for (let a = 0; a < players.length; a++)
 				{
-					names[a] = playerList[a].name;
-					ids[a] = playerList[a].id;
+					names[a] = players[a].name;
+					ids[a] = players[a].id;
 				}
 				io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-				io.emit('vote.update', already_voted.length, playerList.length);
+				io.emit('vote.update', votes.length, players.length);
 			}
 			break;
 		}
@@ -362,7 +362,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket.id); });
+	socket.on('login', (/*string*/name) => { login(name, socket.id, playerList, already_voted, recently_left); });
 	socket.on('MessageFromClient', (/*string*/message) => {
 		if (message[0] == "#") {
 			switch(message.slice(1))
@@ -378,7 +378,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		}
 		else { io.emit('MessageFromServer', message); }
 	});
-	socket.on('vote', (/*number*/playerid) => { vote(playerid); });
+	socket.on('vote', (/*number*/playerid) => { vote(playerid, playerList, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
 		console.log(color + " " + number);
 		playingfield.trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
@@ -398,7 +398,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		io.emit('guess.update', /*number*/playerList[index].id, /*number*/guess, 0);
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
-	socket.on('disconnect', (reason) => { disconnected(); });
+	socket.on('disconnect', (reason) => { disconnected(playerList); });
 });
 app.use(express.static('client'));
 app.get(game_url, (req, res) => {
