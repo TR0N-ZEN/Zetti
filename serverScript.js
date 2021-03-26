@@ -11,7 +11,12 @@ const already_voted = [];
 var game_is_running = false;
 const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
-
+const game_url = '/';
+const IPaddress = '192.168.178.4'; // address for the http server
+// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"] - for dev on laptop
+// const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"] - for dev on laptop
+// const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
+const port = 80; // port for http server
 
 //delay only works in async functions
 function delay(milliseconds) {
@@ -253,10 +258,6 @@ const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
-const IPaddress = '192.168.178.4';
-// os.networkInterfaces()["wlp4s0"][0]["address"] - for dev on laptop
-// '85.214.165.83'; //enter your current ip address inorder to avoid errors
-const port = 80;
 //-------------------------------------------------------------------------
 function login(/*string*/name, /*string*/socketid) // still heavy sideffect use on playerList, recently_left, already_voted
 {
@@ -399,7 +400,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('disconnect', (reason) => { disconnected(); });
 });
 app.use(express.static('client'));
-app.get('/', (req, res) => {
+app.get(game_url, (req, res) => {
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
 	let p = __dirname;
 	if (playerList.length < 6 || recently_left.length != 0) { res.sendFile( p + '/client/index.html'); }
