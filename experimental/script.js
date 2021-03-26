@@ -1,12 +1,15 @@
-$('#click').css("position", "fixed");
 
-$('#click').click(function () {
-    let x = $(this);
-    console.log(x);
-    let dest_left = $("#target").css("left");
-    let dest_top = $("#target").css("top");
-    x.css("z-index", "3");
-    x.css("left", dest_left);
-    x.css("top", dest_top);
-    //x.toggleClass("totarget");
-});
+class a {
+	constructor() {}
+	static arr = [1, "3", "adwa", "4"];
+	list() {
+		a.arr.forEach((val, index) => { console.log(val); });
+		for (let i = 0; i < a.arr.length; i++) { console.log(a.arr[i]); }
+		for (e of a.arr) { console.log(e); }
+	}
+}
+
+var b = new a();
+console.log(a.arr);
+
+b.list();

@@ -3,19 +3,19 @@ const Field = require('./field').Field;
 
 class Zetti_field extends Field 
 {
-	static colors = ["red", "green", "blue", "yellow"];
 	constructor()
 	{
 		super(60)
-		cardIndex = 0
-		for (color of Zetti_field.colors)
+		var cardIndex = 0
+		this.colors = ["red", "green", "blue", "yellow"];
+		this.colors.forEach((color, index) => 
 		{
 			for (let i = 1; i < 14; i++)
 			{
 				this.deck[cardIndex] = new Card(color, i);
 				++cardIndex;
 			}
-		}
+		});
 		for (let i = 0; i < 4; i++)
 		{
 			this.deck[cardIndex] = new Card("Z", i); // Zauberer; each card needs to have unique properties
