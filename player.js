@@ -1,9 +1,9 @@
 var IDs = [0, 0, 0, 0, 0, 0];
 
-class Player {
+class Player extends Client {
 	constructor(name, socket_id) {
+		super(socket_id)
 		this.name = name;
-		this.socket_id = socket_id;
 		this.points = 0;
 		this.guess = 0;
 		this.hand = [];

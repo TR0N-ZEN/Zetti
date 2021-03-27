@@ -318,6 +318,18 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
+function update_players(/*array*/players, /*array*/votes)
+{
+	let names = new Array(players.length);
+	let ids = new Array(players.length);
+	for (let a = 0; a < players.length; a++)
+	{
+		names[a] = players[a].name;
+		ids[a] = players[a].id;
+	}
+	io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
+	io.emit('vote.update', votes.length, players.length);
+}
 function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players)
 {
 	console.log('user disconnected');
@@ -325,27 +337,35 @@ function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_pl
 	{
 		if (io.of('/').sockets[players[i].socket_id] === undefined)
 		{
-			if (game_is_running) { disconnected_players.push(players[i]); }
+			if (game_is_running) {
+				io.emit('MessageFromServer', players[i].name + " lost connection to the game.");
+				disconnected_players.push(players[i]);
+			}
 			else
 			{
-				io.emit('MessageFromServer', players[i].name + " left.")
+				io.emit('MessageFromServer', players[i].name + " left.");
 				votes.splice(votes.indexOf(players[i].id), 1);
 				IDs[players[i].id] = 0;
 				players.splice(i, 1);
-				let names = new Array(players.length);
-				let ids = new Array(players.length);
-				for (let a = 0; a < players.length; a++)
-				{
-					names[a] = players[a].name;
-					ids[a] = players[a].id;
-				}
-				io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-				io.emit('vote.update', votes.length, players.length);
+				update_players(players, votes);
 			}
 			break;
 		}
 	}
 	console.log("IDs: " + IDs);
+}
+function eval_command(string)
+{
+	switch(string)
+	{
+		case("SetRounds"):
+			var str = message.slice(11);
+			var nr = parseInt(str);
+			if (nr < 60 / playerList.length) { playingfield.total_rounds = nr; }
+			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+		case("GetRounds"):
+			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+	}
 }
 //LISTENER------------------------------------------------------------------------
 /*
@@ -364,18 +384,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('login', (/*string*/name) => { login(name, socket.id, playerList, already_voted, recently_left); });
 	socket.on('MessageFromClient', (/*string*/message) => {
-		if (message[0] == "#") {
-			switch(message.slice(1))
-			{
-				case("SetRounds"):
-					var str = message.slice(11);
-					var nr = parseInt(str);
-					if (nr < 60 / playerList.length) { playingfield.total_rounds = nr; }
-					io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
-				case("GetRounds"):
-					io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
-			}
-		}
+		if (message[0] == "#") { eval_command(message.slice(1)) }
 		else { io.emit('MessageFromServer', message); }
 	});
 	socket.on('vote', (/*number*/playerid) => { vote(playerid, playerList, already_voted); });
