@@ -7,7 +7,6 @@ class Player extends Client {
 		this.points = 0;
 		this.guess = 0;
 		this.hand = [];
-		this.index = 0;
 		this.tricks_won = 0;
 		this.id = Player.getID(IDs);
 	}
@@ -21,34 +20,35 @@ class Player extends Client {
 			}
 		}
 	}
-	static index_by_socket_id (socket_id, playerList){
-  	for (let index = 0; index < playerList.length; index++) {
-     if ( playerList[index].socket_id == socket_id ) { return index; }
+	static index_by_socket_id (socket_id, players)
+	{
+  	for (let index = 0; index < players.length; index++) {
+     if ( players[index].socket.id == socket_id ) { return index; }
     }
   }
-    static delete_by_socket_id(socket_id, playerList) {
-    	let index = this.index_by_socket_id(socket_id, playerList);
-      if (typeof(index) !== 'undefined') {
-          playerList.splice(index, 1);
-          return true;
-      }
-      return false;
-    }
-    static index_by_id (player_id, playerList) {
-      for (let index = 0; index < playerList.length; index++) {
-				if ( playerList[index].id == player_id ) { return index; }
-      }
-    }
-    static delete_by_id (id, playerList) //maybe need to delete keyword 'static'
+	static delete_by_socket_id(socket_id, players) {
+		let index = this.index_by_socket_id(socket_id, players);
+		if (typeof(index) !== 'undefined') {
+			players.splice(index, 1);
+			return true;
+		}
+		return false;
+	}
+	static index_by_id (player_id, players) {
+		for (let index = 0; index < players.length; index++) {
+			if ( players[index].id == player_id ) { return index; }
+		}
+	}
+	static delete_by_id (id, players) //maybe need to delete keyword 'static'
+	{
+		let index = this.index_by_id(id, players);
+		if (typeof(index) !== 'undefined')
 		{
-        let index = this.index_by_id(id, playerList);
-        if (typeof(index) !== 'undefined')
-        {
-            playerList.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
+			players.splice(index, 1);
+			return true;
+		}
+		return false;
+	}
 }
 
 module.exports.Player = Player;

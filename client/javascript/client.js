@@ -157,7 +157,7 @@ $( document ).ready(function() {
         guess.hide();
         let guess_number = parseInt($('.take_guess > form > input').val(), 10); // type number in deximal
         $('.take_guess > form > input').val("");
-        socket.emit('guess.response', /*number*/guess_number, /*number*/player_index);
+        socket.emit('guess.response', /*number*/guess_number, /*number*/PlayerObject.id);
         info.guess.text('Zu holen: ' + guess_number.toString());
         let width_in_px = guess.object.css('width');
         guess.object.css("righ", "-" + width_in_px);
@@ -209,8 +209,6 @@ $( document ).ready(function() {
         info.name.append(PlayerObject.name);
         info.points.append(PlayerObject.points);
         info.guess.append(PlayerObject.guess);
-        player_index = PlayerObject.index; //actually the index in playerList on server
-        player_id = PlayerObject.id; //unique identifier number
     });
     socket.on('login.unsuccessful', () => {
         $('#login').slideUp();

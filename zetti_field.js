@@ -7,7 +7,7 @@ class Zetti_field extends Field
 	{
 		super(60)
 		var cardIndex = 0
-		this.colors = ["red", "green", "blue", "yellow"];
+		this.colors = ["red", "green", "blue", "yellow"]; // should be static but this doesn't work for some reason on 28th March 2021
 		this.colors.forEach((color, index) => 
 		{
 			for (let i = 1; i < 14; i++)
@@ -27,6 +27,7 @@ class Zetti_field extends Field
 			++cardIndex;
 		}
 		this.trick = this.playing_stack; // array of Cards
+		this.round_starter = 0;
 		this.trick_starter = 0; // to know who starts a trick
 		this.winner_index = undefined; // to know who starts a trick if it isn't the first in the round
 		this.current_round = 1;
