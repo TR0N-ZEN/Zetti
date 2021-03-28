@@ -1,7 +1,7 @@
 const Client = require('./client').Client;
 
 class Player extends Client {
-	constructor(name, socket = undefined, ids) {
+	constructor(name, ids, socket = undefined, ) {
 		super(socket)
 		this.name = name;
 		this.points = 0;

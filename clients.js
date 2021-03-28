@@ -12,4 +12,4 @@ class Clients
 	}
 }
 
-module.exports = Clients;
+module.exports.Clients = Clients;

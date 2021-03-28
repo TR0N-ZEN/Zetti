@@ -3,3 +3,5 @@ class Client {
 		this.socket = socket;
 	}
 }
+
+module.exports.Client = Client;
