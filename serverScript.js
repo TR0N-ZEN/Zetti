@@ -3,14 +3,12 @@
 const os = require('os');
 const mod = require('./mod');
 const Player = require('./player').Player;
-var IDs = require('./player').IDs;
 const Card = require('./card').Card;
 const Zetti_field= require('./zetti_field').Zetti_field;
-const playingfield = new Zetti_field();
-const playerList = [];
+const field = new Zetti_field();
+const Clients = require('./clients').Clients;
+const clients = new Clients(6);
 const already_voted = [];
-var game_is_running = false;
-const recently_left = []; //can only be filled if game is running
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 const game_url = '/';
 // const IPaddress = '192.168.178.4'; // address for the http server
@@ -65,11 +63,10 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index)
 	// Requesting the players to put a card to the table.
 	for (let i = 0; i < players.length; i++)
 	{
-		playingfield.card_pos_on_stack = i; // sideeffect for visual representation for clients
 		player = players[mod(trick_starter_index + i, players.length)];
 		console.log("card.waitingFor " + player.name);
 		io.emit('card.waitingFor', player.id);
-		player.socket.emit('card.waiting', playingfield.card_pos_on_stack);
+		player.socket.emit('card.waiting', playingfield.trick.length);
 		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
 	}
 	return 0;
@@ -199,22 +196,22 @@ function update_points(/*array*/players)
 	io.emit("playerBoard.update.points", JSON.stringify(points));
 }
 
-async function play_round(/*number*/round, /*array*/players, /*object*/playingfield, /*number*/round_starter)
+async function play_round(/*array*/players, /*object*/playingfield)
 {
-	console.group("play round " + round);
-	trump_color = get_random_element(playingfield.colors);
+	console.group("play round " + playingfield.current_round);
+	var trump_color = get_random_element(playingfield.colors);
 	console.log("trump color: " + trump_color);
-	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
+	io.emit('game.round.start', /*number*/playingfield.current_round, /*string*/trump_color);
 	playingfield.shuffle();
 	//await delay(15000); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
-	distribute_cards(round, playingfield.deck, players);
-	await take_guesses(players, round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
+	distribute_cards(playingfield.current_round, playingfield.deck, players);
+	await take_guesses(players, playingfield.round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	playingfield.winner_index = undefined; //needs to be available between iterations of the following looped block
-	for (let trick_number = 1; trick_number <= round; trick_number++)
+	while (playingfield.round >= playingfield.current_trick)
 	{
 		io.emit("game.trick.start");
 		// Who is starting to put a card to the field?
-		if (trick_number == 1) { playingfield.trick_starter = round_starter; }
+		if (playingfield.current_trick == 1) { playingfield.trick_starter = playingfield.round_starter; }
 		else { playingfield.trick_starter = playingfield.winner_index; }
 		await play_trick(players, playingfield.trick_starter); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
 		playingfield.winner_index = calculate_winner(players, playingfield.trick, playingfield.trick_starter, trump_color);
@@ -222,30 +219,30 @@ async function play_round(/*number*/round, /*array*/players, /*object*/playingfi
 		++players[playingfield.winner_index].tricks_won;
 		io.emit('guess.update', /*number*/players[playingfield.winner_index].id, /*number*/players[playingfield.winner_index].guess, /*number*/players[playingfield.winner_index].tricks_won);
 		console.groupEnd();
-		await new Promise((resolve) => {
-			setTimeout( () => {
-					io.emit("game.trick.end"); //for clearing playingfield from cards on clients
-					resolve();
-			}, 3000);
-		});
+		await delay(3000);
+		io.emit("game.trick.end"); //for clearing playingfield from cards on clients
+		++playingfield.current_trick;
 	}
 	update_points(players); //calculate points after each round
 	console.groupEnd();
 	io.emit('game.round.end');
-	if (playingfield.current_round < playingfield.total_rounds)
+}
+async function showresumee(players)
+{
+	console.table(players);
+	await delay(30000);
+}
+async function game(players, playingfield)
+{
+	playingfield.current_round = 1;
+	while (playingfield.current_round <= playingfield.total_rounds)
 	{
-		round_starter = mod(round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
-		setTimeout(() => {
-				play_round(/*number*/++playingfield.current_round, /*array*/players, /*object*/playingfield, /*number*/round_starter);
-		}, 6000);
+		playingfield.round_starter = mod(playingfield.round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
+		play_round(/*array*/players, /*object*/playingfield);
+		++playingfield.current_round;
 	}
-	else
-	{
-		console.log("END\n20 seconds until process terminates");
-		await delay(20000);
-		console.log("process terminating");
-		//showresumee();
-	}
+	showresumee(players);
+	console.log("process terminating");
 }
 
 //Server Setup-------------------------------------------------------------
@@ -255,25 +252,24 @@ const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 //-------------------------------------------------------------------------
-function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*/ disconnected_players)
+function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*/disconnected_players)
 {
 	if (disconnected_players.length != 0)
 	{
 		disconnected_players.foreach(player => {
 			if (player.name == name)
 			{
-				let idx = Player.index_by_id(player.id, players);
-				players[idx].socket_id = socketid;
-				players[idx].socket = socket;
+				Player.by_id(player.id, players).socket = socket;
 				return 0;
 			}
 		});
 	}
 	if (players.length < 6)
 	{
-		let length = players.push(new Player(name, socket.id));
-		players[length - 1].index = length - 1;
+		let length = players.push(new Player(name, socket.id, clients.ids));
 		console.log("login.successful");
+		console.log(`New Player ${name} logged in.`);
+		console.table(names);
 		socket.emit('login.successful', JSON.stringify(players[length - 1]));
 		let names = new Array(length);
 		let ids = new Array(length);
@@ -283,17 +279,15 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 			ids[a] = players[a].id;
 		}
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-		io.emit('MessageFromServer', players[length - 1].name + " logged in.");
+		io.emit('MessageFromServer', name + " logged in.");
 		io.emit('vote.update', votes.length, length);
-		console.log(`New Player ${name} logged in.`);
-		console.table(names);
 	}
 	else
 	{
 		console.log("login.unsuccessful");
 		socket.emit('login.unsuccessful');
 	}
-	console.log("IDs: " + IDs);
+	console.log("IDs: " + clients.ids);
 	return 0;
 }
 function vote(/*number*/playerid, /*array*/players, /*array*/votes)
@@ -306,10 +300,10 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 		console.groupEnd();
 		if (votes.length == players.length)
 		{
-			game_is_running = true;
+			playingfield.game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { playingfield.total_rounds = 60 / players.length; play_round(1, players, playingfield, 0); }, 2000);
+			setTimeout(() => { playingfield.total_rounds = 60 / players.length; game(players, field); }, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
@@ -333,7 +327,7 @@ function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_pl
 	{
 		if (player.socket.id === undefined)
 		{
-			if (game_is_running) {
+			if (playingfield.game_is_running) {
 				io.emit('MessageFromServer', player.name + " lost connection to the game.");
 				disconnected_players.push(player);
 			}
@@ -341,14 +335,14 @@ function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_pl
 			{
 				io.emit('MessageFromServer', player.name + " left.");
 				votes.splice(votes.indexOf(player.id), 1);
-				IDs[player.id] = 0;
-				Player.delete_by_id(player.id);
+				clients.ids[player.id] = 0;
+				Player.delete_by_id(player.id, clients.list);
 				update_players(players, votes);
 			}
 			break;
 		}
 	}
-	console.log("IDs: " + IDs);
+	console.log("IDs: " + clients.ids);
 }
 function eval_command(string)
 {
@@ -357,7 +351,7 @@ function eval_command(string)
 		case("SetRounds"):
 			var str = message.slice(11);
 			var nr = parseInt(str);
-			if (nr < 60 / playerList.length) { playingfield.total_rounds = nr; }
+			if (nr < 60 / clients.list.length) { playingfield.total_rounds = nr; }
 			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
 		case("GetRounds"):
 			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
@@ -378,39 +372,39 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket, playerList, already_voted, recently_left); });
-	socket.on('MessageFromClient', (/*string*/message) => {
-		if (message[0] == "#") { eval_command(message.slice(1)) }
-		else { io.emit('MessageFromServer', message); }
-	});
-	socket.on('vote', (/*number*/playerid) => { vote(playerid, playerList, already_voted); });
-	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/playerINDEX) => {
+	socket.on('login', (/*string*/name) => { login(name, socket, clients.list, already_voted, clients.left); });
+	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
+	socket.on('Command', eval_command(string));
+	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
+	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
 		console.log(color + " " + number);
-		playingfield.trick.push(new Card(color, number)); //position in trick matches position of player who played the card in playerList
-		for (let i = 0; i < playerList[playerINDEX].hand.length; i++)
+		let player = Player.by_id(player_id, clients.list);
+		for (let i = 0; i < player.hand.length; i++)
 		{
-			if (playerList[playerINDEX].hand[i].color == color && playerList[playerINDEX].hand[i].number == number)
+			if (player.hand[i].color == color && player.hand[i].number == number)
 			{
-				playerList[playerINDEX].hand.splice(i, 1);
+				player.hand.splice(i, 1);
+				let pos_on_stack = playingfield.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
+				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
+				break;
 			}
 		}
-		socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/playingfield.card_pos_on_stack);
 		go_on(); //resolves Promise in async play_trick()'s loop
 	});
 	socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
-		index = Player.index_by_id(id, playerList);
-		playerList[index].guess = guess;
-		console.log(playerList[index].name + " guessed from object: " + playerList[index].guess);
-		io.emit('guess.update', /*number*/playerList[index].id, /*number*/guess, 0);
+		player = Player.by_id(id, clients.list)
+		player.guess = guess;
+		console.log(player.name + " guessed: " + player.guess); 
+		io.emit('guess.update', /*number*/player.id, /*number*/player.guess, 0);
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
-	socket.on('disconnect', (reason) => { disconnected(playerList); });
+	socket.on('disconnect', (reason) => { disconnected(clients.list); });
 });
 app.use(express.static('client'));
 app.get(game_url, (req, res) => {
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
 	let p = __dirname;
-	if (playerList.length < 6 || recently_left.length != 0) { res.sendFile( p + '/client/index.html'); }
+	if (playerList.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/index.html'); }
 	else { res.sendFile( p  + '/client/game_is_full.html'); }
 });
 httpsserver.listen(port, IPaddress, () => {

@@ -27,11 +27,13 @@ class Zetti_field extends Field
 			++cardIndex;
 		}
 		this.trick = this.playing_stack; // array of Cards
+		this.current_round = 1;
+		this.total_rounds = undefined;
 		this.round_starter = 0;
+		this.current_trick = 1;
 		this.trick_starter = 0; // to know who starts a trick
 		this.winner_index = undefined; // to know who starts a trick if it isn't the first in the round
-		this.current_round = 1;
-		this.total_rounds = 0;
+		this.game_is_running = false;
 	}
 }
 
