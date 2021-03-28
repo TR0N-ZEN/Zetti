@@ -11,9 +11,9 @@ const clients = new Clients(6);
 const already_voted = [];
 //add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
 const game_url = '/';
-// const IPaddress = '192.168.178.4'; // address for the http server
-const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
-// const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
+// const IPaddress = '192.168.0.13'; // address for the http server
+// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
+const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
 // const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80; // port for http server
 
@@ -266,7 +266,7 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 	}
 	if (players.length < 6)
 	{
-		let length = players.push(new Player(name, socket.id, clients.ids));
+		let length = players.push(new Player(name, clients.ids, socket));
 		console.log("login.successful");
 		console.log(`New Player ${name} logged in.`);
 		console.table(names);
