@@ -65,13 +65,11 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index)
 	// Requesting the players to put a card to the table.
 	for (let i = 0; i < players.length; i++)
 	{
-		go_on = () => { };
-		current = mod(trick_starter_index + i, players.length);
 		playingfield.card_pos_on_stack = i; // sideeffect for visual representation for clients
-		console.log("card.waitingFor " + players[current].name);
-		io.emit('card.waitingFor', players[current].id);
-		let socket_id = players[current].socket_id;
-		io.to(socket_id).emit('card.waiting', playingfield.card_pos_on_stack);
+		player = players[mod(trick_starter_index + i, players.length)];
+		console.log("card.waitingFor " + player.name);
+		io.emit('card.waitingFor', player.id);
+		player.socket.emit('card.waiting', playingfield.card_pos_on_stack);
 		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
 	}
 	return 0;
@@ -79,19 +77,17 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index)
 function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/players)
 {
 	console.log("distribute cards");
-	for (let i = 0; i < players.length; i++) {
-		let socket_id = players[i].socket_id;
-		for (let j = 0; j < amount_per_player; j++) {
-			players[i].hand.push(deck[i * amount_per_player + j]);
-		}
-		//console.log("to " + players[i].name + ": " + cards_to_distribute);
-		io.to(socket_id).emit('card.distribute', JSON.stringify(players[i].hand));
+	let i = 0;
+	for (player in players) {
+		for (let j = 0; j < amount_per_player; j++) { player.hand.push(deck[i * amount_per_player + j]); }
+		//console.log("to " + player.name + ": " + cards_to_distribute);
+		player.socket.emit('card.distribute', JSON.stringify(player.hand));
+		i++;
 	}
 }
 function get_random_element(/*array*/array)
 {
-	let index = Math.floor(Math.random() * array.length);
-	if (index == array.length) { index = array.length - 1; }
+	let index = mod(Math.floor(Math.random() * array.length), array.length);
 	return array[index];
 }
 var take_next_guess = () => { };
@@ -100,10 +96,10 @@ async function take_guesses(/*array*/players, /*number*/starter_index)
 	console.group("take_guesses");
 	for (let i = 0; i < players.length; i++)
 	{
-		let the_asked_one = mod(starter_index + i, players.length);
-		console.log("guess.waitingFor: " + players[the_asked_one].name);
-		io.emit('guess.waitingFor', players[the_asked_one].id);
-		io.to(players[the_asked_one].socket_id).emit('guess.request');
+		let the_asked_one = players[mod(starter_index + i, players.length)];
+		console.log("guess.waitingFor: " + the_asked_one.name);
+		io.emit('guess.waitingFor', the_asked_one.id);
+		the_asked_one.socket.emit('guess.request');
 		await new Promise( (resolve) => {
 			take_next_guess = resolve; // resolve can be triggered from outside by function call 'take_next_guess()' in 'io.on('guess.response')';
 		});
@@ -178,28 +174,27 @@ function calculate_winner(/*array*/players, /*array*/trick, /*number*/trick_star
 }
 function update_points(/*array*/players)
 {
-	for (let i = 0; i < players.length; i++) {
+	for (player of players) {
 		let delta;
-		let guess = players[i].guess;
-		let tricks_won = players[i].tricks_won;
+		let tricks_won = player.tricks_won;
 		if (guess == tricks_won) { delta = 20 + guess*10; }
 		else
 		{
 			delta = (guess - tricks_won)*10;
 			if (delta > 0) { delta *= -1; }
 		}
-		players[i].points += delta;
-		io.to(players[i].socket_id).emit('points.update', players[i].points);
-		players[i].guess = 0;
-		players[i].tricks_won = 0;
-		players[i].hand = [];
-		console.group(players[i].name);
-		console.log("guessed: " + guess.toString() + "\nwon: " + tricks_won.toString() +  "\ndelta_in_points: " + delta.toString());
+		player.points += delta;
+		console.group(player.name);
+		console.log("guessed: " + player.guess.toString() + "\nwon: " + player.tricks_won.toString() +  "\ndelta_in_points: " + delta.toString());
 		console.groupEnd();
+		player.socket.emit('points.update', player.points);		
+		player.guess = 0;
+		player.tricks_won = 0;
+		player.hand = [];
 	}
 	let points = new Array(players.length);
-	for (let i = 0; i < players.length; i++) {
-		points[i] = players[i].points;
+	for (player in players) {
+		points.push(player.points);
 	}
 	io.emit("playerBoard.update.points", JSON.stringify(points));
 }
@@ -260,7 +255,7 @@ const app = express();
 const httpsserver = require('http').Server(app);
 let io = require('socket.io')(httpsserver); // 'io' holds all sockets
 //-------------------------------------------------------------------------
-function login(/*string*/name, /*string*/socketid, /*array*/players,/*array*/votes, /*array*/ disconnected_players)
+function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*/ disconnected_players)
 {
 	if (disconnected_players.length != 0)
 	{
@@ -269,16 +264,17 @@ function login(/*string*/name, /*string*/socketid, /*array*/players,/*array*/vot
 			{
 				let idx = Player.index_by_id(player.id, players);
 				players[idx].socket_id = socketid;
+				players[idx].socket = socket;
 				return 0;
 			}
 		});
 	}
 	if (players.length < 6)
 	{
-		let length = players.push(new Player(name, socketid));
+		let length = players.push(new Player(name, socket.id));
 		players[length - 1].index = length - 1;
 		console.log("login.successful");
-		io.to(socketid).emit('login.successful', JSON.stringify(players[length - 1]));
+		socket.emit('login.successful', JSON.stringify(players[length - 1]));
 		let names = new Array(length);
 		let ids = new Array(length);
 		for (let a = 0; a < length; a++)
@@ -289,13 +285,13 @@ function login(/*string*/name, /*string*/socketid, /*array*/players,/*array*/vot
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
 		io.emit('MessageFromServer', players[length - 1].name + " logged in.");
 		io.emit('vote.update', votes.length, length);
-		console.log("New Player " + name + " logged in.");
+		console.log(`New Player ${name} logged in.`);
 		console.table(names);
 	}
 	else
 	{
 		console.log("login.unsuccessful");
-		io.to(socketid).emit('login.unsuccessful');
+		socket.emit('login.unsuccessful');
 	}
 	console.log("IDs: " + IDs);
 	return 0;
@@ -333,20 +329,20 @@ function update_players(/*array*/players, /*array*/votes)
 function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players)
 {
 	console.log('user disconnected');
-	for (let i = 0; i < players.length; i++)
+	for (player of players)
 	{
-		if (io.of('/').sockets[players[i].socket_id] === undefined)
+		if (player.socket.id === undefined)
 		{
 			if (game_is_running) {
-				io.emit('MessageFromServer', players[i].name + " lost connection to the game.");
-				disconnected_players.push(players[i]);
+				io.emit('MessageFromServer', player.name + " lost connection to the game.");
+				disconnected_players.push(player);
 			}
 			else
 			{
-				io.emit('MessageFromServer', players[i].name + " left.");
-				votes.splice(votes.indexOf(players[i].id), 1);
-				IDs[players[i].id] = 0;
-				players.splice(i, 1);
+				io.emit('MessageFromServer', player.name + " left.");
+				votes.splice(votes.indexOf(player.id), 1);
+				IDs[player.id] = 0;
+				Player.delete_by_id(player.id);
 				update_players(players, votes);
 			}
 			break;
@@ -382,7 +378,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket.id, playerList, already_voted, recently_left); });
+	socket.on('login', (/*string*/name) => { login(name, socket, playerList, already_voted, recently_left); });
 	socket.on('MessageFromClient', (/*string*/message) => {
 		if (message[0] == "#") { eval_command(message.slice(1)) }
 		else { io.emit('MessageFromServer', message); }
@@ -401,7 +397,8 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/playingfield.card_pos_on_stack);
 		go_on(); //resolves Promise in async play_trick()'s loop
 	});
-	socket.on('guess.response', (/*number*/guess, /*number*/index) => { //both numbers in decimal
+	socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
+		index = Player.index_by_id(id, playerList);
 		playerList[index].guess = guess;
 		console.log(playerList[index].name + " guessed from object: " + playerList[index].guess);
 		io.emit('guess.update', /*number*/playerList[index].id, /*number*/guess, 0);
