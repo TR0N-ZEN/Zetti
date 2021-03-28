@@ -145,7 +145,8 @@ $( document ).ready(function() {
     });
     $('.chat.window > form').submit(function (button) {
         button.preventDefault(); // prevents page reloading
-        socket.emit('MessageFromClient', /*string*/PlayerObject.name + ": " + chat.message.val());
+				if(chat.message.val()[0] == "#") { socket.emit('Command', chat.message.val().slice(1)); }
+				else { socket.emit('MessageFromClient', /*string*/PlayerObject.name + ": " + chat.message.val()); }
         chat.message.val('');
         return false;
     });
