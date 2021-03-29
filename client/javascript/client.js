@@ -216,19 +216,14 @@ $( document ).ready(function() {
         //server send a different website saying there is no space for antoher player
     });
 
-    socket.on('playerBoard.update.names', (/*string*/JSON_namesArray, /*string*/ JSON_idsArray) => {
-        let names = JSON.parse(JSON_namesArray);
-        let ids = JSON.parse(JSON_idsArray);
+    socket.on('playerBoard.update', (/*string*/JSON_players) => {
+        let players = JSON.parse(JSON_players);
         playerboard.table.html("");
-        for (let a = 0; a < names.length; a++) {
-            playerboard.table.append('<tr id="' + ids[a] + '"> <td>' + names[a] + '</td>' + '<td>--</td>' + '<td>--</td>' + '</tr>');
+				let table = "";
+        for (player of players) {
+            table.append(`<tr id="${player.id}"> <td>${player.name}</td> <td>${player.points}</td> <td>${player.tricks_won}/${player.guess}</td> </tr>`);
         }
-    });
-    socket.on('playerBoard.update.points', (/*string*/JSON_pointsArray) => {
-        let points = JSON.parse(JSON_pointsArray);
-        for (let i = 0; i < points.length; i++) {
-            $(playerboard.table.children()[i]).children()[2].innerText = points[i];
-        }
+				playerboard.table.html(table);
     });
 
     socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
