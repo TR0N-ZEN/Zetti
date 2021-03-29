@@ -32,7 +32,6 @@ class Zetti_field extends Field
 		this.round_starter = 0;
 		this.current_trick = 1;
 		this.trick_starter = 0; // to know who starts a trick
-		this.winner_index = undefined; // to know who starts a trick if it isn't the first in the round
 		this.game_is_running = false;
 	}
 }
