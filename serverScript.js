@@ -55,22 +55,7 @@ function delay(milliseconds) {
  * changeCSS
  * */
 
-var go_on = () => { };
-async function play_trick(/*array*/players, /*number*/trick_starter_index)
-{ // sideeffects only on: playingfield.card_pos_on_stack
-	// this function is waiting for resolves triggered in 'io.on('card.toPlayingstack')' by function call 'go_on()'
-	console.group("play trick");
-	// Requesting the players to put a card to the table.
-	for (let i = 0; i < players.length; i++)
-	{
-		player = players[mod(trick_starter_index + i, players.length)];
-		console.log("card.waitingFor " + player.name);
-		io.emit('card.waitingFor', player.id);
-		player.socket.emit('card.waiting', playingfield.trick.length);
-		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
-	}
-	return 0;
-}
+
 function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/players)
 {
 	console.log("distribute cards");
@@ -182,40 +167,54 @@ function update_points(/*array*/players)
 		}
 		player.points += delta;
 		player.socket.emit('points.update', player.points);
-		player.guess = 0;
-		player.tricks_won = 0;
+		// Resetting player attributes for next round;
+		player.guess = ""; // not necessary cause it will be overwritten
+		player.tricks_won = "";
 		player.hand = [];
 	}
 	io.emit("playerBoard.update", JSON.stringify(Clients.info(players)));
 }
-
-async function play_round(/*array*/players, /*object*/playingfield)
+var go_on = () => { };
+async function play_trick(/*array*/players, /*number*/trick_starter_index, /*array*/trick)
 {
-	console.group("play round " + playingfield.current_round);
-	var trump_color = get_random_element(playingfield.colors);
-	console.log("trump color: " + trump_color);
-	io.emit('game.round.start', /*number*/playingfield.current_round, /*string*/trump_color);
+	// this function is waiting for resolves triggered in 'io.on('card.toPlayingstack')' by function call 'go_on()'
+	console.group("play trick");
+	// Requesting the players to put a card to the table.
+	for (let i = 0; i < players.length; i++)
+	{
+		player = players[mod(trick_starter_index + i, players.length)];
+		console.log("card.waitingFor " + player.name);
+		io.emit('card.waitingFor', player.id);
+		player.socket.emit('card.waiting', trick.length);
+		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
+	}
+	return 0;
+}
+async function play_round(/*array*/players, /*object*/playingfield, /*int*/round)
+{
+	console.group(`play round ${round}`);
+	let trump_color = get_random_element(playingfield.colors);
+	console.log(`trump color: ${trump_color}`);
+	let winner_index = mod(round, players.length); //needs to be available between iterations of the following looped block
+	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
 	playingfield.shuffle();
 	//await delay(15000); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
-	distribute_cards(playingfield.current_round, playingfield.deck, players);
-	await take_guesses(players, playingfield.round_starter); // sideeffects on players[i].guesses after "io.on('guess.response')"
-	playingfield.winner_index = undefined; //needs to be available between iterations of the following looped block
-	while (playingfield.round >= playingfield.current_trick)
+	distribute_cards(round, playingfield.deck, players);
+	await take_guesses(players, mod(round, players.length)); // sideeffects on players[i].guesses after "io.on('guess.response')"
+	do
 	{
 		io.emit("game.trick.start");
 		// Who is starting to put a card to the field?
-		if (playingfield.current_trick == 1) { playingfield.trick_starter = playingfield.round_starter; }
-		else { playingfield.trick_starter = playingfield.winner_index; }
-		await play_trick(players, playingfield.trick_starter); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		playingfield.winner_index = calculate_winner(players, playingfield.trick, playingfield.trick_starter, trump_color);
-		console.log("winner: " + players[playingfield.winner_index].name);
-		++players[playingfield.winner_index].tricks_won;
-		io.emit('guess.update', /*number*/players[playingfield.winner_index].id, /*number*/players[playingfield.winner_index].guess, /*number*/players[playingfield.winner_index].tricks_won);
-		console.groupEnd();
+		await play_trick(players, winner_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
+		winner_index = calculate_winner(players, playingfield.trick, winner_index, trump_color);
+		let winner = players[winner_index];
+		console.log(`winner: ${winner.name}`);
+		++winner.tricks_won;
+		io.emit('guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
 		await delay(3000);
 		io.emit("game.trick.end"); //for clearing playingfield from cards on clients
-		++playingfield.current_trick;
-	}
+		++trick;
+	} while(trick <= round)
 	update_points(players); //calculate points after each round
 	console.groupEnd();
 	io.emit('game.round.end');
@@ -227,13 +226,12 @@ async function showresumee(players)
 }
 async function game(players, playingfield)
 {
-	playingfield.current_round = 1;
-	while (playingfield.current_round <= playingfield.total_rounds)
+	let round = 1;
+	do 
 	{
-		playingfield.round_starter = mod(playingfield.round_starter + 1, players.length); //rule of starter of first trick in a round is passed in a circle
-		play_round(/*array*/players, /*object*/playingfield);
-		++playingfield.current_round;
-	}
+		await play_round(/*array*/players, /*object*/playingfield, /*int*/round);
+		++round;
+	} while (round <= playingfield.total_rounds)
 	showresumee(players);
 	console.log("process terminating");
 }
@@ -286,10 +284,10 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 		console.groupEnd();
 		if (votes.length == players.length)
 		{
-			playingfield.game_is_running = true;
+			field.game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { playingfield.total_rounds = 60 / players.length; game(players, field); }, 2000);
+			setTimeout(() => { field.total_rounds = 60 / players.length; game(players, field); }, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
@@ -380,7 +378,7 @@ app.use(express.static('client'));
 app.get(game_url, (req, res) => {
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
 	let p = __dirname;
-	if (playerList.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/index.html'); }
+	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/index.html'); }
 	else { res.sendFile( p  + '/client/game_is_full.html'); }
 });
 httpsserver.listen(port, IPaddress, () => {

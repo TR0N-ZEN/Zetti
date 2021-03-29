@@ -5,19 +5,19 @@ $( document ).ready(function() {
     $("#loading").slideUp();
 
 
-    var left_first_coloumn = "2vw";
-    var left_second_coloumn = "34vw";
-    var top_first_row = "2vh";
-    var top_second_row = "14vh";
-    var top_third_row = "56vh";
-    var card_height = "30vh";
-    var card_width = "21vh";
-    var top_playingstack = "19vh";
-    var left_playingstack = "66vw";
-    var top_hand = "56vh";
-    var top_in_hand = "62vh";
+    const left_first_coloumn = "2vw";
+    const left_second_coloumn = "34vw";
+    const top_first_row = "2vh";
+    const top_second_row = "14vh";
+    const top_third_row = "56vh";
+    const card_height = "30vh";
+    const card_width = "21vh";
+    const top_playingstack = "19vh";
+    const left_playingstack = "66vw";
+    const top_hand = "56vh";
+    const top_in_hand = "62vh";
 
-    var chat = {
+    const chat = {
         visible: true,
         window: $('.chat.window'),
         form: $('.chat.window > form'),
@@ -32,16 +32,16 @@ $( document ).ready(function() {
             chat.visible = true;
         }
     };
-    var playerboard = {
+    const playerboard = {
         object: $('.wrapper > #playerboard'),
         table: $('.wrapper > #playerboard > table')
     } 
-    var playingfield = $('.wrapper > #playingfield');
-    var hand = $('.wrapper > #hand');
-    var playingstack = $('.wrapper > #playingstack');
+    const playingfield = $('.wrapper > #playingfield');
+    const hand = $('.wrapper > #hand');
+    const playingstack = $('.wrapper > #playingstack');
 
 
-    var info = {
+    const info = {
         name: $('.wrapper > #info #Name'),
         round: $('.wrapper > #info #Round'),
         trump: $('.wrapper > #info #Trump'),
@@ -49,7 +49,7 @@ $( document ).ready(function() {
         guess: $('.wrapper > #info #Guess'),
         chat: $('.wrapper > #info > .chat')
     };
-    var guess = {
+    const guess = {
         object: $('.take_guess'),
         visible: false,
         hide: () => {
@@ -119,7 +119,8 @@ $( document ).ready(function() {
 				else { chat.hide(); }
     });
 
-    function removeTransition() {
+    function removeTransition()
+		{
         playingfield.css("transition", "none");
         playingstack.css("transition", "none");
         hand.css("transition", "none");
