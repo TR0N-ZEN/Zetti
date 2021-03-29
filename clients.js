@@ -2,10 +2,10 @@ class Clients
 {
 	constructor(size)
 	{
-		this.list = new Array(size);
+		this.list = [];
 		this.ids = new Array(size);
 		this.left = [];
-		for (e in this.ids) { e = 0 }
+		for (let i = 0; i < this.ids.length; i++) { this.ids[i] = 0; }
 	}
 	append(client) {
 		this.list.push(client);

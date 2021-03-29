@@ -269,8 +269,9 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 		let length = players.push(new Player(name, clients.ids, socket));
 		console.log("login.successful");
 		console.log(`New Player ${name} logged in.`);
-		console.table(names);
-		socket.emit('login.successful', JSON.stringify(players[length - 1]));
+		let sendable = Object.assign({}, players[-1]);
+		delete sendable.socket;
+		socket.emit('login.successful', JSON.stringify(sendable));
 		let names = new Array(length);
 		let ids = new Array(length);
 		for (let a = 0; a < length; a++)
@@ -278,6 +279,7 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 			names[a] = players[a].name;
 			ids[a] = players[a].id;
 		}
+		console.table(names);
 		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
 		io.emit('MessageFromServer', name + " logged in.");
 		io.emit('vote.update', votes.length, length);
@@ -374,7 +376,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('login', (/*string*/name) => { login(name, socket, clients.list, already_voted, clients.left); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
-	socket.on('Command', eval_command(string));
+	socket.on('Command', (string) => { eval_command(string); });
 	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
 		console.log(color + " " + number);

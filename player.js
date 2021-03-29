@@ -11,12 +11,12 @@ class Player extends Client {
 		this.id = Player.getID(ids);
 	}
 	static getID(ids) {
-		for (index in ids)
+		for (let i = 0; i<ids.length; i++)
 		{
-			if (ids[index] == 0)
+			if (ids[i] == 0)
 			{
-				ids[index] = 1;
-				return index;
+				ids[i] = 1;
+				return i;
 			}
 		}
 	}
