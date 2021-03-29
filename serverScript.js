@@ -75,7 +75,7 @@ function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/p
 {
 	console.log("distribute cards");
 	let i = 0;
-	for (player in players) {
+	for (player of players) {
 		for (let j = 0; j < amount_per_player; j++) { player.hand.push(deck[i * amount_per_player + j]); }
 		//console.log("to " + player.name + ": " + cards_to_distribute);
 		player.socket.emit('card.distribute', JSON.stringify(player.hand));
@@ -181,19 +181,12 @@ function update_points(/*array*/players)
 			if (delta > 0) { delta *= -1; }
 		}
 		player.points += delta;
-		console.group(player.name);
-		console.log("guessed: " + player.guess.toString() + "\nwon: " + player.tricks_won.toString() +  "\ndelta_in_points: " + delta.toString());
-		console.groupEnd();
-		player.socket.emit('points.update', player.points);		
+		player.socket.emit('points.update', player.points);
 		player.guess = 0;
 		player.tricks_won = 0;
 		player.hand = [];
 	}
-	let points = new Array(players.length);
-	for (player in players) {
-		points.push(player.points);
-	}
-	io.emit("playerBoard.update.points", JSON.stringify(points));
+	io.emit("playerBoard.update", JSON.stringify(Clients.info(players)));
 }
 
 async function play_round(/*array*/players, /*object*/playingfield)
@@ -266,23 +259,14 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 	}
 	if (players.length < 6)
 	{
-		let length = players.push(new Player(name, clients.ids, socket));
+		let new_player = new Player(name, clients.ids, socket);
+		players.push(new_player);
 		console.log("login.successful");
 		console.log(`New Player ${name} logged in.`);
-		let sendable = Object.assign({}, players[-1]);
-		delete sendable.socket;
-		socket.emit('login.successful', JSON.stringify(sendable));
-		let names = new Array(length);
-		let ids = new Array(length);
-		for (let a = 0; a < length; a++)
-		{
-			names[a] = players[a].name;
-			ids[a] = players[a].id;
-		}
-		console.table(names);
-		io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
+		socket.emit('login.successful', JSON.stringify(new_player.info()));
+		io.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
 		io.emit('MessageFromServer', name + " logged in.");
-		io.emit('vote.update', votes.length, length);
+		io.emit('vote.update', votes.length, players.length);
 	}
 	else
 	{
@@ -310,18 +294,7 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
-function update_players(/*array*/players, /*array*/votes)
-{
-	let names = new Array(players.length);
-	let ids = new Array(players.length);
-	for (let a = 0; a < players.length; a++)
-	{
-		names[a] = players[a].name;
-		ids[a] = players[a].id;
-	}
-	io.emit('playerBoard.update.names', JSON.stringify(names), JSON.stringify(ids));
-	io.emit('vote.update', votes.length, players.length);
-}
+
 function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players)
 {
 	console.log('user disconnected');
@@ -339,7 +312,8 @@ function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_pl
 				votes.splice(votes.indexOf(player.id), 1);
 				clients.ids[player.id] = 0;
 				Player.delete_by_id(player.id, clients.list);
-				update_players(players, votes);
+				io.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
+				io.emit('vote.update', votes.length, players.length);
 			}
 			break;
 		}

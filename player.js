@@ -10,7 +10,15 @@ class Player extends Client {
 		this.tricks_won = 0;
 		this.id = Player.getID(ids);
 	}
-	static getID(ids) {
+	info()
+		{
+			let player = Object.assign({}, this);
+			delete player.socket;
+			delete player.hand;
+			return player;
+		}
+	static getID(ids)
+	{
 		for (let i = 0; i<ids.length; i++)
 		{
 			if (ids[i] == 0)
