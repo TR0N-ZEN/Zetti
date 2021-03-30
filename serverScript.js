@@ -9,7 +9,8 @@ const Clients = require('./clients').Clients;
 
 const clients = new Clients(6);
 const already_voted = [];
-//add a variable to track who is requested a card at the moment, so if it is the one that has disconnected he gets a request so he can play and the game can
+let field = undefined; 
+
 const game_url = '/';
 // const IPaddress = '192.168.0.13'; // address for the http server
 // const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
@@ -93,23 +94,18 @@ async function take_guesses(/*array*/players, /*number*/starter_index)
 }
 function to_serve(/*array*/trick)
 {
-	// for (let i = 0; i < players.length; i++)
-	// {
-	// 	let c_player = mod(trick_starter_index + i, players.length);
-	// 	if (trick[c_player].color != "N") { return trick[c_player].color; }//found color that should be served
-	// }
-	for (card of trick)
+	// for (card of trick)
+	for (let i = 0; i < trick.length; i++)
 	{
+		let card = trick[i];
 		if (card.color != "N") { return card.color; }// found color that should be served
 	}
 	// der Only-Enno Fall
 	console.log("der Only-Enno Fall");
-	console.groupEnd();
 	return "N";
 }
-function best_card(/*array*/trick, /*string*/trump_color)
+function best_card(/*array*/trick, /*string*/trump)
 {
-	console.group("best_card()");
 	let color_to_serve = to_serve(trick);
 	if (color_to_serve == "N") { return 0; }// der Only-Enno Fall
 	let high_card_index = 0;
@@ -120,22 +116,21 @@ function best_card(/*array*/trick, /*string*/trump_color)
 		switch(card.color)
 		{
 			case("Z"):
-				console.log("der erste Zetti ist geflogen");
-				console.groupEnd();
+				// console.log("der erste Zetti ist geflogen");
 				return index;
-			case(trump_color):
-				console.log("Trump has been played.");
-				if (high_card.color != trump_color)
+			case(trump):
+				// console.log("Trump has been played.");
+				if (high_card.color != trump)
 				{
-					console.log("Trump has been played for the first time.");
+					// console.log("Trump has been played for the first time.");
 					high_card_index = index;
-					high_card = card;//trick[high_card_index];
+					high_card = card;
 				}
 				else if (parseInt(card.number, 10) > parseInt(high_card.number, 10))
 				{
 					high_card_index = index;
-					high_card = card;//trick[high_card_index];
-					console.log("Topped.");
+					high_card = card;
+					// console.log("Topped.");
 				}
 				break;
 			case(color_to_serve):
@@ -143,20 +138,21 @@ function best_card(/*array*/trick, /*string*/trump_color)
 				{
 					high_card_index = index;
 					high_card = card;
-					console.log("Topped.");
+					// console.log("Topped.");
 				}
 				break;
 		}
-		++index;
+		index++;
 	}
-	console.groupEnd();
-	return index;
+	// console.log(high_card_index);
+	return high_card_index;
 }
 function update_points(/*array*/players)
 {
 	for (player of players) {
 		let delta;
 		let tricks_won = player.tricks_won;
+		let guess = player.guess;
 		if (guess == tricks_won) { delta = 20 + guess*10; }
 		else
 		{
@@ -191,21 +187,20 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index, /*arr
 async function play_round(/*array*/players, /*object*/playingfield, /*int*/round)
 {
 	console.group(`play round ${round}`);
-	let trump_color = get_random_element(playingfield.colors);
-	console.log(`trump color: ${trump_color}`);
+	let trick = 1;
+	let trump = get_random_element(playingfield.colors);
+	console.log(`trump : ${trump}`);
 	let winner_index = mod(round - 1, players.length); //needs to be available between iterations of the following looped block
-	io.emit('game.round.start', /*number*/round, /*string*/trump_color);
+	io.emit('game.round.start', /*number*/round, /*string*/trump);
 	playingfield.shuffle();
-	//await delay(15000); // why though is this line needed, calls of syncronous functions should be awaited the return of that function
 	distribute_cards(round, playingfield.deck, players);
 	await take_guesses(players, mod(round - 1, players.length)); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	do
 	{
 		io.emit("game.trick.start");
-		// Who is starting to put a card to the field?
 		playingfield.trick = [];
 		await play_trick(players, winner_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		winner_index = mod(winner_index + best_card(playingfield.trick, trump_color), players.length);
+		winner_index = mod(winner_index + best_card(playingfield.trick, trump), players.length);
 		let winner = players[winner_index];
 		console.log(`winner: ${winner.name}`);
 		++winner.tricks_won;
@@ -230,6 +225,7 @@ async function game(players, playingfield)
 	{
 		await play_round(/*array*/players, /*object*/playingfield, /*int*/round);
 		++round;
+		await delay(5000);
 	} while (round <= playingfield.total_rounds)
 	showresumee(players);
 	console.log("process terminating");
@@ -287,7 +283,8 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 			game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
-			setTimeout(() => { game(players, new Zetti_field(players.length)); }, 2000);
+			field = new Zetti_field(players.length);
+			setTimeout(() => { game(players, field)}, 2000);
 		}
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
