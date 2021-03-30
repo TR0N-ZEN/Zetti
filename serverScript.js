@@ -241,9 +241,10 @@ const express = require('express');
 //const { disconnect } = require('process');
 const app = express();
 const httpsserver = require('http').Server(app);
-let io = require('socket.io')(httpsserver); // 'io' holds all sockets
+const io = require('socket.io')(httpsserver); // 'io' holds all sockets
 //-------------------------------------------------------------------------
-function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*/disconnected_players)
+// functions below here use global attributes, so using variables of the global scope without getting those variables fed as arguments: those are io
+function login(/*string*/name, socket, /*array*/players, /*array*/votes, /*array*/disconnected_players)
 {
 	if (disconnected_players.length != 0)
 	{
@@ -274,7 +275,7 @@ function login(/*string*/name, socket, /*array*/players,/*array*/votes, /*array*
 	console.log("IDs: " + clients.ids);
 	return 0;
 }
-function vote(/*number*/playerid, /*array*/players, /*array*/votes)
+function vote(/*number*/playerid, /*array*/players, /*array*/votes, playingfield)
 {
 	console.group("vote");
 	if (!votes.includes(playerid))
@@ -284,7 +285,7 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 		console.groupEnd();
 		if (votes.length == players.length)
 		{
-			field.game_is_running = true;
+			playingfield.game_is_running = true;
 			console.log("start game");
 			io.emit('game.start');
 			setTimeout(() => { field.total_rounds = 60 / players.length; game(players, field); }, 2000);
@@ -293,12 +294,12 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
 
-function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players)
+function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players, playingfield)
 {
 	console.log('user disconnected');
 	for (player of players)
 	{
-		if (player.socket.id === undefined)
+		if (!player.socket.connected)
 		{
 			if (playingfield.game_is_running) {
 				io.emit('MessageFromServer', player.name + " lost connection to the game.");
@@ -308,8 +309,8 @@ function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_pl
 			{
 				io.emit('MessageFromServer', player.name + " left.");
 				votes.splice(votes.indexOf(player.id), 1);
-				clients.ids[player.id] = 0;
-				Player.delete_by_id(player.id, clients.list);
+				players.ids[player.id] = 0;
+				Player.delete_by_id(player.id, players);
 				io.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
 				io.emit('vote.update', votes.length, players.length);
 			}
@@ -325,10 +326,10 @@ function eval_command(string)
 		case("SetRounds"):
 			var str = message.slice(11);
 			var nr = parseInt(str);
-			if (nr < 60 / clients.list.length) { playingfield.total_rounds = nr; }
-			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+			if (nr < 60 / clients.list.length) { field.total_rounds = nr; }
+			io.emit('MessageFromServer', `Server: Total rounds ${field.total_rounds}.`)
 		case("GetRounds"):
-			io.emit('MessageFromServer', `Server: Total rounds ${playingfield.total_rounds}.`)
+			io.emit('MessageFromServer', `Server: Total rounds ${field.total_rounds}.`)
 	}
 }
 //LISTENER------------------------------------------------------------------------
@@ -349,7 +350,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('login', (/*string*/name) => { login(name, socket, clients.list, already_voted, clients.left); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
 	socket.on('Command', (string) => { eval_command(string); });
-	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
+	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted, field); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
 		console.log(color + " " + number);
 		let player = Player.by_id(player_id, clients.list);
@@ -358,7 +359,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 			if (player.hand[i].color == color && player.hand[i].number == number)
 			{
 				player.hand.splice(i, 1);
-				let pos_on_stack = playingfield.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
+				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
 				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
 				break;
 			}
@@ -372,7 +373,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		io.emit('guess.update', /*number*/player.id, /*number*/player.guess, 0);
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
-	socket.on('disconnect', (reason) => { disconnected(clients.list); });
+	socket.on('disconnect', (reason) => { disconnected(clients.list, already_voted, clients.left, field); });
 });
 app.use(express.static('client'));
 app.get(game_url, (req, res) => {
