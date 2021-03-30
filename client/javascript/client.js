@@ -198,7 +198,6 @@ $('.take_guess > form').submit(function (button) {
 * changeCSS
 * */
 
-var player_index = 0;
 socket.on('login.successful', (/*string*/JSON_PlayerObject) => {
 		$('#login').slideUp();
 		PlayerObject = JSON.parse(JSON_PlayerObject);
@@ -304,7 +303,7 @@ socket.on('card.waiting', (/*number*/card_level_on_stack) => {
 				let card_fullclassname =  $(this)[0].className.split(" ");
 				let card_name = card_fullclassname[0].split("_");//.target.attributes.class.name;
 				console.log("You clicked: " + card_name[0], card_name[1]);
-				socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10), /*index*/ player_index); // => card.update
+				socket.emit('card.toPlayingstack', /*string*/card_name[0], /*number*/parseInt(card_name[1],10), /*id*/ PlayerObject.id); // => card.update
 				card.removeClass("inhand");
 				card.addClass("onplayingstack");
 				await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 

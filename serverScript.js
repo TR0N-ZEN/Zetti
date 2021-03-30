@@ -348,8 +348,8 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('Command', (string) => { eval_command(string); });
 	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-		console.log(`card.toPlayingstack: ${color} ${number}`);
 		let player = Player.by_id(player_id, clients.list);
+		console.log(`card.toPlayingstack: ${color} ${number} by ${player.name}`);
 		for (let i = 0; i < player.hand.length; i++)
 		{
 			if (player.hand[i].color == color && player.hand[i].number == number)
