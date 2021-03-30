@@ -255,8 +255,11 @@ socket.on('game.round.end', async () => {
 		$('.card_frame', hand).removeClass("appear_border").addClass("disappear_border");
 		await delay(1100); //hardcoded; deppendent on animation-duration of disappear_border
 }); 
+socket.on('game.trick.start', () => {
+		console.log("game.trick.start");
+}); // de: Stich <=> eng: trick
 socket.on('game.trick.end', () => {
-		console.log("game.trick");
+		console.log("game.trick.end");
 		$('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 
@@ -265,7 +268,6 @@ socket.on('guess.waitingFor', (/*string*/playerID) => {
 		$(`#${playerID} > .name`, playerboard.table).css("color", "lightgreen");
 });
 socket.on('guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
-		console.log(`Won: ${won}`);
 		$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
 });
 socket.on('guess.request', () => { 

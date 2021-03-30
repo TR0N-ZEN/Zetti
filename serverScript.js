@@ -190,23 +190,24 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	let trick = 1;
 	let trump = get_random_element(playingfield.colors);
 	console.log(`trump : ${trump}`);
-	let winner_index = mod(round - 1, players.length); //needs to be available between iterations of the following looped block
+	let starter_index = mod(round - 1, players.length); //needs to be available between iterations of the following looped block
 	io.emit('game.round.start', /*number*/round, /*string*/trump);
 	playingfield.shuffle();
 	distribute_cards(round, playingfield.deck, players);
 	await take_guesses(players, mod(round - 1, players.length)); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	do
 	{
-		io.emit("game.trick.start");
+		io.emit('game.trick.start');
 		playingfield.trick = [];
-		await play_trick(players, winner_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		winner_index = mod(winner_index + best_card(playingfield.trick, trump), players.length);
+		await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
+		await delay(5000);
+		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
+		starter_index = winner_index;
 		let winner = players[winner_index];
 		console.log(`winner: ${winner.name}`);
 		++winner.tricks_won;
 		io.emit('guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
-		await delay(3000);
-		io.emit("game.trick.end"); //for clearing playingfield from cards on clients
+		io.emit('game.trick.end'); //for clearing playingfield from cards on clients
 		++trick;
 	} while(trick <= round)
 	update_points(players); //calculate points after each round
@@ -289,7 +290,6 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes)
 	}
 	else { console.log("vote rejected"); console.groupEnd(); }
 }
-
 function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players, ids)
 {
 	console.log('user disconnected');
@@ -348,7 +348,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('Command', (string) => { eval_command(string); });
 	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-		console.log(color + " " + number);
+		console.log(`card.toPlayingstack: ${color} ${number}`);
 		let player = Player.by_id(player_id, clients.list);
 		for (let i = 0; i < player.hand.length; i++)
 		{
@@ -356,9 +356,11 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 			{
 				player.hand.splice(i, 1);
 				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
+				console.log(`card.update: ${color} ${number} ${pos_on_stack}`);
 				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
 				break;
 			}
+			else { console.log("card not found"); }
 		}
 		go_on(); //resolves Promise in async play_trick()'s loop
 	});
