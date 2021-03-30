@@ -1,7 +1,10 @@
-class Field {
-	constructor(decksize) {
+class Field
+{
+	constructor(decksize, stacksize = undefined)
+	{
 		this.deck = new Array(decksize);
-		this.playing_stack = new Array();
+		if (stacksize === undefined) { this.playing_stack = new Array(); }
+		else { this.playing_stack = new Array(stacksize); }
 		this.card_pos_on_stack = 0;
 		this.shuffle = function() {
 			for (let i = this.deck.length - 1; i > 0; i--)
