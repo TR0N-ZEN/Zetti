@@ -139,7 +139,7 @@ $('#login > form').submit(function (button) {
 // $('.chat.window > form')
 chat.window.submit(function (button) {
 		button.preventDefault(); // prevents page reloading
-		if(chat.message.val()[0] == "#") { socket.emit('Command', chat.message.val().slice(1)); }
+		if(chat.message.val()[0] == "#") { console.log(`Command: ${chat.message.val().slice(1)}`); socket.emit('Command', chat.message.val().slice(1)); }
 		else { socket.emit('MessageFromClient', /*string*/PlayerObject.name + ": " + chat.message.val()); }
 		chat.message.val('');
 		return false;
