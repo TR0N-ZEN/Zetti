@@ -6,10 +6,13 @@ const Player = require('./player').Player;
 const Card = require('./card').Card;
 const Zetti_field= require('./zetti_field').Zetti_field;
 const Clients = require('./clients').Clients;
+const commands = require('./commands');
+const connection_handling = require('./connection_handling');
 
-const clients = new Clients(6);
-const already_voted = [];
-let field = undefined; 
+let clients = new Clients(6);
+let already_voted = [];
+let field = {}; 
+let game_is_running = {value: false};
 
 const game_url = '/';
 // const IPaddress = '192.168.0.13'; // address for the http server
@@ -17,7 +20,7 @@ const game_url = '/';
 const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
 // const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80; // port for http server
-let game_is_running = false;
+
 
 //delay only works in async functions
 function delay(milliseconds)
@@ -214,6 +217,14 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	console.groupEnd();
 	io.emit('game.round.end');
 }
+function clear_game()
+{
+	//global variables resetted
+	clients = new Clients(6);
+	already_voted = [];
+	field = {}; 
+	game_is_running = {value: false};
+}
 async function showresumee(players)
 {
 	console.table(players);
@@ -228,7 +239,10 @@ async function game(players, playingfield)
 		++round;
 		await delay(5000);
 	} while (round <= playingfield.total_rounds)
-	showresumee(players);
+	await showresumee(players);
+	clear_game(players, playingfield);
+	let message = "Please reload the website to login again in order to start a new round :-)";
+	io.emit('MessageFromServer', message);
 	console.log("process terminating");
 }
 
@@ -240,94 +254,8 @@ const httpsserver = require('http').Server(app);
 const io = require('socket.io')(httpsserver); // 'io' holds all sockets
 //-------------------------------------------------------------------------
 // functions below here use global attributes, so using variables of the global scope without getting those variables fed as arguments: those are io
-function login(/*string*/name, socket, /*array*/players, /*array*/votes, /*array*/disconnected_players)
-{
-	if (disconnected_players.length != 0)
-	{
-		disconnected_players.foreach(player => {
-			if (player.name == name)
-			{
-				Player.by_id(player.id, players).socket = socket;
-				return 0;
-			}
-		});
-	}
-	if (players.length < 6)
-	{
-		let new_player = new Player(name, clients.ids, socket);
-		players.push(new_player);
-		console.log("login.successful");
-		console.log(`New Player ${name} logged in.`);
-		socket.emit('login.successful', JSON.stringify(new_player.info()));
-		io.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
-		io.emit('MessageFromServer', name + " logged in.");
-		io.emit('vote.update', votes.length, players.length);
-	}
-	else
-	{
-		console.log("login.unsuccessful");
-		socket.emit('login.unsuccessful');
-	}
-	console.log("IDs: " + clients.ids);
-	return 0;
-}
-function vote(/*number*/playerid, /*array*/players, /*array*/votes)
-{
-	console.group("vote");
-	if (!votes.includes(playerid))
-	{
-		console.log("vote accepted");
-		io.emit('vote.update', /*number*/votes.push(playerid), /*number*/players.length);
-		console.groupEnd();
-		if (votes.length == players.length)
-		{
-			game_is_running = true;
-			console.log("start game");
-			io.emit('game.start');
-			field = new Zetti_field(players.length);
-			setTimeout(() => { game(players, field)}, 2000);
-		}
-	}
-	else { console.log("vote rejected"); console.groupEnd(); }
-}
-function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players, ids)
-{
-	console.log('user disconnected');
-	for (player of players)
-	{
-		if (!player.socket.connected)
-		{
-			if (game_is_running) {
-				io.emit('MessageFromServer', player.name + " lost connection to the game.");
-				disconnected_players.push(player);
-			}
-			else
-			{
-				io.emit('MessageFromServer', player.name + " left.");
-				votes.splice(votes.indexOf(player.id), 1);
-				ids[player.id] = 0;
-				Player.delete_by_id(player.id, players);
-				io.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
-				io.emit('vote.update', votes.length, players.length);
-			}
-			break;
-		}
-	}
-	console.log("IDs: " + ids);
-}
-function eval_command(string)
-{
-	switch(string)
-	{
-		case("SetRounds"):
-			var str = message.slice(11);
-			var nr = parseInt(str);
-			if (nr < 60 / clients.list.length) { field.total_rounds = nr; }
-			io.emit('MessageFromServer', `Server: Total rounds ${field.total_rounds}.`)
-		case("GetRounds"):
-			io.emit('MessageFromServer', `Server: Total rounds ${field.total_rounds}.`)
-	}
-}
+
+
 //LISTENER------------------------------------------------------------------------
 /*
  * login
@@ -340,23 +268,31 @@ function eval_command(string)
  * disconnect
  */
 io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
-	//console.log(Object.keys(io.sockets.sockets));
 	console.log('a user connected');
+	// connection_handling
+	socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/clients.list, /*global object*/already_voted, /*global object*/clients.left, /*global object*/io); });
+	socket.on('vote', (/*number*/playerid) => {
+		if (connection_handling.vote(playerid, clients.list, already_voted, io))
+		{
+			field = new Zetti_field(clients.list.length);
+			game(clients.list, field);
+		}
+	});
+	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients.list, already_voted, clients.left, clients.ids, io); });
+	// command
+	socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, socket, field); });
+	// miscellaneous
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-	socket.on('login', (/*string*/name) => { login(name, socket, clients.list, already_voted, clients.left); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
-	socket.on('Command', (string) => { eval_command(string); });
-	socket.on('vote', (/*number*/playerid) => { vote(playerid, clients.list, already_voted); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
 		let player = Player.by_id(player_id, clients.list);
-		console.log(`card.toPlayingstack: ${color} ${number} by ${player.name}`);
 		for (let i = 0; i < player.hand.length; i++)
 		{
 			if (player.hand[i].color == color && player.hand[i].number == number)
 			{
 				player.hand.splice(i, 1);
 				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
-				console.log(`card.update: ${color} ${number} ${pos_on_stack}`);
+				console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
 				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
 				break;
 			}
@@ -371,7 +307,6 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		io.emit('guess.update', /*number*/player.id, /*number*/player.guess, 0);
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
-	socket.on('disconnect', (reason) => { disconnected(clients.list, already_voted, clients.left, clients.ids); });
 });
 app.use(express.static('client'));
 app.get(game_url, (req, res) => {
@@ -379,6 +314,9 @@ app.get(game_url, (req, res) => {
 	let p = __dirname;
 	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/index.html'); }
 	else { res.sendFile( p  + '/client/game_is_full.html'); }
+});
+app.get("/help", (req, res) => {
+	res.sendFile(__dirname + '/client/help.html');
 });
 httpsserver.listen(port, IPaddress, () => {
   console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
