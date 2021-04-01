@@ -18,7 +18,8 @@ function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, gam
 				socket.emit('login.successful', JSON.stringify(player.info()));
 				socket.emit('game.start');
 				socket.emit('game.round.start', /*number*/playingfield.current_round, /*string*/playingfield.trump);
-				socket.emit('guess.update', /*number*/player.id, /*number*/player.guess, /*number*/player.tricks_won);
+				socket.emit('info.points.update', /*number*/player.points);
+				socket.emit('info.guess.update', /*number*/(player.guess-player.tricks_won));
 				socket.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
 				socket.emit('card.distribute', JSON.stringify(player.hand));
 				console.log(`${player.name} reconnected.`);

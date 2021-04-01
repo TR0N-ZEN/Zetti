@@ -162,7 +162,7 @@ function update_points(/*array*/players)
 			if (delta > 0) { delta *= -1; }
 		}
 		player.points += delta;
-		player.socket.emit('points.update', player.points);
+		player.socket.emit('info.points.update', player.points);
 		// Resetting player attributes for next round;
 		player.guess = ""; // not necessary cause it will be overwritten
 		player.tricks_won = "";
@@ -206,18 +206,21 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 		playingfield.trick = [];
 		io.emit('game.trick.start');
 		await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		await delay(5000);
+		await delay(2000);
 		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
 		starter_index = winner_index;
 		let winner = players[winner_index];
 		console.log(`winner: ${winner.name}`);
 		++winner.tricks_won;
-		io.emit('guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
+		io.emit('playerBoard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
+		winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won));
 		io.emit('game.trick.end'); //for clearing playingfield from cards on clients
 		++trick;
 	} while(trick <= round)
+	io.emit('info.guess.update');
 	update_points(players); //calculate points after each round
 	console.groupEnd();
+	await delay(4000);
 	io.emit('game.round.end');
 }
 function clear_game()
@@ -284,7 +287,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	});
 	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients, already_voted,io, game_is_running); });
 	// command
-	socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, socket, field); });
+	socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, /*global object*/io, field); });
 	// miscellaneous
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
@@ -308,7 +311,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		player = Player.by_id(id, clients.list)
 		player.guess = guess;
 		console.log(player.name + " guessed: " + player.guess); 
-		io.emit('guess.update', /*number*/player.id, /*number*/player.guess, 0);
+		io.emit('playerBoard.guess.update', /*number*/player.id, /*number*/player.guess, 0);
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
 });
