@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Ende</title>
+    <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
+    <meta name="theme-color" content="#ffffff;">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
+    <script src="socket.io/socket.io.js" defer></script>
+    <script src="javascript/auswertung.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="css/auswertung.css">
+    <link rel="stylesheet" type="text/css" href="css/unison.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div id="card_wall">
+				
+		</div>
+	</div>
+</body>
+<div id="jpgs" style="display: none;">
+	<div class="N_0"><img src="jpgs/N_0.jpg" alt="N_0.jpg"></div>
+	<div class="N_1"><img src="jpgs/N_1.jpg" alt="N_1.jpg"></div>
+	<div class="N_2"><img src="jpgs/N_2.jpg" alt="N_2.jpg"></div>
+	<div class="N_3"><img src="jpgs/N_3.jpg" alt="N_3.jpg"></div>
+	<div class="Z_0"><img src="jpgs/Z_0.jpg" alt="Z_0.jpg"></div>
+	<div class="Z_1"><img src="jpgs/Z_1.jpg" alt="Z_1.jpg"></div>
+	<div class="Z_2"><img src="jpgs/Z_2.jpg" alt="Z_2.jpg"></div>
+	<div class="Z_3"><img src="jpgs/Z_3.jpg" alt="Z_3.jpg"></div>
+	<div class="red_1"><img src="jpgs/red_1.jpg" alt="red_1.jpg"></div>
+	<div class="red_2"><img src="jpgs/red_2.jpg" alt="red_2.jpg"></div>
+	<div class="red_3"><img src="jpgs/red_3.jpg" alt="red_3.jpg"></div>
+	<div class="red_4"><img src="jpgs/red_4.jpg" alt="red_4.jpg"></div>
+	<div class="red_5"><img src="jpgs/red_5.jpg" alt="red_5.jpg"></div>
+	<div class="red_6"><img src="jpgs/red_6.jpg" alt="red_6.jpg"></div>
+	<div class="red_7"><img src="jpgs/red_7.jpg" alt="red_7.jpg"></div>
+	<div class="red_8"><img src="jpgs/red_8.jpg" alt="red_8.jpg"></div>
+	<div class="red_9"><img src="jpgs/red_9.jpg" alt="red_9.jpg"></div>
+	<div class="red_10"><img src="jpgs/red_10.jpg" alt="red_10.jpg"></div>
+	<div class="red_11"><img src="jpgs/red_11.jpg" alt="red_11.jpg"></div>
+	<div class="red_12"><img src="jpgs/red_12.jpg" alt="red_12.jpg"></div>
+	<div class="red_13"><img src="jpgs/red_13.jpg" alt="red_13.jpg"></div>
+	<div class="yellow_1"><img src="jpgs/yellow_1.jpg" alt="yellow_1.jpg"></div>
+	<div class="yellow_2"><img src="jpgs/yellow_2.jpg" alt="yellow_2.jpg"></div>
+	<div class="yellow_3"><img src="jpgs/yellow_3.jpg" alt="yellow_3.jpg"></div>
+	<div class="yellow_4"><img src="jpgs/yellow_4.jpg" alt="yellow_4.jpg"></div>
+	<div class="yellow_5"><img src="jpgs/yellow_5.jpg" alt="yellow_5.jpg"></div>
+	<div class="yellow_6"><img src="jpgs/yellow_6.jpg" alt="yellow_6.jpg"></div>
+	<div class="yellow_7"><img src="jpgs/yellow_7.jpg" alt="yellow_7.jpg"></div>
+	<div class="yellow_8"><img src="jpgs/yellow_8.jpg" alt="yellow_8.jpg"></div>
+	<div class="yellow_9"><img src="jpgs/yellow_9.jpg" alt="yellow_9.jpg"></div>
+	<div class="yellow_10"><img src="jpgs/yellow_10.jpg" alt="yellow_10.jpg"></div>
+	<div class="yellow_11"><img src="jpgs/yellow_11.jpg" alt="yellow_11.jpg"></div>
+	<div class="yellow_12"><img src="jpgs/yellow_12.jpg" alt="yellow_12.jpg"></div>
+	<div class="yellow_13"><img src="jpgs/yellow_13.jpg" alt="yellow_13.jpg"></div>
+	<div class="blue_1"><img src="jpgs/blue_1.jpg" alt="blue_1.jpg"></div>
+	<div class="blue_2"><img src="jpgs/blue_2.jpg" alt="blue_2.jpg"></div>
+	<div class="blue_3"><img src="jpgs/blue_3.jpg" alt="blue_3.jpg"></div>
+	<div class="blue_4"><img src="jpgs/blue_4.jpg" alt="blue_4.jpg"></div>
+	<div class="blue_5"><img src="jpgs/blue_5.jpg" alt="blue_5.jpg"></div>
+	<div class="blue_6"><img src="jpgs/blue_6.jpg" alt="blue_6.jpg"></div>
+	<div class="blue_7"><img src="jpgs/blue_7.jpg" alt="blue_7.jpg"></div>
+	<div class="blue_8"><img src="jpgs/blue_8.jpg" alt="blue_8.jpg"></div>
+	<div class="blue_9"><img src="jpgs/blue_9.jpg" alt="blue_9.jpg"></div>
+	<div class="blue_10"><img src="jpgs/blue_10.jpg" alt="blue_10.jpg"></div>
+	<div class="blue_11"><img src="jpgs/blue_11.jpg" alt="blue_11.jpg"></div>
+	<div class="blue_12"><img src="jpgs/blue_12.jpg" alt="blue_12.jpg"></div>
+	<div class="blue_13"><img src="jpgs/blue_13.jpg" alt="blue_13.jpg"></div>
+	<div class="green_1"><img src="jpgs/green_1.jpg" alt="green_1.jpg"></div>
+	<div class="green_2"><img src="jpgs/green_2.jpg" alt="green_2.jpg"></div>
+	<div class="green_3"><img src="jpgs/green_3.jpg" alt="green_3.jpg"></div>
+	<div class="green_4"><img src="jpgs/green_4.jpg" alt="green_4.jpg"></div>
+	<div class="green_5"><img src="jpgs/green_5.jpg" alt="green_5.jpg"></div>
+	<div class="green_6"><img src="jpgs/green_6.jpg" alt="green_6.jpg"></div>
+	<div class="green_7"><img src="jpgs/green_7.jpg" alt="green_7.jpg"></div>
+	<div class="green_8"><img src="jpgs/green_8.jpg" alt="green_8.jpg"></div>
+	<div class="green_9"><img src="jpgs/green_9.jpg" alt="green_9.jpg"></div>
+	<div class="green_10"><img src="jpgs/green_10.jpg" alt="green_10.jpg"></div>
+	<div class="green_11"><img src="jpgs/green_11.jpg" alt="green_11.jpg"></div>
+	<div class="green_12"><img src="jpgs/green_12.jpg" alt="green_12.jpg"></div>
+	<div class="green_13"><img src="jpgs/green_13.jpg" alt="green_13.jpg"></div>
+</div>
+</html>
