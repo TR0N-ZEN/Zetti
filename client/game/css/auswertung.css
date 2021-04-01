@@ -1,0 +1,41 @@
+img
+{
+	height: inherit;
+	width: inherit;
+}
+:root
+{
+	--card-height: 10vh;
+	--card-width: 7vh;
+}
+#card_wall
+{
+	position: absolute;
+	top:1;
+	left:1;
+	border: 1vh solid grey;
+	height: 62vh;
+	width: 72vh;
+	display: grid;
+	grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+	grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+.hidden_card
+{
+	transition-property: all;
+	transition-duration: 1500ms;
+}
+.hidden_card
+{
+	/* border: orange solid 1px; */
+	width: 0;
+	height: 0;
+	opacity: 0;
+}
+.visible_card
+{
+	width: var(--card-width);
+	height: var(--card-height);
+	opacity: 1;
+}

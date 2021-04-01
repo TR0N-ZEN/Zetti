@@ -1,9 +1,9 @@
 const Card = require('./card').Card;
 const Field = require('./field').Field;
 
-class Zetti_field extends Field 
+class Zetti_field extends Field
 {
-	constructor(player_count)
+	constructor(player_count = 6)
 	{
 		const decksize = 60;
 		super(decksize);
