@@ -65,6 +65,7 @@ h2 {
     overflow-y: scroll;
     grid-area: changelog;
     background-color: white;
+		overflow: visible;
 }
 .changelog > div {
     background: var(--blue);
