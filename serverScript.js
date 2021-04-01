@@ -14,7 +14,6 @@ let already_voted = [];
 let field = {}; 
 let game_is_running = {value: false};
 
-const game_url = '/';
 // const IPaddress = '192.168.0.13'; // address for the http server
 // const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
 const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
@@ -313,15 +312,21 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		take_next_guess(); //resolves Promise in async take_guesses()'s loop
 	});
 });
-app.use(express.static('client'));
-app.get(game_url, (req, res) => {
+
+app.get("/", (req, res) => {
+	app.use(express.static('client/game'));
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
 	let p = __dirname;
-	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/index.html'); }
-	else { res.sendFile( p  + '/client/game_is_full.html'); }
+	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/game/index.html'); }
+	else { res.sendFile( p  + '/client/game/game_is_full.html'); }
 });
 app.get("/help", (req, res) => {
-	res.sendFile(__dirname + '/client/help.html');
+	app.use(express.static('client/help'));
+	res.sendFile(__dirname + '/client/help/help.html');
+});
+app.get("/overview", (req, res) => {
+	app.use(express.static('client/overview'));
+	res.sendFile(__dirname + '/client/overview/overview.html');
 });
 httpsserver.listen(port, IPaddress, () => {
   console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
