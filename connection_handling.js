@@ -1,22 +1,34 @@
-const Player = require('./player');
-const Clients = require('./clients');
+const Player = require('./player').Player;
+const Clients = require('./clients').Clients;
 
-function login(/*string*/name, socket, /*array*/players, /*array*/votes, /*array*/disconnected_players, io)
+function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, game_is_running, playingfield = undefined)
 {
+	let players = clients.list;
+	let ids = clients.ids;
+	let disconnected_players = clients.left;
+	console.log(`Login attempt by ${name}`);
 	if (disconnected_players.length != 0)
 	{
 		disconnected_players.forEach((player, index) => {
+			console.log(`${player.name}`);
 			if (player.name == name)
 			{
 				disconnected_players.splice(index, 1);
 				Player.by_id(player.id, players).socket = socket;
-				return 0;
+				socket.emit('login.successful', JSON.stringify(player.info()));
+				socket.emit('game.start');
+				socket.emit('game.round.start', /*number*/playingfield.current_round, /*string*/playingfield.trump);
+				socket.emit('guess.update', /*number*/player.id, /*number*/player.guess, /*number*/player.tricks_won);
+				socket.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
+				socket.emit('card.distribute', JSON.stringify(player.hand));
+				console.log(`${player.name} reconnected.`);
+				//return 0;
 			}
 		});
 	}
-	if (players.length < 6)
+	if (!game_is_running.value && players.length < 6)
 	{
-		let new_player = new Player(name, clients.ids, socket);
+		let new_player = new Player(name, ids, socket);
 		players.push(new_player);
 		console.log(`New Player ${name} logged in.`);
 		socket.emit('login.successful', JSON.stringify(new_player.info()));
@@ -24,14 +36,14 @@ function login(/*string*/name, socket, /*array*/players, /*array*/votes, /*array
 		io.emit('MessageFromServer', name + " logged in.");
 		io.emit('vote.update', votes.length, players.length);
 	}
-	else
+	else if (game_is_running.value || players.length == 6)
 	{
 		console.log("login.unsuccessful");
 		socket.emit('login.unsuccessful');
 	}
 	return 0;
 }
-function vote(/*number*/playerid, /*array*/players, /*array*/votes, io)
+function vote(/*number*/playerid, /*array*/players, /*array*/votes, io, game_is_running)
 {
 	console.group("vote");
 	if (!votes.includes(playerid))
@@ -49,14 +61,18 @@ function vote(/*number*/playerid, /*array*/players, /*array*/votes, io)
 	}
 	else { console.log("vote rejected"); console.groupEnd(); return false; }
 }
-function disconnected(/*array*/players, /*array*/votes, /*array*/disconnected_players, ids, io)
+function disconnected(/*array*/clients, /*array*/votes, io, game_is_running)
 {
+	let players = clients.list;
+	let ids = clients.ids;
+	let disconnected_players = clients.left;
 	console.log('user disconnected');
 	for (player of players)
 	{
 		if (!player.socket.connected)
 		{
-			if (game_is_running.value) {
+			if (game_is_running.value)
+			{
 				io.emit('MessageFromServer', player.name + " lost connection to the game.");
 				disconnected_players.push(player);
 			}
