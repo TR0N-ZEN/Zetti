@@ -1,0 +1,97 @@
+﻿:root {
+    --thegreen:#7ABF24;
+    --thehovergreen:#79bf24ab;
+    --thewhite:#ffffff;
+    --theviolet:#BB5E96;
+    --semitransparent:#ffffffef;
+    --milkglass:#ffffff6b;
+    --blue: #3399ff;
+    --orange: #ff5e00bb;
+}
+
+* {
+    box-sizing:border-box;
+    padding:0;
+    margin:0;
+    border:none;
+    overflow:hidden;
+}
+
+body {
+    color: black;
+    font-family:sans-serif;
+    overflow-wrap:break-word;
+    background-color:var(--orange);
+    font-size: 2.5vmin;
+}
+h2 {
+    margin-bottom: 1vh;
+    margin-left: 0.5vw;
+}
+
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    padding: 5vmin;
+    display: grid;
+    grid-gap: 5vmin;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas:
+        "changelog";
+}
+
+
+.grid-box {
+    padding: 1vmin;
+}
+/*
+.grid-box {
+    padding: 1vmin;
+    z-index: 0;
+    transform: scale(1);
+    box-shadow: none;
+    transition-property: box-shadow z-index transform;
+    transition-duration: 1s;
+}
+.grid-box:hover {
+    z-index: 2;
+    transform: scale(1.03);
+    box-shadow: 0 0 5px black;
+}
+*/
+
+.changelog {
+    overflow-y: scroll;
+    grid-area: changelog;
+    background-color: white;
+}
+.changelog > div {
+    background: var(--blue);
+    padding-left: 1vw;
+    padding-right: 0.5vw;
+    border-radius: 10px;
+    padding: 1vmin;
+    z-index: 0;
+    transform: scale(1);
+    box-shadow: none;
+    transition-property: box-shadow z-index transform;
+    transition-duration: 1s;
+}
+.changelog > div:hover {
+    z-index: 2;
+    transform: scale(1.03);
+    box-shadow: 0 0 5px black;
+}
+.changelog ul {
+    list-style-position: inside;
+    list-style-type: none;
+}
+
+ul > li {
+    padding-left: 1vw;
+    padding-right: 1vw;
+    border-radius: 10px;
+    background: #cce5ff;
+    margin: 2px;
+}
