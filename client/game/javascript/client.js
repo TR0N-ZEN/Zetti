@@ -221,7 +221,16 @@ socket.on('playerBoard.update', (/*string*/JSON_players) => {
 		}
 		playerboard.table.html(table);
 });
-
+socket.on('playerBoard.guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
+			$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
+});
+socket.on('info.points.update', (/*number*/points) => {
+	info.points.text(`Punkte : ${points.toString()}`);
+});
+socket.on('info.guess.update', (/*number*/number = undefined) => {
+	if ((typeof number) == "undefined") { info.guess.text(`Noch zu holen: `);}
+	else { info.guess.text(`Noch zu holen: ${(number).toString()}`); }
+});
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
 		$('#votes').text(`${votes.toString()}/${amount_of_players.toString()}`);
 });
@@ -266,10 +275,6 @@ socket.on('game.trick.end', () => {
 socket.on('guess.waitingFor', (/*string*/playerID) => {
 		$('tr > .name', playerboard.table).css("color", "white");
 		$(`#${playerID} > .name`, playerboard.table).css("color", "lightgreen");
-});
-socket.on('guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
-		$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
-		info.guess.text('Noch zu holen: ' + (guess - won).toString());
 });
 socket.on('guess.request', () => { 
 		guess.show();
@@ -326,11 +331,6 @@ socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/car
 		card.css("top", parseInt(top_playingstack, 10).toString() + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
 		card.css("left", (parseInt(left_playingstack, 10) + card_level_on_stack*2).toString() + "vw");
 });
-
-socket.on('points.update', (/*number*/points) => {
-		info.points.text(`Punkte : ${points.toString()}`);
-});
-
 
 //DEBUGING-------------------------------------------------------
 socket.on('changeCSS', (/*string*/element, /*string*/property, /*string*/value) => {
