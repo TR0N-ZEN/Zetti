@@ -15,6 +15,7 @@ const top_in_hand = "62vh";
 console.log( "Loaded entire website." );
 $("#loading").slideUp();
 
+const vote = $('#ready_player');
 const chat = {
 		visible: true,
 		window: $('.chat.window'),
@@ -154,7 +155,7 @@ $('.take_guess > form').submit(function (button) {
 		//$('.take_guess > form > input').val("");
 		$('input', this).val("");
 		socket.emit('guess.response', /*number*/guess_number, /*number*/PlayerObject.id);
-		info.guess.text('Zu holen: ' + guess_number.toString());
+		info.guess.text('Noch zu holen: ' + guess_number.toString());
 		let width_in_px = guess.object.css('width');
 		guess.object.css("righ", "-" + width_in_px);
 		setTimeout(() => {
@@ -231,13 +232,13 @@ socket.on('MessageFromServer', (/*string*/message) => {
 
 socket.on('game.start', async () => {
 		console.log("game.start");
-		$('#ready_player').css("top", "-100vh"); //hardcoded
+		vote.css("top", "-100vh"); //hardcoded
 		playingfield.css("left", left_second_coloumn); //hardcoded
 		playingstack.css("left", left_playingstack); //hardcoded
 		hand.css("top", top_hand); //hardcoded
 		await delay(2500); //hardcoded; deppendent on animation-duration of top_in_hand
 		removeTransition();
-		setTimeout(() => { $('#ready_player').css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
+		setTimeout(() => { vote.css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
 });
 socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
 		$('#hand > .card_frame').remove();
@@ -268,6 +269,7 @@ socket.on('guess.waitingFor', (/*string*/playerID) => {
 });
 socket.on('guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
 		$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
+		info.guess.text('Noch zu holen: ' + (guess - won).toString());
 });
 socket.on('guess.request', () => { 
 		guess.show();

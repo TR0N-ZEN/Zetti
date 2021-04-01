@@ -192,16 +192,20 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	console.group(`play round ${round}`);
 	let trick = 1;
 	let trump = get_random_element(playingfield.colors);
+	playingfield.trump = trump;
 	console.log(`trump : ${trump}`);
 	let starter_index = mod(round - 1, players.length); //needs to be available between iterations of the following looped block
+	playingfield.trick_starter_index = starter_index;
 	io.emit('game.round.start', /*number*/round, /*string*/trump);
 	playingfield.shuffle();
 	distribute_cards(round, playingfield.deck, players);
-	await take_guesses(players, mod(round - 1, players.length)); // sideeffects on players[i].guesses after "io.on('guess.response')"
+	await take_guesses(players, starter_index); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	do
 	{
-		io.emit('game.trick.start');
+		playingfield.trick_starter_index = starter_index;
+		playingfield.current_trick = trick;
 		playingfield.trick = [];
+		io.emit('game.trick.start');
 		await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
 		await delay(5000);
 		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
@@ -235,6 +239,7 @@ async function game(players, playingfield)
 	let round = 1;
 	do 
 	{
+		field.current_round = round;
 		await play_round(/*array*/players, /*object*/playingfield, /*int*/round);
 		++round;
 		await delay(5000);
@@ -270,15 +275,15 @@ const io = require('socket.io')(httpsserver); // 'io' holds all sockets
 io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
 	console.log('a user connected');
 	// connection_handling
-	socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/clients.list, /*global object*/already_voted, /*global object*/clients.left, /*global object*/io); });
+	socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/clients, /*global object*/already_voted,/*global object*/io, game_is_running ,field); });
 	socket.on('vote', (/*number*/playerid) => {
-		if (connection_handling.vote(playerid, clients.list, already_voted, io))
+		if (connection_handling.vote(playerid, clients.list, already_voted, io, game_is_running))
 		{
 			field = new Zetti_field(clients.list.length);
 			game(clients.list, field);
 		}
 	});
-	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients.list, already_voted, clients.left, clients.ids, io); });
+	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients, already_voted,io, game_is_running); });
 	// command
 	socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, socket, field); });
 	// miscellaneous
