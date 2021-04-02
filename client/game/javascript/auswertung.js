@@ -44,8 +44,12 @@ let card_wall = $('.wrapper > #card_wall');
 		{
 			let color = card.color;
 			let number = card.number;
-			card_wall.append(make_card(color, number));
-			setTimeout(() => {$(`.${color}_${number}`, card_wall).addClass('visible_card')}, Math.random()*10000);
+			setTimeout(() => {
+				card_wall.append(make_card(color, number));
+				setTimeout(() => {
+					$(`.${color}_${number}`, card_wall).addClass('visible_card');
+				}, Math.random()*10000);
+			}, Math.random()*10000);
 		}
 	})();
 //});

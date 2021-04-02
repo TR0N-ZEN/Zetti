@@ -1,11 +1,11 @@
 const Client = require('./client').Client;
 
 class Player extends Client {
-	constructor(name, ids, socket = undefined, ) {
+	constructor(name, ids, socket = undefined) {
 		super(socket)
 		this.name = name;
-		this.points = 0;
-		this.guess = 0;
+		this.points = undefined;
+		this.guess = undefined;
 		this.hand = [];
 		this.tricks_won = 0;
 		this.id = Player.getID(ids);

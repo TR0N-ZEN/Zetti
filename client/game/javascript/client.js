@@ -164,7 +164,10 @@ $('.take_guess > form').submit(function (button) {
 });
 
 
-
+function safe(arg)
+{
+	if (arg != undefined) { return arg; }
+}
 //LISTENERS---------------------------------------------------
 /*
 * socket.on(x, function)
@@ -217,7 +220,7 @@ socket.on('playerBoard.update', (/*string*/JSON_players) => {
 		let table;
 		for (player of players)
 		{
-			table += `<tr id="${player.id}"> <td class="name">${player.name}</td> <td class="points">${player.points}</td> <td class="won_guess">${player.tricks_won}/${player.guess}</td> </tr>`;
+			table += `<tr id="${player.id}"> <td class="name">${player.name}</td> <td class="points">${safe(player.points)}</td> <td class="won_guess">${safe(player.tricks_won)}/${(player.guess)}</td> </tr>`;
 		}
 		playerboard.table.html(table);
 });
@@ -302,8 +305,8 @@ socket.on('card.waitingFor', (/*string*/playerID) => {
 		$('tr > td:first-of-type', playerboard.table).css("color", "white");
 		$(`#${playerID} > .name`).css("color", "lightgreen");
 });
-socket.on('card.waiting', (/*number*/card_level_on_stack) => {
-		console.log("card.waiting");
+socket.on('card.request', (/*number*/card_level_on_stack) => {
+		console.log("card.request");
 		$('.card.inhand').click( async function () {
 				$('.card.inhand').unbind("click");
 				let card = $(this);
