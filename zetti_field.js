@@ -34,8 +34,8 @@ class Zetti_field extends Field
 		this.round_starter = undefined;
 		this.current_trick = undefined;
 		this.trick_starter = undefined; // to know who starts a trick
+		this.waiting_for_guess = undefined;
+		this.waiting_for_card = undefined;
 	}
 }
-
-
 module.exports.Zetti_field = Zetti_field;

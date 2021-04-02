@@ -22,6 +22,10 @@ function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, gam
 				socket.emit('info.guess.update', /*number*/(player.guess-player.tricks_won));
 				socket.emit('playerBoard.update', JSON.stringify(Clients.info(players)));
 				socket.emit('card.distribute', JSON.stringify(player.hand));
+				if (playingfield.waiting_for_card != undefined) { socket.emit('card.waitingFor', playingfield.waiting_for_card); }
+				else if (playingfield.waiting_for_guess != undefined) { socket.emit('guess.waitingFor', playingfield.waiting_for_guess); }
+				if (playingfield.waiting_for_card == player.id) { socket.emit(`card.request`); }
+				else if (playingfield.waiting_for_guess == player.id) { socket.emit(`guess.request`); }
 				console.log(`${player.name} reconnected.`);
 				//return 0;
 			}

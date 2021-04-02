@@ -15,8 +15,8 @@ let field = {};
 let game_is_running = {value: false};
 
 // const IPaddress = '192.168.0.13'; // address for the http server
-// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
-const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
+const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
+// const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
 // const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80; // port for http server
 
@@ -83,15 +83,17 @@ async function take_guesses(/*array*/players, /*number*/starter_index)
 	console.group("take_guesses");
 	for (let i = 0; i < players.length; i++)
 	{
-		let the_asked_one = players[mod(starter_index + i, players.length)];
-		console.log("guess.waitingFor: " + the_asked_one.name);
-		io.emit('guess.waitingFor', the_asked_one.id);
-		the_asked_one.socket.emit('guess.request');
+		let player = players[mod(starter_index + i, players.length)];
+		console.log(`guess.waitingFor: ${player.name}`);
+		io.emit('guess.waitingFor', player.id);
+		player.socket.emit('guess.request');
+		/*global variable*/ field.waiting_for_guess = player.id;
 		await new Promise( (resolve) => {
 			take_next_guess = resolve; // resolve can be triggered from outside by function call 'take_next_guess()' in 'io.on('guess.response')';
 		});
   }
 	console.groupEnd();
+	/*global variable*/ field.waiting_for_guess = undefined;
 	return 0;
 }
 function to_serve(/*array*/trick)
@@ -113,6 +115,7 @@ function best_card(/*array*/trick, /*string*/trump)
 	let high_card_index = 0;
 	let high_card = trick[high_card_index];
 	let index = 0;
+	let trump_played = false;
 	for (card of trick)
 	{
 		switch(card.color)
@@ -125,6 +128,7 @@ function best_card(/*array*/trick, /*string*/trump)
 				if (high_card.color != trump)
 				{
 					// console.log("Trump has been played for the first time.");
+					trump_played = true;
 					high_card_index = index;
 					high_card = card;
 				}
@@ -136,7 +140,7 @@ function best_card(/*array*/trick, /*string*/trump)
 				}
 				break;
 			case(color_to_serve):
-				if (parseInt(card.number, 10) > parseInt(high_card.number, 10))
+				if (trump_played && parseInt(card.number, 10) > parseInt(high_card.number, 10))
 				{
 					high_card_index = index;
 					high_card = card;
@@ -151,7 +155,8 @@ function best_card(/*array*/trick, /*string*/trump)
 }
 function update_points(/*array*/players)
 {
-	for (player of players) {
+	for (player of players)
+	{
 		let delta;
 		let tricks_won = player.tricks_won;
 		let guess = player.guess;
@@ -179,11 +184,13 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index, /*arr
 	for (let i = 0; i < players.length; i++)
 	{
 		player = players[mod(trick_starter_index + i, players.length)];
-		console.log("card.waitingFor " + player.name);
+		console.log(`card.waitingFor  ${player.name}`);
 		io.emit('card.waitingFor', player.id);
-		player.socket.emit('card.waiting', trick.length);
+		player.socket.emit('card.request', trick.length);
+		/*global variable*/ field.waiting_for_card = player.id;
 		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
 	}
+	/*global variable*/ field.waiting_for_card = undefined;
 	return 0;
 }
 async function play_round(/*array*/players, /*object*/playingfield, /*int*/round)
@@ -281,8 +288,8 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('vote', (/*number*/playerid) => {
 		if (connection_handling.vote(playerid, clients.list, already_voted, io, game_is_running))
 		{
-			field = new Zetti_field(clients.list.length);
-			game(clients.list, field);
+			/*global variable*/ field = new Zetti_field(clients.list.length);
+			/*global variable*/ game(clients.list, field);
 		}
 	});
 	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients, already_voted,io, game_is_running); });
