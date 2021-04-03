@@ -45,11 +45,12 @@ class Player extends Client
 	static update_points(player)
 	{
 		let delta = player.guess - player.tricks_won;
-		if (delta == 0) { player.points += 20 + player.guess*10; }
+		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}\n has delta ${delta}.`);
+		if (delta == 0) { player.points += (20 + player.guess*10); }
 		else
 		{
 			if (delta > 0) { delta *= (-1); }
-			player.points += delta*10;
+			player.points += (delta*10);
 		}
 	}
 	static by_id (id, players)
