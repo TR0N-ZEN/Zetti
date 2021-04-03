@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>news</title>
+    <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
+    <meta name="theme-color" content="#ffffff;">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
+    <script src="socket.io/socket.io.js" defer></script>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="standard.css">
+</head>
+<body>
+    <div class="wrapper">
+			<div class="news grid-box">
+				<h1>neues</h1>
+				<p>
+					Im Chat können Kommandos an das Spiel gesendet werden.</br>
+					Kommandos:
+				</p>
+				<table>
+					<tr><td class="command">#Get Rounds</td><td>Gibt Auskunft über Anzahl der zu spielenden Runden.</td></tr>
+					<tr><td class="command">#Set Rounds x</td><td>Begrenzt die zu spielende Rundenanzahl auf den Wert von x.</td></tr>
+				</table>
+				<p>
+					Nach Ende des Spiels kann nach ca. 40 Sekunden die Website neu geladen werden,<br>
+					um sich erneut angemeldet und ein Spiel gestartet werden.
+				</p>
+				<p>
+					bei Verbindungsunterbrechung,<br>
+					Website neu laden<br>
+					und mit selben Namen anmelden unter dem man zuvor gespielt hat
+				</p>
+				<p>
+					Bei Problemen ne Mail mit Beschreibung und einem Bild vom Problem falls möglich an <a href="mailto:theo.reichert7@gmail.com">theo.reichert7@gmail.com</a></br>
+					Bis bald :-)</br>
+					T
+				</p>
+				<a href="../game">zum Spiel</a>
+			</div>
+			<div class="changelog grid-box">
+				<div>
+					<h3>version 2.0</h3>
+					<p>(xx.04.2020)</p>
+					<ul>
+						<li>Spiel durch Spieler allein spielbar</li>
+						<li>bei Verbindungsunterbrechung weiterspielbar</li>
+						<li>keine Siegerauswertung</li>
+						<li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
+					</ul>
+				</div>
+				<div>
+					<h3>version 1.0</h3>
+					<p>(23.01.2020)</p>
+					<ul>
+						<li>läuft erstmal</li>
+						<li>bei Verbindungsunterbrechung is das Game meistens nicht weiterspielbar</li>
+						<li>keine Siegerauswertung</li>
+						<li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
+						<li>Programm braucht live Betreuung beim Spielen</li>
+					</ul>
+				</div>
+			</div>
+    </div>
+</body>
+</html>
