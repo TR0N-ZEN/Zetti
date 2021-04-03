@@ -1,6 +1,7 @@
 //message from ubuntu
 ////playingfield and player preparation
 const os = require('os');
+const path = require('path');
 const mod = require('./mod');
 const Player = require('./player').Player;
 const Players = require('./players').Players;
@@ -310,23 +311,26 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	});
 });
 
-app.get("/", (req, res) => {
+app.get("/game", (req, res) => {
 	app.use(express.static('client/game'));
 	//let p = 'C:/Users/Ego/source/repos/TR0N-ZEN/Zetti';
-	let p = __dirname;
-	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile( p + '/client/game/index.html'); }
-	else { res.sendFile( p  + '/client/game/game_is_full.html'); }
+	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile(path.join(__dirname, '/client/game/index.html')); }
+	else { res.sendFile(path.join(__dirname, '/client/game/game_is_full.html')); }
 });
 app.get("/help", (req, res) => {
 	app.use(express.static('client/help'));
-	res.sendFile(__dirname + '/client/help/help.html');
+	res.sendFile(path.join(__dirname, '/client/help/help.html'));
 });
-app.get("/overview", (req, res) => {
+app.get("/", (req, res) => {
 	app.use(express.static('client/overview'));
-	res.sendFile(__dirname + '/client/overview/overview.html');
+	res.sendFile(path.join(__dirname, '/client/overview/overview.html'));
+});
+app.get("/excuse", (req, res) => {
+	app.use(express.static('client/excuse'));
+	res.sendFile(path.join(__dirname, '/client/excuse/excuse.html'));
 });
 httpsserver.listen(port, IPaddress, () => {
-  console.log( 'Server is listening on ' + IPaddress + ':' + port.toString() );
+  console.log(`Server is listening on ${IPaddress} : ${port.toString()}`);
 });
 //console.log(Object.keys(io.sockets.sockets));
 //console.log(Object.keys(io.sockets.connected));
