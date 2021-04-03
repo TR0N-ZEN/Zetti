@@ -1,13 +1,13 @@
 function make_card(/*string*/color, /*number*/number)
 {
-		//let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
 		let card_svg = $(`#jpgs > .${color}_${number.toString()}`).html();
 		let card = document.createElement('div');
 		card.setAttribute("class", `card ${color}_${number.toString()} hidden_card`);
 		card.innerHTML = card_svg;
 		return $( card );
 };
-class Card {
+class Card
+{
 	constructor(color, number) {
 		this.color = color;
 		this.number = number;

@@ -5,17 +5,32 @@ img
 }
 :root
 {
-	--card-height: 10vh;
-	--card-width: 7vh;
+	--card-height: 14vh;
+	--card-width: 9.8vh;
+}
+.wrapper
+{
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	flex-flow: row;
+	flex-wrap: nowrap;
+	align-items: center;
+}
+#placing
+{
+	border: 1vh solid grey;
+	height: 100%;
+	max-width: 35vw;
 }
 #card_wall
 {
-	position: absolute;
+	/* position: absolute;
 	top:1;
-	left:1;
+	left:1; */
 	border: 1vh solid grey;
-	height: 62vh;
-	width: 72vh;
+	height: 86vh;
+	width: 100vh;
 	display: grid;
 	grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
 	grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;

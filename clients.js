@@ -2,9 +2,9 @@ const Client = require('./client').Client;
 
 class Clients
 {
-	constructor(size)
+	constructor(size, list = [])
 	{
-		this.list = [];
+		this.list = list;
 		this.ids = new Array(size);
 		this.left = [];
 		for (let i = 0; i < this.ids.length; i++) { this.ids[i] = 0; }
@@ -13,13 +13,13 @@ class Clients
 	{
 		this.list.push(client);
 	}
-	static info(clients_list)
+	static info(clients)
 	{
 		let array = [];
-		console.table(clients_list);
-		for (let i = 0; i < clients_list.length; i++)
+		console.table(clients);
+		for (let i = 0; i < clients.length; i++)
 		{
-			array.push(clients_list[i].info());
+			array.push(clients[i].info());
 		}
 		return array;
 	}

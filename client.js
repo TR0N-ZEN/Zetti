@@ -1,5 +1,7 @@
-class Client {
-	constructor(socket = undefined) {
+class Client
+{
+	constructor(socket = undefined)
+	{
 		this.socket = socket;
 	}
 }
