@@ -189,8 +189,8 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	io.emit('game.round.start', /*number*/round, /*string*/trump);
 	playingfield.shuffle();
 	/*global variable*/ distribute_cards(round, playingfield.deck, players);
-	/*global variable*/ await take_guesses(players, starter_index, playingfield); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	Players.unlock(players);
+	/*global variable*/ await take_guesses(players, starter_index, playingfield); // sideeffects on players[i].guesses after "io.on('guess.response')"
 	do
 	{
 		/*global variable*/ playingfield.trick = [];
