@@ -1,15 +1,16 @@
 const socket = io();
-const left_first_coloumn = "2vw";
-const left_second_coloumn = "34vw";
-const top_first_row = "2vh";
-const top_second_row = "14vh";
-const top_third_row = "56vh";
-const card_height = "30vh";
-const card_width = "21vh";
-const top_playingstack = "19vh";
-const left_playingstack = "66vw";
-const top_hand = "56vh";
-const top_in_hand = "62vh";
+
+
+const css = {
+	grid: {
+		column: { first: "2vw", second: "34vw"},
+		row: { first: "2vh", second: "14vh", third: "56vh" }
+	},
+	card: { height: "30vh", left: "66vh" },
+	hand: { top: "56vh", top_in_hand: "62vh" },
+	playingstack: { top: "19vh", left: "66vh"},
+	hidden: {	bottom: "100vh", right: "100vw" }
+}
 
 //$( document ).ready(function() {
 console.log( "Loaded entire website." );
@@ -166,11 +167,13 @@ $('.take_guess > form').submit(function (button) {
 
 function safe(arg)
 {
-	if (arg != undefined) { return arg; }
+	console.log("safe");
+	if (arg == undefined) { console.log("undefined"); return " "; }
+	else { return arg; };
 }
 //LISTENERS---------------------------------------------------
 /*
-* socket.on(x, function)
+* socket.on(x, function() {})
 *
 * login.
 *      successful
@@ -184,16 +187,17 @@ function safe(arg)
 * MessageFromServer
 * game.
 *      start
-*      round.start
-*      round.end
-*      trick.start
-*      trick.end
+*      round
+*				.start
+*       .end
+*      trick
+*				.start
+*       .end
 * guess.
 *      waitingFor
 *      request
-*      complete
 * card.
-*      distribute //cards on hand
+*      distribute
 *      waiting -> emit('card.toPlayingstack', ...) -> card.update
 *      waitingFor
 *      update //card on stack
@@ -211,27 +215,27 @@ socket.on('login.successful', (/*string*/JSON_PlayerObject) => {
 });
 socket.on('login.unsuccessful', () => {
 		$('#login').slideUp();
-		//server send a different website saying there is no space for antoher player
 });
 
-socket.on('playerBoard.update', (/*string*/JSON_players) => {
-		let players = JSON.parse(JSON_players);
-		playerboard.table.html("");
-		let table;
-		for (player of players)
-		{
-			table += `<tr id="${player.id}"> <td class="name">${player.name}</td> <td class="points">${safe(player.points)}</td> <td class="won_guess">${safe(player.tricks_won)}/${(player.guess)}</td> </tr>`;
-		}
-		playerboard.table.html(table);
+socket.on('playerboard.update', (/*string*/JSON_players) => {
+	console.log("playerboard.update");
+	let players = JSON.parse(JSON_players);
+	playerboard.table.html("");
+	let table;
+	for (player of players)
+	{
+		table += `<tr id="${player.id}"> <td class="name">${player.name}</td> <td class="points">${safe(player.points)}</td> <td class="won_guess">${safe(player.tricks_won)}/${safe(player.guess)}</td> </tr>`;
+	}
+	playerboard.table.html(table);
 });
-socket.on('playerBoard.guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
+socket.on('playerboard.guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
 			$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
 });
 socket.on('info.points.update', (/*number*/points) => {
 	info.points.text(`Punkte : ${points.toString()}`);
 });
 socket.on('info.guess.update', (/*number*/number = undefined) => {
-	if ((typeof number) == "undefined") { info.guess.text(`Noch zu holen: `);}
+	if (number == undefined) { info.guess.text(`Noch zu holen: `);}
 	else { info.guess.text(`Noch zu holen: ${(number).toString()}`); }
 });
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
@@ -245,9 +249,9 @@ socket.on('MessageFromServer', (/*string*/message) => {
 socket.on('game.start', async () => {
 		console.log("game.start");
 		vote.css("top", "-100vh"); //hardcoded
-		playingfield.css("left", left_second_coloumn); //hardcoded
-		playingstack.css("left", left_playingstack); //hardcoded
-		hand.css("top", top_hand); //hardcoded
+		playingfield.css("left", css.grid.column.second); //hardcoded
+		playingstack.css("left", css.playingstack.left); //hardcoded
+		hand.css("top", css.hand.top); //hardcoded
 		await delay(2500); //hardcoded; deppendent on animation-duration of top_in_hand
 		removeTransition();
 		setTimeout(() => { vote.css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
@@ -318,8 +322,8 @@ socket.on('card.request', (/*number*/card_level_on_stack) => {
 				card.addClass("onplayingstack");
 				await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 
 				card.css("z-index", (card_level_on_stack+2).toString());
-				card.css("top", parseInt(top_playingstack, 10).toString() + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
-				card.css("left", (parseInt(left_playingstack, 10)+card_level_on_stack*2).toString() + "vw"); //hardcoded
+				card.css("top", css.playingstack.top);//card.addClass("onplayingstack"); //moves it to the appropirate height
+				card.css("left", (parseInt(css.playingstack.left, 10)+card_level_on_stack*2).toString() + "vw"); //hardcoded
 		});
 });
 socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/card_level_on_stack) => {
@@ -328,11 +332,11 @@ socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/car
 		console.log(card);
 		let crd = $('.wrapper').append(card);
 		console.log(crd);
-		card.addClass( ["fromanotherplayer", "onplayingstack"] );
+		card.addClass( ["fromanotherplayer", "onplayingstack"] ); // "fromanotherplayer" places card outside of viewport by shifting it to the right, "onplayingstack" positions card to fit playingtsack in vertical axis 
 		await delay(90);//hardcoded and and a workaround for the problem of not applying the transition to card 
 		card.css("z-index", card_level_on_stack+2);
-		card.css("top", parseInt(top_playingstack, 10).toString() + "vh");//card.addClass("onplayingstack"); //moves it to the appropirate height
-		card.css("left", (parseInt(left_playingstack, 10) + card_level_on_stack*2).toString() + "vw");
+		card.css("top", css.playingstack.top);//card.addClass("onplayingstack"); //moves it to the appropirate height
+		card.css("left", (parseInt(css.playingstack.left, 10) + card_level_on_stack*2).toString() + "vw");
 });
 
 //DEBUGING-------------------------------------------------------
