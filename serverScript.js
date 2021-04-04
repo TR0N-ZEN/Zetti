@@ -1,13 +1,15 @@
-//message from ubuntu
-////playingfield and player preparation
 const os = require('os');
 const path = require('path');
-const mod = require('./mod');
-const Player = require('./player').Player;
-const Players = require('./players').Players;
-const Card = require('./card').Card;
-const Zetti_field= require('./zetti_field').Zetti_field;
-const Clients = require('./clients').Clients;
+
+const mod = require('./tools/mod').mod;
+const get_random_element = require('./tools/get_random_element').get_random_element;
+const delay = require('./tools/delay').delay;
+
+const Player = require('./server_assets/player').Player;
+const Players = require('./server_assets/players').Players;
+const Card = require('./game_props/card').Card;
+const Zetti_field= require('./game_props/zetti_field').Zetti_field;
+const Clients = require('./server_assets/clients').Clients;
 const commands = require('./commands');
 const connection_handling = require('./connection_handling');
 
@@ -23,47 +25,47 @@ const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev o
 const port = 80; // port for http server
 
 
-//delay only works in async functions
-function delay(milliseconds)
-{
-	return new Promise( (resolve) => {
-		setTimeout( () => {
-			resolve();
-		}, milliseconds);
-	});
-}
-
 ////game functionalities
 
 //EMITTER---------------------------------------------------
 /*
  * login.
- *      successful
- *      unsuccessful
+ * 	successful
+ *	unsuccessful
  * playerboard.
- *      update.
- *          names
- *          points
+ *	update
+ * 	names
+ *	points
  * vote.
- *      update
+ *	update
  * game.
- *      start
- *      round
- * 				.start
- *      	.end
- *      trick
- * 				.start
- *      	.end
+ *	start
+ *	round
+ * 		.start
+ *		.end
+ * trick
+ * 	.start
+ *	.end
  * card.
- *      distribute //cards on hand
- *      update //card on stack
+ *	distribute //cards on hand
+ *	update //card on stack
  * points
- *      .update
+ *	.update
  * guess
- *      .update
+ *	.update
  * changeCSS
  * */
-
+//LISTENERS------------------------------------------------------------------------
+/*
+ * login
+ * MessageFromClient
+ * vote
+ * card
+ *	.toPlayingstack
+ * guess.
+ * 	.response
+ * disconnect
+ */
 
 function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/players)
 {
@@ -76,11 +78,7 @@ function distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/p
 		i++;
 	}
 }
-function get_random_element(/*array*/array)
-{
-	let index = mod(Math.floor(Math.random() * array.length), array.length);
-	return array[index];
-}
+
 var take_next_guess = () => { };
 async function take_guesses(/*array*/players, /*number*/starter_index, playingfield)
 {
@@ -248,6 +246,22 @@ async function game(players, playingfield, round = 1)
 	console.log("process terminating");
 }
 
+function CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id)
+{
+	let player = Player.by_id(player_id, clients.list);
+		for (let i = 0; i < player.hand.length; i++)
+		{
+			if (player.hand[i].color == color && player.hand[i].number == number)
+			{
+				player.hand.splice(i, 1);
+				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
+				console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
+				break;
+			}
+		}
+		return pos_on_stack;
+}
+
 //Server Setup-------------------------------------------------------------
 const express = require('express');
 //const { disconnect } = require('process');
@@ -258,7 +272,7 @@ const io = require('socket.io')(httpsserver); // 'io' holds all sockets
 // functions below here use global attributes, so using variables of the global scope without getting those variables fed as arguments: those are io
 
 
-//LISTENER------------------------------------------------------------------------
+//LISTENERS------------------------------------------------------------------------
 /*
  * login
  * MessageFromClient
@@ -287,19 +301,8 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
 	socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-		let player = Player.by_id(player_id, clients.list);
-		for (let i = 0; i < player.hand.length; i++)
-		{
-			if (player.hand[i].color == color && player.hand[i].number == number)
-			{
-				player.hand.splice(i, 1);
-				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
-				console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
-				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
-				break;
-			}
-			else { console.log("card not found"); }
-		}
+		let pos_on_stack = CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
+		socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
 		go_on(); //resolves Promise in async play_trick()'s loop
 	});
 	socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
@@ -317,18 +320,18 @@ app.get("/game", (req, res) => {
 	if (clients.list.length < 6 || clients.left.length != 0) { res.sendFile(path.join(__dirname, '/client/game/index.html')); }
 	else { res.sendFile(path.join(__dirname, '/client/game/game_is_full.html')); }
 });
-app.get("/help", (req, res) => {
-	app.use(express.static('client/help'));
-	res.sendFile(path.join(__dirname, '/client/help/help.html'));
-});
+// app.get("/help", (req, res) => {
+// 	app.use(express.static('client/help'));
+// 	res.sendFile(path.join(__dirname, '/client/help/help.html'));
+// });
 app.get("/", (req, res) => {
 	app.use(express.static('client/overview'));
 	res.sendFile(path.join(__dirname, '/client/overview/overview.html'));
 });
-app.get("/excuse", (req, res) => {
-	app.use(express.static('client/excuse'));
-	res.sendFile(path.join(__dirname, '/client/excuse/excuse.html'));
-});
+// app.get("/excuse", (req, res) => {
+// 	app.use(express.static('client/excuse'));
+// 	res.sendFile(path.join(__dirname, '/client/excuse/excuse.html'));
+// });
 httpsserver.listen(port, IPaddress, () => {
   console.log(`Server is listening on ${IPaddress} : ${port.toString()}`);
 });

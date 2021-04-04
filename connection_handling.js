@@ -1,5 +1,5 @@
-const Player = require('./player').Player;
-const Clients = require('./clients').Clients;
+const Player = require('./server_assets/player').Player;
+const Clients = require('./server_assets/clients').Clients;
 
 function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, game_is_running, playingfield = undefined)
 {
