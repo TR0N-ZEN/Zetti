@@ -214,10 +214,10 @@
         box-shadow: 0 0 5px white;
     }
     #playingstack {
-        background-color: antiquewhite;
+        background-color: black;
         position: fixed;
         top: var(--top-playingstack);
-        left: 100vw;/*left: var(--left-playinstack);*/
+        left: var(--left-playingstack);
         transition: left 2s, top 2s;
         height: var(--card-height);
         width: var(--card-width);
@@ -277,7 +277,7 @@
     .nexttoplayingstack {
         position: fixed;
         left: 100vw;
-        top: 19vh;
+        top: var(--top-playingstack);
     }
     /*
     .onplayingstack {

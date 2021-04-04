@@ -9,4 +9,4 @@ function mod(m, n) { // m is in one of the rest classes of Zn so mod: Z -> Zn: m
     return r;
 }
 
-module.exports= mod;
+module.exports.mod = mod;
