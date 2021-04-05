@@ -38,7 +38,7 @@ const playerboard = {
 } 
 const playingfield = $('.wrapper > #playingfield');
 const hand = $('.wrapper > #hand');
-const playingstack = $('.wrapper > #playingstack');
+//const playingstack = $('.wrapper > #playingstack');
 const info = {
 		name: $('.wrapper > #info #Name'),
 		round: $('.wrapper > #info #Round'),
@@ -79,19 +79,28 @@ function delay(milliseconds)
 		});
 }
 
-const resizeObserver = new ResizeObserver( async (entries) => {
-		await delay(100);//cause until 1s after the first window resize the animation in css that positions #hand has finished
-		if (!guess.visible) { guess.hide(); }
-		if (!chat.visible) { chat.hide(); }
-		$(".card").each(function (index_card) {
-				let distance = $($("card_frame", hand)[index_card]).offset();
-				$(this).offset(distance);
-				// console.log($(this));
-				// console.log(distance);
-				// console.log($(this).css("top") + " " + $(this).css("left"));
-		});
+const resizeObserver = new ResizeObserver( /*async*/ (entries) => {
+	console.log("resizing");
+	//await delay(100);//cause until 100ms after the first window resize the animation in css that positions #hand has finished
+	if (!guess.visible) { guess.hide(); }
+	if (!chat.visible) { chat.hide(); }
+	let offsets = [];
+	//for (entry of entries)
+	for (index in entries)
+	{
+		offsets[index] = $(".card_frame", hand).slice(index, index+1).offset();
+		//offsets.push($(entry).offset());
+	}
+	$("wrapper > .card").each(function (index) {
+		console.log(offsets[index]);
+		$(this).offset(offsets[index]);
+	});
+	// $("wrapper > .card").each(function (index) {
+	// 		let offset_object = $(".card_frame", hand).slice(index, index+1).offset();
+	// 		$(this).offset(offset_object);
+	// });
 });
-resizeObserver.observe(document.querySelector("#hand"));
+resizeObserver.observe(document.querySelector("#hand", {box: "border-box"}));
 
 
 function make_card(/*string*/color, /*number*/number, /*string*/from)
@@ -101,17 +110,17 @@ function make_card(/*string*/color, /*number*/number, /*string*/from)
 		if (from == "me") { from = " inhand"; }
 		else if (from == "oponent") { from = " fromanotherplayer"; }
 		else { from = ""; }
-		let card = document.createElement('div');
-		card.setAttribute("class", `${color}_${number.toString()} card`);
-		card.innerHTML = card_svg;
-		return $( card );
+		let html_card = document.createElement('div');
+		html_card.setAttribute("class", `${color}_${number.toString()} card`);
+		html_card.innerHTML = card_svg;
+		return $( html_card );
 };
 function slideup_card(/*string*/color, /*number*/number) { $(`.wrapper > .${color}_${number.toString()}.card`).addClass("inhand"); }
 
 function removeTransition()
 {
 		playingfield.css("transition", "none");
-		playingstack.css("transition", "none");
+		//playingstack.css("transition", "none");
 		hand.css("transition", "none");
 }
 
@@ -250,14 +259,13 @@ socket.on('game.start', async () => {
 		console.log("game.start");
 		vote.css("top", "-100vh"); //hardcoded
 		playingfield.css("left", css.grid.column.second); //hardcoded
-		playingstack.css("left", css.playingstack.left); //hardcoded
+		//playingstack.css("left", css.playingstack.left); //hardcoded
 		hand.css("top", css.hand.top); //hardcoded
 		await delay(2500); //hardcoded; deppendent on animation-duration of top_in_hand
 		removeTransition();
 		setTimeout(() => { vote.css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
 });
 socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
-		$('#hand > .card_frame').remove();
 		console.log(`game.round.start : ${round.toString()}`);
 		info.round.text(`Runde: ${round.toString()}`);
 		info.trump.text(`Trumpf: ${trumpColor}`);
@@ -270,6 +278,7 @@ socket.on('game.round.end', async () => {
 		});
 		$('.card_frame', hand).removeClass("appear_border").addClass("disappear_border");
 		await delay(1100); //hardcoded; deppendent on animation-duration of disappear_border
+		$('.card_frame', hand).remove();
 }); 
 socket.on('game.trick.start', () => {
 		console.log("game.trick.start");
@@ -298,10 +307,12 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
 		$('#hand > div').addClass("card_frame").addClass("appear_border");
 		for (let a = 0; a < cards.length; a++)
 		{
-				let card = $( make_card(/*string*/cards[a].color, /*number*/cards[a].number, "") );
-				$('.wrapper').append(card);
-				let pos = $('#hand > div').slice(a, a+1).position().left + hand.position().left;
-				$(`.wrapper > .${cards[a].color}_${cards[a].number.toString()}.card`).css("left", `${pos}px`);
+				let html_card = $( make_card(/*string*/cards[a].color, /*number*/cards[a].number, "") );
+				$('.wrapper').append(html_card);
+				// let pos = $('#hand > div').slice(a, a+1)[0].position().left + hand.position().left;
+				let offset_left = $('.card_frame', hand).slice(a, a+1).offset().left;
+				// $(`.wrapper > .${cards[a].color}_${cards[a].number.toString()}.card`).css("left", `${offset_left}px`);
+				$(`.wrapper > .card`).slice(a, a+1).css("left", `${offset_left}px`);
 				setTimeout(slideup_card, 1100, /*string*/cards[a].color, /*number*/cards[a].number);
 		}
 });
@@ -340,7 +351,7 @@ socket.on('card.update', async (/*string*/color, /*number*/number, /*number*/car
 });
 
 //DEBUGING-------------------------------------------------------
-socket.on('changeCSS', (/*string*/element, /*string*/property, /*string*/value) => {
-		$(element).css(property, value);
+socket.on('changeCSS', (/*string*/element_selector, /*string*/property, /*string*/value) => {
+		$(element_selector).css(property, value);
 });
 //});
