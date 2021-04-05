@@ -80,36 +80,21 @@ function delay(milliseconds)
 }
 
 const resizeObserver = new ResizeObserver( /*async*/ (entries) => {
-	console.log("resizing");
 	//await delay(100);//cause until 100ms after the first window resize the animation in css that positions #hand has finished
 	if (!guess.visible) { guess.hide(); }
 	if (!chat.visible) { chat.hide(); }
-	let offsets = new Array($(".card_frame", hand).length);
-	//for (entry of entries)
-	let index = 0;
-	for (offset of offsets)
+	let jQuery_cards = $(".wrapper > .card");
+	let card_frames =  $(".card_frame", hand);
+	for (let index = 0; index < jQuery_cards.length; index++)
 	{
-		offset = $(".card_frame", hand).slice(index, index+1).offset();
-		$(".wrapper > .card").slice(index, index+1).offset(offset);
-		index++;
-		//offsets.push($(entry).offset());
+		let offset = card_frames.eq(index).offset();
+		jQuery_cards.eq(index).offset(offset);
 	}
-	console.table(offsets);
-	// $(".wrapper > .card").each(function (index) {
-	// 	console.log(`${index} : ${offsets[index]}`);
-	// 	$(this).offset(offsets[index]);
-	// });
-	// $("wrapper > .card").each(function (index) {
-	// 		let offset_object = $(".card_frame", hand).slice(index, index+1).offset();
-	// 		$(this).offset(offset_object);
-	// });
 });
 resizeObserver.observe(document.querySelector("#hand", {box: "border-box"}));
 
-
 function make_card(/*string*/color, /*number*/number, /*string*/from)
 {
-		//let card_svg = $("#svgs > ." + color + "_" + number.toString()).html();
 		let card_svg = $(`#jpgs > .${color}_${number.toString()}`).html();
 		if (from == "me") { from = " inhand"; }
 		else if (from == "oponent") { from = " fromanotherplayer"; }
@@ -139,10 +124,10 @@ info.chat.click( () => {
 * login
 * MessageFromClient
 * vote
-* guess
-*      .response
-* card
-*      .toPlayingstack //in LISTENERS
+* guess.
+* 	response
+* card.
+* 	toPlayingstack //in LISTENERS
 
 */
 
@@ -199,23 +184,23 @@ function safe(arg)
 *      update
 * MessageFromServer
 * game.
-*      start
-*      round
-*				.start
-*       .end
-*      trick
-*				.start
-*       .end
+* 	start
+*    round.
+*			start
+* 		end
+*   trick.
+*			start
+*     end
 * guess.
-*      waitingFor
-*      request
+*   waitingFor
+*   request
 * card.
-*      distribute
-*      waiting -> emit('card.toPlayingstack', ...) -> card.update
-*      waitingFor
-*      update //card on stack
+* 	distribute
+*   waiting -> emit('card.toPlayingstack', ...) -> card.update
+*   waitingFor
+*   update //card on stack
 * points.
-*      update
+*   update
 * changeCSS
 * */
 
