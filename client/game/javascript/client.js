@@ -165,23 +165,22 @@ $('.take_guess > form').submit(function (button) {
 
 function safe(arg)
 {
-	console.log("safe");
 	if (arg == undefined) { console.log("undefined"); return " "; }
-	else { return arg; };
+	else { console.log("safe"); return arg.toString(); };
 }
 //LISTENERS---------------------------------------------------
 /*
 * socket.on(x, function() {})
 *
 * login.
-*      successful
-*      unsuccessful
+* 	successful
+* 	unsuccessful
 * playerBoard:
-*      update.
-*          names
-*          points
+* 	update.
+*   	names
+* 		points
 * vote.
-*      update
+* 	update
 * MessageFromServer
 * game.
 * 	start
@@ -226,15 +225,14 @@ socket.on('playerboard.update', (/*string*/JSON_players) => {
 	}
 	playerboard.table.html(table);
 });
-socket.on('playerboard.guess.update', (/*number*/playerID, /*number*/guess, /*number*/won) => {
-			$(`#${playerID} > .won_guess`, playerboard.table).html(`${won.toString()}/${guess.toString()}`);
+socket.on('playerboard.guess.update', (/*number*/playerID, /*number*/guess = undefined, /*number*/won = undefined) => {
+	$(`#${playerID} > .won_guess`, playerboard.table).html(`${safe(won)}/${safe(guess)}`);
 });
-socket.on('info.points.update', (/*number*/points) => {
-	info.points.text(`Punkte : ${points.toString()}`);
+socket.on('info.points.update', (/*number*/points = undefined) => {
+	info.points.text(`Punkte : ${safe(points)}`);
 });
 socket.on('info.guess.update', (/*number*/number = undefined) => {
-	if (number == undefined) { info.guess.text(`Noch zu holen: `);}
-	else { info.guess.text(`Noch zu holen: ${(number).toString()}`); }
+	info.guess.text(`Noch zu holen: ${safe(number)}`);
 });
 socket.on('vote.update', (/*number*/votes, /*number*/amount_of_players) => {
 		$('#votes').text(`${votes.toString()}/${amount_of_players.toString()}`);

@@ -93,6 +93,8 @@ async function take_guesses(/*array*/players, /*number*/starter_index, playingfi
 		await new Promise( (resolve) => {
 			take_next_guess = resolve; // resolve can be triggered from outside by function call 'take_next_guess()' in 'io.on('guess.response')';
 		});
+		console.log(`${player.name} guessed: ${player.guess}`); 
+		/*global variable*/io.emit('playerboard.guess.update', /*number*/player.id, /*number*/player.guess, 0);
   }
 	console.groupEnd();
 	/*global variable*/ playingfield.waiting_for_guess = undefined;
@@ -166,7 +168,7 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index, /*arr
 	{
 		player = players[mod(trick_starter_index + i, players.length)];
 		console.log(`card.waitingFor  ${player.name}`);
-		io.emit('card.waitingFor', player.id);
+		/*global variable*/io.emit('card.waitingFor', player.id);
 		player.socket.emit('card.request', trick.length);
 		/*global variable*/ field.waiting_for_card = player.id;
 		await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'io.on('card.toPlayingstack')'.
@@ -175,43 +177,43 @@ async function play_trick(/*array*/players, /*number*/trick_starter_index, /*arr
 	/*global variable*/ field.waiting_for_card = undefined;
 	return 0;
 }
-async function play_round(/*array*/players, /*object*/playingfield, /*int*/round)
+async function play_round(/*array*/players, /*object*/playingfield, /*int*/round, trump, trick = 1)
 {
 	console.group(`play round ${round}`);
-	let trick = 1;
 	/*global variable*/ playingfield.current_trick = trick;
-	let trump = get_random_element(playingfield.colors);
-	/*global variable*/ playingfield.trump = trump;
-	console.log(`trump : ${trump}`);
 	let starter_index = mod((round - 1), players.length); //needs to be available between iterations of the following looped block
 	/*global variable*/ playingfield.trick_starter_index = starter_index;
 	io.emit('game.round.start', /*number*/round, /*string*/trump);
+	Players.prep_for_round(players);
+	console.log("after prep_for_round(): ");
+	console.table(players);
 	playingfield.shuffle();
 	/*global variable*/ distribute_cards(round, playingfield.deck, players);
-	Players.unlock(players);
 	/*global variable*/ await take_guesses(players, starter_index, playingfield); // sideeffects on players[i].guesses after "io.on('guess.response')"
+	console.log("after take_guesses(): ");
+	console.table(players);
 	do
 	{
 		/*global variable*/ playingfield.trick = [];
 		io.emit('game.trick.start');
 		/*global variable*/ await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
 		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
-		starter_index = winner_index;
-		/*global variable*/ playingfield.trick_starter_index = starter_index;
 		let winner = players[winner_index];
 		++winner.tricks_won;
 		console.log(`winner: ${winner.name}`);
 		await delay(500);
 		io.emit('playerboard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
-		winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won));
+		winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won)); // updates the winner's "Noch zu holen: " field
 		await delay(1500);
 		io.emit('game.trick.end'); //for clearing playingfield from cards on clients
+		starter_index = winner_index;
+		/*global variable*/ playingfield.trick_starter_index = starter_index;
 		++trick;
 		/*global variable*/ playingfield.current_trick = trick;
 	} while(trick <= round)
 	io.emit('info.guess.update');
 	/*global variable*/ Players.update_points(players); //calculate points after each round
-	Players.lock(players);
+	console.log("After update_points(): ");
 	console.table(players);
 	io.emit("playerboard.update", JSON.stringify(Clients.info(players)));
 	console.groupEnd();
@@ -228,14 +230,23 @@ function clear_game()
 async function showresumee(players)
 {
 	console.log("Resumee");
+	console.table(players);
 	await delay(30000);
 }
 async function game(players, playingfield, round = 1)
 {
+	console.log("After game(): ");
+	console.table(players);
+	for (player of players) {	player.points = 0; }
+	console.log("After prep_for_game(): ");
+	console.table(players);
 	playingfield.current_round = round;
 	do 
 	{
-		await play_round(/*array*/players, /*object*/playingfield, /*int*/round);
+		let trump = get_random_element(playingfield.colors);
+		/*global variable*/ playingfield.trump = trump;
+		console.log(`trump : ${trump}`);
+		await play_round(/*array*/players, /*object*/playingfield, /*int*/round, trump);
 		++round;
 		playingfield.current_round = round;
 		await delay(5000);
@@ -308,11 +319,12 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 		go_on(); //resolves Promise in async play_trick()'s loop
 	});
 	socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
-		player = Player.by_id(id, clients.list)
-		player.guess = guess;
-		console.log(`${player.name} guessed: ${player.guess}`); 
-		io.emit('playerboard.guess.update', /*number*/player.id, /*number*/player.guess, 0);
-		/*constantly redifined global function*/ take_next_guess(); //resolves Promise in async take_guesses()'s loop
+		if (id == field.waiting_for_guess)
+		{
+			player = Player.by_id(id, clients.list)
+			player.guess = guess;
+			/*constantly redifined global function*/ take_next_guess(); //resolves Promise in async take_guesses()'s loop	
+		}
 	});
 });
 
