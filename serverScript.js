@@ -195,7 +195,7 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 		/*global variable*/ playingfield.trick = [];
 		io.emit('game.trick.start');
 		/*global variable*/ await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		// await delay(2000);
+		await delay(2000);
 		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
 		starter_index = winner_index;
 		/*global variable*/ playingfield.trick_starter_index = starter_index;
@@ -213,7 +213,6 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	Players.lock(players);
 	io.emit("playerboard.update", JSON.stringify(Clients.info(players)));
 	console.groupEnd();
-	await delay(4000);
 	io.emit('game.round.end');
 }
 function clear_game()
@@ -256,10 +255,10 @@ function CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_
 				player.hand.splice(i, 1);
 				let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
 				console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
-				break;
+				return pos_on_stack;
+				//break;
 			}
 		}
-		return pos_on_stack;
 }
 
 //Server Setup-------------------------------------------------------------
@@ -297,6 +296,7 @@ io.on('connection', (socket) => { //parameter of the callbackfunction here calle
 	socket.on('disconnect', (reason) => { connection_handling.disconnected(clients, already_voted,io, game_is_running); });
 	// command
 	socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, /*global object*/io, field); });
+	socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
 	// miscellaneous
 	socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 	socket.on('MessageFromClient', (/*string*/message) => { io.emit('MessageFromServer', message); });
@@ -340,4 +340,15 @@ httpsserver.listen(port, IPaddress, () => {
 
 
 //DEBUGING------------------------------------------------------
-function changeCSS(element, property, value) { io.emit('changeCSS', element,  property, value); }
+function changeCSS(element_selector, property, value, player_id, player_socket = undefined)
+{
+	if (player_socket == undefined)
+	{
+		let player = Player.by_id(player_id, /*global variable*/ clients.list);
+		player.socket.emit('changeCSS', element_selector,  property, value);
+	}
+	else if (player_id == undefined)
+	{
+		player_socket.emit('changeCSS', element_selector,  property, value);
+	}
+}

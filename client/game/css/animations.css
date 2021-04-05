@@ -4,13 +4,8 @@
 }
 
 @keyframes green-blue-shadow {
-    from {
-        box-shadow: green 0 0 2vmax;
-    }
-
-    to {
-        box-shadow: blue 0 0 2vmax;
-    }
+    from { box-shadow: green 0 0 2vmax; }
+    to { box-shadow: blue 0 0 2vmax; }
 }
 
 @keyframes orange-blue-border {
@@ -28,7 +23,7 @@
 }
 
 .wrapper > .grid-box {
-    animation-name: orange-blue-shadow;
+    animation-name: none;
     animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-direction: alternate;
