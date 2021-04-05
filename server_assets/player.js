@@ -46,12 +46,13 @@ class Player extends Client
 	{
 		let delta = player.guess - player.tricks_won;
 		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}\n has delta ${delta}.`);
-		if (delta == 0) { player.points += (20 + player.guess*10); }
+		if (delta == 0) { player.points = (20 + player.tricks_won*10) + player.points; }
 		else
 		{
 			if (delta > 0) { delta *= (-1); }
-			player.points += (delta*10);
+			player.points = (delta*10) + player.points;
 		}
+		console.log(`\tpoints: ${player.points}`);
 	}
 	static by_id (id, players)
 	{

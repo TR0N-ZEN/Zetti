@@ -16,7 +16,6 @@ class Clients
 	static info(clients)
 	{
 		let array = [];
-		console.table(clients);
 		for (let i = 0; i < clients.length; i++)
 		{
 			array.push(clients[i].info());

@@ -195,15 +195,16 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 		/*global variable*/ playingfield.trick = [];
 		io.emit('game.trick.start');
 		/*global variable*/ await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "io.on('card.toPlayingstack')"
-		await delay(2000);
 		let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
 		starter_index = winner_index;
 		/*global variable*/ playingfield.trick_starter_index = starter_index;
 		let winner = players[winner_index];
 		++winner.tricks_won;
 		console.log(`winner: ${winner.name}`);
+		await delay(500);
 		io.emit('playerboard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
 		winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won));
+		await delay(1500);
 		io.emit('game.trick.end'); //for clearing playingfield from cards on clients
 		++trick;
 		/*global variable*/ playingfield.current_trick = trick;
@@ -211,6 +212,7 @@ async function play_round(/*array*/players, /*object*/playingfield, /*int*/round
 	io.emit('info.guess.update');
 	/*global variable*/ Players.update_points(players); //calculate points after each round
 	Players.lock(players);
+	console.table(players);
 	io.emit("playerboard.update", JSON.stringify(Clients.info(players)));
 	console.groupEnd();
 	io.emit('game.round.end');
@@ -225,7 +227,7 @@ function clear_game()
 }
 async function showresumee(players)
 {
-	console.table(players);
+	console.log("Resumee");
 	await delay(30000);
 }
 async function game(players, playingfield, round = 1)
