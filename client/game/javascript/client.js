@@ -84,17 +84,21 @@ const resizeObserver = new ResizeObserver( /*async*/ (entries) => {
 	//await delay(100);//cause until 100ms after the first window resize the animation in css that positions #hand has finished
 	if (!guess.visible) { guess.hide(); }
 	if (!chat.visible) { chat.hide(); }
-	let offsets = [];
+	let offsets = new Array($(".card_frame", hand).length);
 	//for (entry of entries)
-	for (index in entries)
+	let index = 0;
+	for (offset of offsets)
 	{
-		offsets[index] = $(".card_frame", hand).slice(index, index+1).offset();
+		offset = $(".card_frame", hand).slice(index, index+1).offset();
+		$(".wrapper > .card").slice(index, index+1).offset(offset);
+		index++;
 		//offsets.push($(entry).offset());
 	}
-	$("wrapper > .card").each(function (index) {
-		console.log(offsets[index]);
-		$(this).offset(offsets[index]);
-	});
+	console.table(offsets);
+	// $(".wrapper > .card").each(function (index) {
+	// 	console.log(`${index} : ${offsets[index]}`);
+	// 	$(this).offset(offsets[index]);
+	// });
 	// $("wrapper > .card").each(function (index) {
 	// 		let offset_object = $(".card_frame", hand).slice(index, index+1).offset();
 	// 		$(this).offset(offset_object);
