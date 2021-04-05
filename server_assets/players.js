@@ -1,4 +1,4 @@
-const { Player } = require("./player");
+const Player = require("./player").Player;
 
 class Players
 {
@@ -13,8 +13,7 @@ class Players
 			player.socket.emit('info.points.update', player.points);
 		}
 	}
-	static lock(players) { for (player of players) { Player.lock(player); } }
-	static unlock(players) { for (player of players) { Player.unlock(player); } }
+	static prep_for_round(players) { for (player of players) { Player.prep_for_round(player); } }
 }
 
 module.exports.Players = Players;

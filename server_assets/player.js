@@ -19,17 +19,11 @@ class Player extends Client
 			delete player.hand;
 			return player;
 		}
-	static lock(player)
+	static prep_for_round(player)
 	{
-		player.guess = undefined; // not necessary cause it will be overwritten
-		player.tricks_won = undefined;
-		player.hand = [];
-	}
-	static unlock(player)
-	{
-		player.points = 0;
-		player.guess = 0;
+		player.guess = undefined;
 		player.tricks_won = 0;
+		player.hand = [];
 	}
 	static getID(ids)
 	{
@@ -45,26 +39,27 @@ class Player extends Client
 	static update_points(player)
 	{
 		let delta = player.guess - player.tricks_won;
-		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}\n has delta ${delta}.`);
-		if (delta == 0) { player.points = (20 + player.tricks_won*10) + player.points; }
+		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}.`);
+		if (delta == 0) { delta = 20 + player.tricks_won*10; }
 		else
 		{
 			if (delta > 0) { delta *= (-1); }
-			player.points = (delta*10) + player.points;
+			delta = (delta*10);
 		}
-		console.log(`\tpoints: ${player.points}`);
+		player.points += delta;
+		console.log(`\thas delta ${delta}\n\tpoints: ${player.points}`);
 	}
 	static by_id (id, players)
 	{
 		for (player of players) { if (player.id == id) { return player }}
 	}
-	static index_by_socket_id (socket_id, players)
+	static index_by_socket_id(socket_id, players)
 	{
   	for (let index = 0; index < players.length; index++) {
      if ( players[index].socket.id == socket_id ) { return index; }
     }
   }
-	static delete_by_socket_id (socket_id, players) {
+	static delete_by_socket_id(socket_id, players) {
 		let index = this.index_by_socket_id(socket_id, players);
 		if (typeof(index) !== 'undefined') {
 			players.splice(index, 1);
@@ -72,12 +67,12 @@ class Player extends Client
 		}
 		return false;
 	}
-	static index_by_id (player_id, players) {
+	static index_by_id(player_id, players) {
 		for (let index = 0; index < players.length; index++) {
 			if ( players[index].id == player_id ) { return index; }
 		}
 	}
-	static delete_by_id (id, players) //maybe need to delete keyword 'static'
+	static delete_by_id(id, players) //maybe need to delete keyword 'static'
 	{
 		let index = this.index_by_id(id, players);
 		if (typeof(index) !== 'undefined')
