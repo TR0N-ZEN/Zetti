@@ -8,13 +8,17 @@ const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev o
 // const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
 const port = 80; // port for http server
 
-const express = require('express');
 //const { disconnect } = require('process');
+
+const express = require('express');
 const app = express();
 const httpsserver = require('http').Server(app);
 const io = require('socket.io')(httpsserver); // 'io' holds all sockets
 
-io.on('connection', (socket) => {console.log('user connected');});
+io.on('connection', (socket) => {
+	console.log('user connected');
+	socket.on("connect_to_game", (number) => {  });
+});
 
 var namespace_1 = io.of("/game_1");
 var namespace_2 = io.of("/game_2");
@@ -22,24 +26,25 @@ var game_1 = new Zetti(namespace_1);
 var game_2 = new Zetti(namespace_2);
 
 app.get("/game_1", (req, res) => {
-	app.use(express.static('client/game'));
+	app.use(express.static('client/game_1'));
 	if (game_1.clients.list.length < 6 || game_1.clients.left.length != 0)
 	{
-		res.sendFile(path.join(__dirname, '/client/game/index.html'));
+		res.sendFile(path.join(__dirname, '/client/game_1/index.html'));
 	}
 	else
 	{
-		res.sendFile(path.join(__dirname, '/client/game/game_is_full.html'));
+		res.sendFile(path.join(__dirname, '/client/game_1/game_is_full.html'));
 	}
 });
 app.get("/game_2", (req, res) => {
-	app.use(express.static('client/game'));
+	app.use(express.static('client/game_2'));
 	if (game_2.clients.list.length < 6 || game_2.clients.left.length != 0)
 	{
-		res.sendFile(path.join(__dirname, '/client/game/index.html'));
+		res.sendFile(path.join(__dirname, '/client/game_2/index.html'));
 	}
-	else {
-		res.sendFile(path.join(__dirname, '/client/game/game_is_full.html'));
+	else
+	{
+		res.sendFile(path.join(__dirname, '/client/game_2/game_is_full.html'));
 	}
 });
 

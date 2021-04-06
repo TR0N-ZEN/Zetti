@@ -12,14 +12,15 @@ const connection_handling = require('./connection_handling');
 
 class Zetti
 {
-	constructor(game_io)
+	constructor(namespace)
 	{
-		let clients = new Clients(6, new Players().list);
-		let already_voted = [];
-		/*exposed*/let game_is_running = {value: false};
-		let field = {};
-		var take_next_guess = () => { };
-		var go_on = () => { };
+		/*exposed*/this.game_io = namespace;
+		/*exposed*/this.clients = new Clients(6, new Players().list);
+		/*exposed*/this.already_voted = [];
+		/*exposed*/this.game_is_running = {value: false};
+		this.field = {};
+		this.take_next_guess = () => { };
+		this.go_on = () => { };
 		//LISTENERS------------------------------------------------------------------------
 		/*
 		* login
@@ -31,35 +32,35 @@ class Zetti
 		* 	.response
 		* disconnect
 		*/
-		game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
+		this.game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
 			console.log('a user connected');
 			// connection_handling
-			socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/clients, /*global object*/already_voted, /*global object*/game_io, game_is_running ,field); });
+			socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/this.clients, /*global object*/this.already_voted, /*global object*/this.game_io, this.game_is_running ,this.field); });
 			socket.on('vote', (/*number*/playerid) => {
-				if (connection_handling.vote(playerid, clients.list, already_voted, game_io, game_is_running))
+				if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
 				{
-					/*global variable*/ field = new Zetti_field(clients.list.length);
-					/*global variable*/ game(clients.list, field);
+					/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
+					game(this.clients.list, this.field);
 				}
 			});
-			socket.on('disconnect', (reason) => { connection_handling.disconnected(clients, already_voted, /*global object*/game_io, game_is_running); });
+			socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
 			// command
-			socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, /*global object*/game_io, field); });
+			socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, this.game_io, this.field); });
 			socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
 			// miscellaneous
 			socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-			socket.on('MessageFromClient', (/*string*/message) => { game_io.emit('MessageFromServer', message); });
+			socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
 			socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
 				let pos_on_stack = CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
 				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
-				go_on(); //resolves Promise in async play_trick()'s loop
+				/*global variable*/ this.go_on(); //resolves Promise in async play_trick()'s loop
 			});
 			socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
 				if (id == field.waiting_for_guess)
 				{
-					player = Player.by_id(id, clients.list)
+					player = Player.by_id(id, this.clients.list)
 					player.guess = guess;
-					/*constantly redifined global */ take_next_guess(); //resolves Promise in async take_guesses()'s loop	
+					/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
 				}
 			});
 		});
@@ -67,10 +68,10 @@ class Zetti
 	clear_game()
 	{
 		//global variables resetted
-		/*global variable*/ clients = new Clients(6, new Players().list);
-		/*global variable*/ already_voted = [];
-		/*global variable*/ field = {}; 
-		/*global variable*/ game_is_running = { value: false };
+		/*global variable*/ this.clients = new Clients(6, new Players().list);
+		/*global variable*/ this.already_voted = [];
+		/*global variable*/ this.field = {}; 
+		/*global variable*/ this.game_is_running = { value: false };
 	}
 	//EMITTER---------------------------------------------------
 	/*
@@ -100,18 +101,6 @@ class Zetti
 	*	.update
 	* changeCSS
 	* */
-	//LISTENERS------------------------------------------------------------------------
-	/*
-	* login
-	* MessageFromClient
-	* vote
-	* card
-	*	.toPlayingstack
-	* guess.
-	* 	.response
-	* disconnect
-	*/
-
 	distribute_cards(/*number*/amount_per_player, /*array*/deck, /*array*/players)
 	{
 		console.log("distribute cards");
@@ -130,17 +119,17 @@ class Zetti
 		{
 			let player = players[mod(starter_index + i, players.length)];
 			console.log(`guess.waitingFor: ${player.name}`);
-			game_io.emit('guess.waitingFor', player.id);
+			/*global variable*/ this.game_io.emit('guess.waitingFor', player.id);
 			player.socket.emit('guess.request');
-			/*global variable*/ playingfield.waiting_for_guess = player.id;
+			playingfield.waiting_for_guess = player.id; /* logging */
 			await new Promise( (resolve) => {
-				/*global variable*/ take_next_guess = resolve; // resolve can be triggered from outside by  call 'take_next_guess()' in 'game_io.on('guess.response')';
+				/*global variable*/ this.take_next_guess = resolve; // resolve can be triggered from outside by  call 'take_next_guess()' in 'this.game_io.on('guess.response')';
 			});
 			console.log(`${player.name} guessed: ${player.guess}`); 
-			/*global variable*/game_io.emit('playerboard.guess.update', /*number*/player.id, /*number*/player.guess, 0);
+			/*global variable*/ this.game_io.emit('playerboard.guess.update', /*number*/player.id, /*number*/player.guess, 0);
 		}
 		console.groupEnd();
-		/*global variable*/ playingfield.waiting_for_guess = undefined;
+		/*global variable*/ playingfield.waiting_for_guess = undefined; /* logging */
 		return 0;
 	}
 	to_serve(/*array*/trick)
@@ -202,63 +191,63 @@ class Zetti
 	}
 	async play_trick(/*array*/players, /*number*/trick_starter_index, /*array*/trick)
 	{
-		// this  is waiting for resolves triggered in 'game_io.on('card.toPlayingstack')' by  call 'go_on()'
-		console.group("play trick");
+		// this  is waiting for resolves triggered in 'this.game_io.on('card.toPlayingstack')' by  call 'this.go_on()'
+		console.group("play_trick()");
 		// Requesting the players to put a card to the table.
 		for (let i = 0; i < players.length; i++)
 		{
-			player = players[mod(trick_starter_index + i, players.length)];
+			let player = players[mod(trick_starter_index + i, players.length)];
 			console.log(`card.waitingFor  ${player.name}`);
-			/*global variable*/game_io.emit('card.waitingFor', player.id);
+			/*global variable*/ this.game_io.emit('card.waitingFor', player.id);
 			player.socket.emit('card.request', trick.length);
-			/*global variable*/ field.waiting_for_card = player.id;
-			await new Promise((resolve) => { go_on = resolve; }); // Card is put on playingfield.playingstack in 'game_io.on('card.toPlayingstack')'.
+			/*global variable*/ this.field.waiting_for_card = player.id;  /* logging */
+			await new Promise((resolve) => { /*global variable*/ this.go_on = resolve; }); // Card is put on playingfield.playingstack in 'this.game_io.on('card.toPlayingstack')'.
 		}
 		console.groupEnd();
-		/*global variable*/ field.waiting_for_card = undefined;
+		/*global variable*/ this.field.waiting_for_card = undefined; /* logging */
 		return 0;
 	}
 	async play_round(/*array*/players, /*object*/playingfield, /*int*/round, trump, trick = 1)
 	{
 		console.group(`play round ${round}`);
-		/*global variable*/ playingfield.current_trick = trick;
+		playingfield.current_trick = trick; /* logging */
 		let starter_index = mod((round - 1), players.length); //needs to be available between iterations of the following looped block
-		/*global variable*/ playingfield.trick_starter_index = starter_index;
-		game_io.emit('game.round.start', /*number*/round, /*string*/trump);
+		playingfield.trick_starter_index = starter_index; /* logging */
+		/*global variable*/ this.game_io.emit('game.round.start', /*number*/round, /*string*/trump);
 		Players.prep_for_round(players);
 		console.log("after prep_for_round(): ");
 		console.table(players);
 		playingfield.shuffle();
-		/*global variable*/ distribute_cards(round, playingfield.deck, players);
-		/*global variable*/ await take_guesses(players, starter_index, playingfield); // sideeffects on players[i].guesses after "game_io.on('guess.response')"
+		this.distribute_cards(round, playingfield.deck, players);
+		await this.take_guesses(players, starter_index, playingfield);
 		console.log("after take_guesses(): ");
 		console.table(players);
 		do
 		{
-			/*global variable*/ playingfield.trick = [];
-			game_io.emit('game.trick.start');
-			/*global variable*/ await play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "game_io.on('card.toPlayingstack')"
-			let winner_index = mod(starter_index + best_card(playingfield.trick, trump), players.length);
+			playingfield.trick = [];
+			/*global variable*/ this.game_io.emit('game.trick.start');
+			await this.play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "this.game_io.on('card.toPlayingstack')"
+			let winner_index = mod(starter_index + this.best_card(playingfield.trick, trump), players.length);
 			let winner = players[winner_index];
 			++winner.tricks_won;
 			console.log(`winner: ${winner.name}`);
 			await delay(500);
-			game_io.emit('playerboard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
+			/*global variable*/ this.game_io.emit('playerboard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
 			winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won)); // updates the winner's "Noch zu holen: " field
 			await delay(1500);
-			game_io.emit('game.trick.end'); //for clearing playingfield from cards on clients
+			/*global variable*/ this.game_io.emit('game.trick.end'); //for clearing playingfield from cards on this.clients
 			starter_index = winner_index;
-			/*global variable*/ playingfield.trick_starter_index = starter_index;
+			playingfield.trick_starter_index = starter_index; /* logging */
 			++trick;
-			/*global variable*/ playingfield.current_trick = trick;
+			playingfield.current_trick = trick; /* logging */
 		} while(trick <= round)
-		game_io.emit('info.guess.update');
-		/*global variable*/ Players.update_points(players); //calculate points after each round
+		/*global variable*/ this.game_io.emit('info.guess.update');
+		Players.update_points(players); //calculate points after each round
 		console.log("After update_points(): ");
 		console.table(players);
-		game_io.emit("playerboard.update", JSON.stringify(Clients.info(players)));
+		/*global variable*/ this.game_io.emit("playerboard.update", JSON.stringify(Clients.info(players)));
 		console.groupEnd();
-		game_io.emit('game.round.end');
+		/*global variable*/ this.game_io.emit('game.round.end');
 	}
 	async showresumee(players)
 	{
@@ -273,32 +262,32 @@ class Zetti
 		for (player of players) {	player.points = 0; }
 		console.log("After prep_for_game(): ");
 		console.table(players);
-		playingfield.current_round = round;
+		playingfield.current_round = round; /* logging */
 		do 
 		{
 			let trump = get_random_element(playingfield.colors);
-			/*global variable*/ playingfield.trump = trump;
+			playingfield.trump = trump; /* logging */
 			console.log(`trump : ${trump}`);
-			await play_round(/*array*/players, /*object*/playingfield, /*int*/round, trump);
+			await this.play_round(/*array*/players, /*object*/playingfield, /*int*/round, trump);
 			++round;
-			playingfield.current_round = round;
+			playingfield.current_round = round; /* logging */
 			await delay(5000);
 		} while (round <= playingfield.total_rounds)
-		await showresumee(players);
-		clear_game(players, playingfield);
+		await this.showresumee(players);
+		this.clear_game();
 		let message = "Please reload the website to login again in order to start a new round :-)";
-		game_io.emit('MessageFromServer', message);
+		/*global variable*/ this.game_io.emit('MessageFromServer', message);
 		console.log("process terminating");
 	}
 	CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id)
 	{
-		let player = Player.by_id(player_id, clients.list);
+		let player = Player.by_id(player_id, /*global variable*/this.clients.list);
 			for (let i = 0; i < player.hand.length; i++)
 			{
 				if (player.hand[i].color == color && player.hand[i].number == number)
 				{
 					player.hand.splice(i, 1);
-					let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in clients.list
+					let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in this.clients.list
 					console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
 					return pos_on_stack;
 					//break;
@@ -306,16 +295,12 @@ class Zetti
 			}
 	}
 
-	//Server Setup-------------------------------------------------------------
-	
-	//-------------------------------------------------------------------------
-	// functions below here use global attributes, so using variables of the global scope without getting those variables fed as arguments: those are io
 	//DEBUGING------------------------------------------------------
 	 changeCSS(element_selector, property, value, player_id, player_socket = undefined)
 	{
 		if (player_socket == undefined)
 		{
-			let player = Player.by_id(player_id, /*global variable*/ clients.list);
+			let player = Player.by_id(player_id, /*global variable*/ this.clients.list);
 			player.socket.emit('changeCSS', element_selector,  property, value);
 		}
 		else if (player_id == undefined)
