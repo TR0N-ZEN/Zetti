@@ -1,6 +1,5 @@
 const socket = io();
 
-
 const css = {
 	grid: {
 		column: { first: "2vw", second: "34vw"},
@@ -13,7 +12,7 @@ const css = {
 }
 
 //$( document ).ready(function() {
-console.log( "Loaded entire website." );
+console.log("Loaded entire website.");
 $("#loading").slideUp();
 
 const vote = $('#ready_player');
@@ -202,7 +201,9 @@ function safe(arg)
 *   update
 * changeCSS
 * */
-
+socket.prependAny((event) => {
+  console.log(`socket.on(${event})`);
+});
 socket.on('login.successful', (/*string*/JSON_PlayerObject) => {
 		$('#login').slideUp();
 		PlayerObject = JSON.parse(JSON_PlayerObject);
@@ -215,7 +216,6 @@ socket.on('login.unsuccessful', () => {
 });
 
 socket.on('playerboard.update', (/*string*/JSON_players) => {
-	console.log("playerboard.update");
 	let players = JSON.parse(JSON_players);
 	playerboard.table.html("");
 	let table;
@@ -243,7 +243,6 @@ socket.on('MessageFromServer', (/*string*/message) => {
 });
 
 socket.on('game.start', async () => {
-		console.log("game.start");
 		vote.css("top", "-100vh"); //hardcoded
 		playingfield.css("left", css.grid.column.second); //hardcoded
 		//playingstack.css("left", css.playingstack.left); //hardcoded
@@ -253,12 +252,11 @@ socket.on('game.start', async () => {
 		setTimeout(() => { vote.css("display", "none"); }, 3000); //hardcoded; deppendent on animation-duration of #ready_player 
 });
 socket.on('game.round.start', async (/*number*/round, /*string*/trumpColor) => {
-		console.log(`game.round.start : ${round.toString()}`);
+		console.log(`round: ${round.toString()}`);
 		info.round.text(`Runde: ${round.toString()}`);
 		info.trump.text(`Trumpf: ${trumpColor}`);
 });
 socket.on('game.round.end', async () => {
-		console.log("game.round.end");
 		$('tr', playerboard.table).each(function () {
 				// $(this).children()[1].innerText = ""; //deleting won/guess
 				$('.won_guess', this).html("");
@@ -268,10 +266,8 @@ socket.on('game.round.end', async () => {
 		$('.card_frame', hand).remove();
 }); 
 socket.on('game.trick.start', () => {
-		console.log("game.trick.start");
 }); // de: Stich <=> eng: trick
 socket.on('game.trick.end', () => {
-		console.log("game.trick.end");
 		$('.onplayingstack').remove();
 }); // de: Stich <=> eng: trick
 
@@ -284,7 +280,6 @@ socket.on('guess.request', () => {
 });
 
 socket.on('card.distribute', async (/*string*/JSON_cards) => {
-		console.log("card.distribute");
 		let cards = JSON.parse(JSON_cards);
 		for (card in cards)
 		{
@@ -308,7 +303,6 @@ socket.on('card.waitingFor', (/*string*/playerID) => {
 		$(`#${playerID} > .name`).css("color", "lightgreen");
 });
 socket.on('card.request', (/*number*/card_level_on_stack) => {
-		console.log("card.request");
 		$('.card.inhand').click( async function () {
 				$('.card.inhand').unbind("click");
 				let card = $(this);
