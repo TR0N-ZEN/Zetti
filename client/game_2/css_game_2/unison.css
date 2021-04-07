@@ -16,16 +16,13 @@
 
 body 
 {
-    color: var(--milkglass);
     font-family: sans-serif;
     overflow-wrap: break-word;
-    background-color: black;
     font-size: 4vmin;
 }
 
 .grid-box 
 {
-    background-color: black;
     /*
     box-shadow: 2px 2px 2px var(--semitransparent);
     */
@@ -35,12 +32,9 @@ body
 
 button 
 {
-    color: white;
-    background-color: black;
     text-align: center;
     text-decoration: none;
     border: none;
-    border-left: solid 0.1vw black;
     font-size: 3vmin;
 }
 
@@ -48,6 +42,4 @@ button
     {
         transition-property: color;
         transition-duration: 0.5s;
-        background-color: white;
-        color: black;
     }

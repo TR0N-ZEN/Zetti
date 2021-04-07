@@ -51,7 +51,11 @@ class Player extends Client
 	}
 	static by_id (id, players)
 	{
-		for (player of players) { if (player.id == id) { return player }}
+		//for (player of players)
+		for (let a = 0; a < players.length; a++)
+		{
+			let player = players[a];
+			if (player.id == id) { return player } }
 	}
 	static index_by_socket_id(socket_id, players)
 	{

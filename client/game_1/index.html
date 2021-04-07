@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <title>Zetti Spiel 1</title>
     <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
-    <meta name="theme-color" content="#ffffff;">
+    <meta name="theme-color" content="#000000;">
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" defer></script>--> <!--jQuery from CDN of google-->
-    <script src="javascript/jquery-3.5.1.js" defer></script> <!--google from webserver I host-->
+    <script src="javascript_game_1/jquery-3.5.1.js" defer></script> <!--google from webserver I host-->
     <script src="socket.io/socket.io.js" defer></script> <!--exposed package for 'socket.io' on the server-->
-    <script src="javascript/client.js" defer></script>
-    <link rel="stylesheet" type="text/css" href="css/unison.css">
-    <link rel="stylesheet" type="text/css" href="css/horizontal_fixed.css">
-    <link rel="stylesheet" type="text/css" href="css/animations.css">
+    <script src="javascript_game_1/client.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="css_game_1/unison.css">
+    <link rel="stylesheet" type="text/css" href="css_game_1/horizontal_fixed.css">
+    <link rel="stylesheet" type="text/css" href="css_game_1/animations.css">
 </head>
 <body>
     <div id="loading">
@@ -29,13 +29,13 @@
             <p id="votes"></p>
             <button>Bereit</button>
         </div>
-        <div class="take_guess grid-box">
+        <div class="take_guess ">
             <form>
                 <input type="text" placeholder="Sach an" autocomplete="off" id="guesses" />
                 <button>SND</button>
             </form>
         </div>
-        <div id="info" class="grid-box">
+        <div id="info" class="">
             <div><p id="Name">Name: </p></div>
             <div><p id="Round">Runde: </p></div>
             <div><p id="Trump">Trumpf: </p></div>
@@ -45,7 +45,7 @@
                 <button>CHAT</button>
             </div>
         </div>
-        <div class="chat window grid-box">
+        <div class="chat window ">
             <ul>
 							<!--<li>For help visit <a href="/"></a></li>-->
             </ul>
@@ -54,17 +54,17 @@
                 <button>SND</button>
             </form>
         </div>
-        <div id="playerboard" class="grid-box">
+        <div id="playerboard" class="">
             <table>
             </table>
         </div>
-        <div id="playingfield" class="grid-box">
+        <div id="playingfield" class="">
         </div>
 				<!--
 					<div id="playingstack">
         	</div>
 				-->
-        <div id="hand" class="grid-box">
+        <div id="hand" class="">
         </div>
     </div>
     <div id="jpgs" style="display: none;">
