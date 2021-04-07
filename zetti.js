@@ -40,7 +40,7 @@ class Zetti
 				if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
 				{
 					/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
-					game(this.clients.list, this.field);
+					this.game(this.clients.list, this.field);
 				}
 			});
 			socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
@@ -51,14 +51,14 @@ class Zetti
 			socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
 			socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
 			socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-				let pos_on_stack = CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
+				let pos_on_stack = this.CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
 				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
-				/*global variable*/ this.go_on(); //resolves Promise in async play_trick()'s loop
+				/*global variable*/ this.go_on(); //resolves Promise in this.play_trick()'s loop
 			});
 			socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
-				if (id == field.waiting_for_guess)
+				if (id == /*global variable*/ this.field.waiting_for_guess)
 				{
-					player = Player.by_id(id, this.clients.list)
+					let player = Player.by_id(id, this.clients.list)
 					player.guess = guess;
 					/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
 				}
@@ -105,8 +105,10 @@ class Zetti
 	{
 		console.log("distribute cards");
 		let i = 0;
-		for (player of players)
+		//for (player of players)
+		for (let a = 0; a < players.length; a++)
 		{
+			let player = players[a];
 			for (let j = 0; j < amount_per_player; j++) { player.hand.push(deck[i * amount_per_player + j]); }
 			player.socket.emit('card.distribute', JSON.stringify(player.hand));
 			i++;
@@ -135,9 +137,9 @@ class Zetti
 	to_serve(/*array*/trick)
 	{
 		// for (card of trick)
-		for (let i = 0; i < trick.length; i++)
+		for (let a = 0; a < trick.length; a++)
 		{
-			let card = trick[i];
+			let card = trick[a];
 			if (card.color != "N") { return card.color; }// found color that should be served
 		}
 		// der Only-Enno Fall
@@ -146,14 +148,15 @@ class Zetti
 	}
 	best_card(/*array*/trick, /*string*/trump)
 	{
-		let color_to_serve = to_serve(trick);
+		let color_to_serve = this.to_serve(trick);
 		if (color_to_serve == "N") { return 0; }// der Only-Enno Fall
 		let high_card_index = 0;
 		let high_card = trick[high_card_index];
 		let index = 0;
 		let trump_played = false;
-		for (card of trick)
-		{
+		//for (card of trick)
+		for (let a = 0; a < trick.length; a++) {	let card = trick[a];
+		//{
 			switch(card.color)
 			{
 				case("Z"):
@@ -259,7 +262,8 @@ class Zetti
 	{
 		console.log("After game(): ");
 		console.table(players);
-		for (player of players) {	player.points = 0; }
+		//for (player of players) {	player.points = 0; }
+		for (let a = 0; a < players.length; a++) {	let player = players[a]; player.points = 0; }
 		console.log("After prep_for_game(): ");
 		console.table(players);
 		playingfield.current_round = round; /* logging */
@@ -287,7 +291,7 @@ class Zetti
 				if (player.hand[i].color == color && player.hand[i].number == number)
 				{
 					player.hand.splice(i, 1);
-					let pos_on_stack = field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in this.clients.list
+					let pos_on_stack = /*global variable*/ this.field.trick.push(new Card(color, number)) - 1; //position in trick matches position of player who played the card in this.clients.list
 					console.log(`card.update: ${color} ${number} on position ${pos_on_stack} by ${player.name}`);
 					return pos_on_stack;
 					//break;
