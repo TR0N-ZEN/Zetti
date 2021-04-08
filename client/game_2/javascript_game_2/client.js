@@ -1,7 +1,8 @@
 const socket = io("/game_2");
 
-
 const css = {
+	primary_color = "white",
+	secondary_color = "black",
 	grid: {
 		column: { first: "2vw", second: "34vw"},
 		row: { first: "2vh", second: "14vh", third: "56vh" }
@@ -273,7 +274,7 @@ socket.on('game.trick.end', () => {
 }); // de: Stich <=> eng: trick
 
 socket.on('guess.waitingFor', (/*string*/playerID) => {
-		$('tr > .name', playerboard.table).css("color", "white");
+		$('tr > .name', playerboard.table).css("color", css.secondary_color);
 		$(`#${playerID} > .name`, playerboard.table).css("color", "lightgreen");
 });
 socket.on('guess.request', () => { 
@@ -300,7 +301,7 @@ socket.on('card.distribute', async (/*string*/JSON_cards) => {
 		}
 });
 socket.on('card.waitingFor', (/*string*/playerID) => {
-		$('tr > td:first-of-type', playerboard.table).css("color", "white");
+		$('tr > td:first-of-type', playerboard.table).css("color", css.secondary_color);
 		$(`#${playerID} > .name`).css("color", "lightgreen");
 });
 socket.on('card.request', (/*number*/card_level_on_stack) => {
