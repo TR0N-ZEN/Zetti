@@ -1,8 +1,8 @@
 const socket = io("/game_2");
 
 const css = {
-	primary_color = "white",
-	secondary_color = "black",
+	primary_color: "white",
+	secondary_color: "black",
 	grid: {
 		column: { first: "2vw", second: "34vw"},
 		row: { first: "2vh", second: "14vh", third: "56vh" }
