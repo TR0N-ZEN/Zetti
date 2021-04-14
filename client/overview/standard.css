@@ -37,11 +37,11 @@ h2
 {
 	width: 100vw;
 	height: 100vh;
-	padding: 5vmin;
+	padding: 5vh 2vw;
 	display: grid;
 	grid-gap: 5vmin;
 	grid-template-columns: 3fr 1fr;
-	grid-template-rows: 1fr;
+	grid-template-rows: 90vh;
 	grid-template-areas:
 			"news changelog";
 }
@@ -90,17 +90,16 @@ p
 }
 .changelog
 {
-    overflow-y: scroll;
     grid-area: changelog;
     background-color: white;
-		overflow: visible;
+    overflow-y: scroll;
 }
 .changelog > div
 {
 	margin-top: 1vh;
 	padding-left: 1vw;
 	padding-right: 0.5vw;
-	border-radius: 20px;
+	border-radius: 1vmin;
 	padding: 1vmin;
 	z-index: 0;
 	transform: scale(1);
