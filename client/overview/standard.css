@@ -121,6 +121,7 @@ p
 }
 .changelog > :nth-last-child(1) { background: var(--blue); }
 .changelog > :nth-last-child(2) { background: var(--thegreen); }
+.changelog > :nth-last-child(3) { background: var(--thehovergreen); }
 
 ul > li
 {
