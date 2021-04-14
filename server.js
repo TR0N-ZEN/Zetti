@@ -2,10 +2,11 @@ const os = require('os');
 const path = require('path');
 
 const Zetti = require('./zetti').Zetti;
-// const IPaddress = '192.168.0.13'; // address for the http server
-// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop
-const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop
-// const IPaddress = '85.214.165.83'; //enter your current ip address inorder to avoid errors
+
+// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop via wifi
+const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop via ethernet
+// const IPaddress = '85.214.165.83';
+// const IPaddress = os.networkInterfaces()["venet0:0"][0].address;
 const port = 80; // port for http server
 
 //const { disconnect } = require('process');
