@@ -74,6 +74,7 @@ p
 {
 	grid-area: news;
 	background-color: white;
+	overflow-y: scroll;
 }
 .news > p
 {
