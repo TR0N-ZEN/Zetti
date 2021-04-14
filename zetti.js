@@ -32,38 +32,42 @@ class Zetti
 		* 	.response
 		* disconnect
 		*/
-		this.game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
-			console.log('a user connected');
-			// connection_handling
-			socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/this.clients, /*global object*/this.already_voted, /*global object*/this.game_io, this.game_is_running ,this.field); });
-			socket.on('vote', (/*number*/playerid) => {
-				if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
-				{
-					/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
-					this.game(this.clients.list, this.field);
-				}
-			});
-			socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
-			// command
-			socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, this.game_io, this.field); });
-			socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
-			// miscellaneous
-			socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-			socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
-			socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-				let pos_on_stack = this.CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
-				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
-				/*global variable*/ this.go_on(); //resolves Promise in this.play_trick()'s loop
-			});
-			socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
-				if (id == /*global variable*/ this.field.waiting_for_guess)
-				{
-					let player = Player.by_id(id, this.clients.list)
-					player.guess = guess;
-					/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
-				}
-			});
-		});
+		if (namespace == undefined) { console.log("#TEST") }
+		else
+		{
+			this.game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
+				console.log('a user connected');
+				// connection_handling
+				socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/this.clients, /*global object*/this.already_voted, /*global object*/this.game_io, this.game_is_running ,this.field); });
+				socket.on('vote', (/*number*/playerid) => {
+					if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
+					{
+						/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
+						this.game(this.clients.list, this.field);
+					}
+				});
+				socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
+				// command
+				socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, this.game_io, this.field); });
+				socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
+				// miscellaneous
+				socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
+				socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
+				socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
+					let pos_on_stack = this.CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
+					socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
+					/*global variable*/ this.go_on(); //resolves Promise in this.play_trick()'s loop
+				});
+				socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
+					if (id == /*global variable*/ this.field.waiting_for_guess)
+					{
+						let player = Player.by_id(id, this.clients.list)
+						player.guess = guess;
+						/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
+					}
+				});
+			});	
+		}
 	}
 	clear_game()
 	{
@@ -136,7 +140,8 @@ class Zetti
 	}
 	to_serve(/*array*/trick)
 	{
-		// for (card of trick)
+		// for (card of trick) 
+		// {
 		for (let a = 0; a < trick.length; a++)
 		{
 			let card = trick[a];
@@ -148,20 +153,18 @@ class Zetti
 	}
 	best_card(/*array*/trick, /*string*/trump)
 	{
-		let color_to_serve = this.to_serve(trick);
+		/*string*/let color_to_serve = this.to_serve(trick);
+		console.log(`color_to_serve ${color_to_serve}`);
 		if (color_to_serve == "N") { return 0; }// der Only-Enno Fall
 		let high_card_index = 0;
 		let high_card = trick[high_card_index];
 		let index = 0;
 		let trump_played = false;
 		//for (card of trick)
-		for (let a = 0; a < trick.length; a++) {	let card = trick[a];
 		//{
+		for (let a = 0; a < trick.length; a++) {	let card = trick[a]; console.log(card);
 			switch(card.color)
 			{
-				case("Z"):
-					// console.log("der erste Zetti ist geflogen");
-					return index;
 				case(trump):
 					// console.log("Trump has been played.");
 					if (high_card.color != trump)
@@ -179,13 +182,18 @@ class Zetti
 					}
 					break;
 				case(color_to_serve):
-					if (trump_played && parseInt(card.number, 10) > parseInt(high_card.number, 10))
+					if (!trump_played && parseInt(card.number, 10) > parseInt(high_card.number, 10))
 					{
 						high_card_index = index;
 						high_card = card;
 						// console.log("Topped.");
 					}
 					break;
+				case("Z"):
+					// console.log("der erste Zetti ist geflogen");
+					return index;
+				default:
+					console.log("This card doesn't compete.");
 			}
 			index++;
 		}
@@ -219,7 +227,6 @@ class Zetti
 		/*global variable*/ this.game_io.emit('game.round.start', /*number*/round, /*string*/trump);
 		Players.prep_for_round(players);
 		console.log("after prep_for_round(): ");
-		console.table(players);
 		playingfield.shuffle();
 		this.distribute_cards(round, playingfield.deck, players);
 		await this.take_guesses(players, starter_index, playingfield);
@@ -230,14 +237,15 @@ class Zetti
 			playingfield.trick = [];
 			/*global variable*/ this.game_io.emit('game.trick.start');
 			await this.play_trick(players, starter_index, playingfield.trick); // appends cards to 'playingfield.trick' in "this.game_io.on('card.toPlayingstack')"
-			let winner_index = mod(starter_index + this.best_card(playingfield.trick, trump), players.length);
+			console.table(playingfield.trick);
+			let winner_index = mod((starter_index + this.best_card(playingfield.trick, trump)), players.length);
 			let winner = players[winner_index];
 			++winner.tricks_won;
 			console.log(`winner: ${winner.name}`);
-			await delay(500);
+			await delay(1000);
 			/*global variable*/ this.game_io.emit('playerboard.guess.update', /*number*/winner.id, /*number*/winner.guess, /*number*/winner.tricks_won);
 			winner.socket.emit('info.guess.update', (winner.guess - winner.tricks_won)); // updates the winner's "Noch zu holen: " field
-			await delay(1500);
+			await delay(2000);
 			/*global variable*/ this.game_io.emit('game.trick.end'); //for clearing playingfield from cards on this.clients
 			starter_index = winner_index;
 			playingfield.trick_starter_index = starter_index; /* logging */
