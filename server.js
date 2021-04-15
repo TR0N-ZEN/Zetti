@@ -9,6 +9,10 @@ const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev o
 // const IPaddress = os.networkInterfaces()["venet0:0"][0].address;
 const port = 80; // port for http server
 
+// const dirname = __dirname; //only to use when not in interactive mode
+const dirname = "/media/theo/shared/Users/ego/desktop/Zetti";
+// const dirname = "/apps/Zetti";
+
 //const { disconnect } = require('process');
 
 const express = require('express');
@@ -26,9 +30,6 @@ var namespace_2 = io.of("/game_2");
 var game_1 = new Zetti(namespace_1);
 var game_2 = new Zetti(namespace_2);
 
-// const dirname = __dirname; //only to use when not in interactive mode
-const dirname = "/media/theo/shared/Users/ego/desktop/Zetti";
-// const dirname = "/apps/Zetti";
 
 app.get("/game_1", (req, res) => {
 	app.use(express.static('client/game_1'));

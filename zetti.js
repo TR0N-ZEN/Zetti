@@ -285,9 +285,11 @@ class Zetti
 			playingfield.current_round = round; /* logging */
 			await delay(5000);
 		} while (round <= playingfield.total_rounds)
+		var message = "in 40 seconds you can reload this website and start a new round after loggin in again."
+		/*global variable*/ this.game_io.emit('MessageFromServer', message);
 		await this.showresumee(players);
 		this.clear_game();
-		let message = "Please reload the website to login again in order to start a new round :-)";
+		var message = "Please reload the website to login again in order to start a new round :-)";
 		/*global variable*/ this.game_io.emit('MessageFromServer', message);
 		console.log("process terminating");
 	}
