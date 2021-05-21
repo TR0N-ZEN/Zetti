@@ -1,4 +1,3 @@
-#define TEST
 
 #include <cmath>
 #include <random>
@@ -9,14 +8,29 @@
 #include "card.h"
 #include "field.h"
 
+//
+#define TEST
+//#define DEBUG
+//
+
 Field::Field(int Deck_size, int Stack_size, std::vector<Card>* Cards)
 {
 	deck_size = Deck_size;
 	stack_size = Stack_size;
 	cards = Cards;
-	for (int i = 0; i < Deck_size; i++) { deck[i] = &(Cards->at(i)); }
-	deck.reserve(deck_size); //changes the allocated memeory and swaps content of container to newly allocated memory
-	playing_stack.resize(stack_size); //what does it exacly
+	deck.reserve(deck_size); // changes the allocated memeory and swaps content of container to newly allocated memory
+	deck.resize(deck_size); // changes the attribute that is returned by deck.size()
+	playing_stack.resize(stack_size);
+	for (int i = 0; i < deck_size; i++)
+	{
+		deck[i] = &(Cards->at(i));
+#ifdef DEBUG
+		std::cout << (Cards->at(i)).number << " saved in " << deck[i] << std::endl;
+#endif
+	}
+#ifdef DEBUG
+	std::cout << "deck.size() " << deck.size() << std::endl;
+#endif
 }
 
 
@@ -26,7 +40,7 @@ void Field::shuffle()
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<> distrib(0, deck_size - 1);
 	Card* cache = new Card("empty", 0);
-	for (int i = 0; i < deck_size; i++)
+	for (int i = 0; i < deck_size; i++) // randomizing order of elements in std::vector<Card*> (element = pointer to Card)
 	{
 		int j = distrib(gen);
 		cache = deck.at(i);
@@ -35,23 +49,42 @@ void Field::shuffle()
 	}
 }
 
+
 #ifdef TEST
-int main()
+void test()
 {
+	std::cout << "TEST field.cpp" << std::endl;
 	// create test_deck
-	std::vector<Card>* t_d= new std::vector<Card>;
-	std::vector<Card>& test_deck = *t_d;
-	Field* test_field = new Field(60, 2, t_d);
-	for (Card *card : test_field->deck) { std::cout << card->number << " "; }
-	std::cout << std::endl;
+	std::vector<Card>* crds= new std::vector<Card>;
+	std::vector<Card>& cards = *crds;
 	for (int i = 0; i < 60; i++)
 	{
-		test_deck[i] = Card("test", i);
+		cards.push_back(Card("test", i));
 	}
-	// testing Field::shuffle()
-	test_field->shuffle();
-	for (Card *card : test_field->deck) { std::cout << card->number << std::endl; }
 	std::cout << std::endl;
-	return 0;
+
+	Field* test_field = new Field(60, 2, crds);
+
+#ifdef DEBUG
+	std::cout << "cards.size() " << cards.size() << std::endl;
+	std::cout << "(testfield->cards)->size " << (test_field->cards)->size() << std::endl;
+	std::cout << "(test_field->deck).size() " << (test_field->deck).size() << std::endl;
+#endif
+	// for (int i = 0; i < 60; i++) { std::cout << test_field->deck[i]->number << " "; }
+	for (Card* card : (test_field->deck)) { std::cout << card->number << " "; }
+	std::cout << std::endl;
+	
+	// test Field::shuffle()
+	test_field->shuffle();
+	for (Card* card : test_field->deck) { std::cout << card->number << " "; }
+	std::cout << std::endl;	
 }
 #endif
+
+int main()
+{
+#ifdef TEST
+	test();
+#endif
+	return 0;
+}
