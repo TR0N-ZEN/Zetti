@@ -6,14 +6,14 @@
 #include <deque>
 
 #include "card.h"
-#include "field.h"
+#include "card_field.h"
 
 //
 #define TEST
 //#define DEBUG
 //
 
-Field::Field(int Deck_size, int Stack_size, std::vector<Card>* Cards)
+Card_Field::Card_Field(int Deck_size, int Stack_size, std::vector<Card>* Cards)
 {
 	deck_size = Deck_size;
 	stack_size = Stack_size;
@@ -34,7 +34,7 @@ Field::Field(int Deck_size, int Stack_size, std::vector<Card>* Cards)
 }
 
 
-void Field::shuffle()
+void Card_Field::shuffle()
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -63,7 +63,7 @@ void test()
 	}
 	std::cout << std::endl;
 
-	Field* test_field = new Field(60, 2, crds);
+	Card_Field* test_field = new Card_Field(60, 2, crds);
 
 #ifdef DEBUG
 	std::cout << "cards.size() " << cards.size() << std::endl;
