@@ -8,10 +8,10 @@
 class Field
 {
 	private:
-		std::vector<Card>* cards;
 		int deck_size = 0;
 		int stack_size = 0;
 	public:
+		std::vector<Card>* cards;
 		std::vector<Card*> deck;
 		std::deque<Card*> playing_stack;
 		int card_pos_on_stack = 0;

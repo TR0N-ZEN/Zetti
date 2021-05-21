@@ -6,3 +6,5 @@ Card::Card(std::string Color, int Number)
 	color = Color;
 	number = Number;
 }
+
+Card::~Card() {};
