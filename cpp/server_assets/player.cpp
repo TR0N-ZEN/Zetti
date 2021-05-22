@@ -35,11 +35,14 @@ Player::Player(/*socket, */std::vector<short unsigned int>& Ids, std::string Nam
 	hand = Hand;
 };
 
-short int Player::update_points(Player& player)
+void Player::update_points(Player& player)
 {
 	short int delta = player.guess - player.tricks_won;
 	short int points_delta = 0;
 	points_delta += (delta == 0)*(20 + player.tricks_won*10);
 	points_delta -= (delta != 0)*(delta*10);
 	player.points += points_delta;
+	// resetting player attributes for next round
+	player.guess = 0;
+	player.tricks_won = 0;
 };
