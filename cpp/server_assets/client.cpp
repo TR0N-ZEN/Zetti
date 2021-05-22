@@ -1,6 +1,6 @@
 #include "client.h"
 
-short int Client::getID(std::vector<short int>& Ids)
+short int Client::getID(std::vector<short unsigned int>& Ids)
 {
 	int id = 0;
 	if (Ids[0] != 0)
@@ -22,9 +22,9 @@ short int Client::getID(std::vector<short int>& Ids)
 	return id; // returns -1 if all entries in Ids are different from 0
 };
 
-Client::Client(/*socket; */ std::vector<short int>& Ids)
+Client::Client(/*socket; */ std::vector<short unsigned int>& Ids)
 {
-	this->id = Client::getID(Ids);
+	id = Client::getID(Ids);
 };
 
 Client::~Client() {};

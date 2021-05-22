@@ -1,4 +1,6 @@
 #include <vector>
+#include <iostream>
+
 
 class Client
 {
@@ -6,7 +8,7 @@ class Client
 		protected:
 			//socket;
 			short int id;
-			static short int getID(std::vector<short int>& Ids);
-			Client(/*socket;*/std::vector<short int>& Ids);
+			static short int getID(std::vector<short unsigned int>& Ids);
+			Client(/*socket;*/std::vector<short unsigned int>& Ids);
 			~Client();
 };
