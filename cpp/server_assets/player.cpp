@@ -26,9 +26,8 @@ void log(Player& player, short unsigned int mode)
 };
 #endif
 
-Player::Player(/*socket, */std::string Name, std::vector<short int>& Ids, short int Points, short int Guess, short int Tricks_won, std::vector<Card*> Hand) : Client(Ids)
+Player::Player(/*socket, */std::vector<short unsigned int>& Ids, std::string Name, short int Points, short unsigned int Guess, short unsigned int Tricks_won, std::vector<Card*> Hand) : Client(Ids)
 {
-	id = Player::getID(Ids);
 	name = Name;
 	points = Points;
 	guess = Guess;
@@ -38,12 +37,9 @@ Player::Player(/*socket, */std::string Name, std::vector<short int>& Ids, short 
 
 short int Player::update_points(Player& player)
 {
-	int delta = player.guess - player.tricks_won;
-	if (delta == 0) { delta = 20 + player.tricks_won*10; }
-	else
-	{
-		if (delta > 0) { delta *= (-1); }
-		delta *= 10;
-	}
-	player.points += delta;
+	short int delta = player.guess - player.tricks_won;
+	short int points_delta = 0;
+	points_delta += (delta == 0)*(20 + player.tricks_won*10);
+	points_delta -= (delta != 0)*(delta*10);
+	player.points += points_delta;
 };
