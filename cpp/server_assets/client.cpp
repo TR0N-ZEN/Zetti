@@ -24,7 +24,11 @@ short int Client::getID(std::vector<short unsigned int>& Ids)
 
 Client::Client(/*socket; */ std::vector<short unsigned int>& Ids)
 {
+#ifdef DEBUG
+	if(Client::getID(Ids) >= 0) { id = Client::getID(Ids); }
+#else
 	id = Client::getID(Ids);
+#endif
 };
 
 Client::~Client() {};
