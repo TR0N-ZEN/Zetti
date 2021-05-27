@@ -38,14 +38,30 @@ class Player extends Client
 	}
 	static update_points(player)
 	{
-		let delta = player.guess - player.tricks_won;
 		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}.`);
+		let delta = player.guess - player.tricks_won;
 		if (delta == 0) { delta = 20 + player.tricks_won*10; }
 		else
 		{
 			if (delta > 0) { delta *= (-1); }
 			delta = (delta*10);
 		}
+		player.points += delta;
+		console.log(`\thas delta ${delta}\n\tpoints: ${player.points}`);
+	}
+	static by_id (id, players)
+	{
+		//for (player of players)
+		for (let a = 0; a < players.length; a++)
+		{
+			let player = players[a];
+			if (player.id == id) { return player } }
+	}
+	static update_points_branchless(player)
+	{
+		console.log(`Player ${player.name}:\n\tguess: ${player.guess}\n\ttricks_won: ${player.tricks_won}.`);
+		let delta = player.guess - player.tricks_won;
+		delta = (delta==0)*(20 + player.tricks_won*10) + (delta>0)*delta*(-10) + (delta<0)*delta*10;
 		player.points += delta;
 		console.log(`\thas delta ${delta}\n\tpoints: ${player.points}`);
 	}
