@@ -1,13 +1,13 @@
 ﻿:root
 {
-    --thegreen:#7ABF24;
-    --thehovergreen:#79bf24ab;
-    --thewhite: white;
-    --theviolet:#BB5E96;
-    --semitransparent:#ffffffef;
-    --milkglass:#ffffff6b;
-    --blue: #3399ff;
-    --orange: #ff5e00bb;
+	--thegreen:#7ABF24;
+	--thehovergreen:#79bf24ab;
+	--thewhite: white;
+	--theviolet:#BB5E96;
+	--semitransparent:#ffffffef;
+	--milkglass:#ffffff6b;
+	--blue: #3399ff;
+	--orange: #ff5e00bb;
 }
 
 #force_landscape
@@ -22,11 +22,11 @@
 
 *
 {
-    box-sizing:border-box;
-    padding:0;
-    margin:0;
-    border:none;
-    overflow:hidden;
+	box-sizing:border-box;
+	padding:0;
+	margin:0;
+	border:none;
+	overflow:hidden;
 }
 
 @media (max-aspect-ratio:8/5)
@@ -41,16 +41,16 @@
 
 	body
 	{
-			color: black;
-			font-family:sans-serif;
-			overflow-wrap:break-word;
-			background-color:var(--orange);
-			font-size: 2.5vmin;
+		color: black;
+		font-family:sans-serif;
+		overflow-wrap:break-word;
+		background-color:var(--orange);
+		font-size: 2.5vmin;
 	}
 	h2
 	{
-			margin-bottom: 1vh;
-			margin-left: 0.5vw;
+		margin-bottom: 1vh;
+		margin-left: 0.5vw;
 	}
 
 	.wrapper
@@ -69,21 +69,21 @@
 
 	.grid-box
 	{
-			padding: 1vmin;
+		padding: 1vmin;
 	}
 	/*
 	.grid-box {
-			padding: 1vmin;
-			z-index: 0;
-			transform: scale(1);
-			box-shadow: none;
-			transition-property: box-shadow z-index transform;
-			transition-duration: 1s;
+		padding: 1vmin;
+		z-index: 0;
+		transform: scale(1);
+		box-shadow: none;
+		transition-property: box-shadow z-index transform;
+		transition-duration: 1s;
 	}
 	.grid-box:hover {
-			z-index: 2;
-			transform: scale(1.03);
-			box-shadow: 0 0 5px black;
+		z-index: 2;
+		transform: scale(1.03);
+		box-shadow: 0 0 5px black;
 	}
 	*/
 	p
@@ -110,9 +110,9 @@
 	}
 	.changelog
 	{
-			grid-area: changelog;
-			background-color: white;
-			overflow-y: scroll;
+		grid-area: changelog;
+		background-color: white;
+		overflow-y: scroll;
 	}
 	.changelog > div
 	{
@@ -144,11 +144,11 @@
 
 	ul > li
 	{
-			padding-left: 1vw;
-			padding-right: 1vw;
-			border-radius: 10px;
-			background: #cce5ff;
-			margin: 2px;
+		padding-left: 1vw;
+		padding-right: 1vw;
+		border-radius: 10px;
+		background: #cce5ff;
+		margin: 2px;
 	}
 
 }
