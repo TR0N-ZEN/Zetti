@@ -1,1 +1,1 @@
-console.log(__dirname);
+console.log(__dirname); // --dirname returns the absolute path of the module it is called, even when it is imported

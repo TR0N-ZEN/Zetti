@@ -2,17 +2,46 @@ const os = require('os');
 const path = require('path');
 
 const Zetti = require('./zetti').Zetti;
+let IPaddress, dirname = undefined;
+console.log(`Started process with arg: '${process.argv[2]}'`);
+switch (process.argv[2])
+{
+	case("local"):
+		IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop via ethernet
+		// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop via wifi
+		//const dirname = "/mnt/EAD49BDCD49BA979/Users/ego/desktop/Zetti/javascript"; // deprecated
+		dirname = __dirname; // only to use when not in node's interactive mode
+		break;
+	case("server"):
+		// const IPaddress = '85.214.165.83'; // deprecated
+		IPaddress = os.networkInterfaces()["venet0:0"][0].address; // execution from server
+		// const dirname = "/home/zetti/Zetti/javascript"; // deprecated
+		dirname = __dirname; // only to use when not in node's interactive mode
+		break;
+	default:
+		console.log("Your supplied argument is invalid. Valid arguents are 'local', 'server'.");
+}
 
-// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop via wifi
-const IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop via ethernet
-// const IPaddress = '85.214.165.83';
-// const IPaddress = os.networkInterfaces()["venet0:0"][0].address;
+
 const port = 80; // port for http server
 
-// const dirname = __dirname; // only to use when not in node's interactive mode and in the folder javascript of the project
-const dirname = "/mnt/EAD49BDCD49BA979/Users/ego/desktop/Zetti/javascript"; // development on laptop from linux
-// const dirname = "/apps/Zetti"; // run on server
-const client_dir = path.join(dirname, "/client");
+// helper code for constant variable "client_dir"
+let x = dirname.split(path.sep);
+x.splice((-1),1);
+x.splice(0,1);
+let y = "";
+for (e of x) { y+= (`/${e}`); }
+const client_dir = path.join(y, "/client");
+
+//logging for checking
+console.log("--------------------------");
+console.log(`process.argv[2] = ${process.argv[2]}`);
+console.log(`IPaddress = ${IPaddress}`);
+console.log(`dirname = ${dirname}`);
+console.log(`client_dir = ${client_dir}`);
+//console.log(` = ${}`);
+console.log("--------------------------");
+
 
 //const { disconnect } = require('process');
 
