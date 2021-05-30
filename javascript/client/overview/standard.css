@@ -1,0 +1,154 @@
+﻿:root
+{
+    --thegreen:#7ABF24;
+    --thehovergreen:#79bf24ab;
+    --thewhite: white;
+    --theviolet:#BB5E96;
+    --semitransparent:#ffffffef;
+    --milkglass:#ffffff6b;
+    --blue: #3399ff;
+    --orange: #ff5e00bb;
+}
+
+#force_landscape
+{
+	z-index: 98;
+	width: 100vw;
+	height: 100vh;
+	background-color: var(--orange);
+	color: var(--semitransparent);
+	overflow-wrap:break-word;
+}
+
+*
+{
+    box-sizing:border-box;
+    padding:0;
+    margin:0;
+    border:none;
+    overflow:hidden;
+}
+
+@media (max-aspect-ratio:8/5)
+{
+	#force_landscape { display: block; }
+	div.wrapper { display: none; }
+}
+
+@media (min-aspect-ratio:8/5)
+{
+	#force_landscape { display: none; }
+
+	body
+	{
+			color: black;
+			font-family:sans-serif;
+			overflow-wrap:break-word;
+			background-color:var(--orange);
+			font-size: 2.5vmin;
+	}
+	h2
+	{
+			margin-bottom: 1vh;
+			margin-left: 0.5vw;
+	}
+
+	.wrapper
+	{
+		width: 100vw;
+		height: 100vh;
+		padding: 5vh 2vw;
+		display: grid;
+		grid-gap: 5vmin;
+		grid-template-columns: 3fr 1fr;
+		grid-template-rows: 90vh;
+		grid-template-areas:
+				"news changelog";
+	}
+
+
+	.grid-box
+	{
+			padding: 1vmin;
+	}
+	/*
+	.grid-box {
+			padding: 1vmin;
+			z-index: 0;
+			transform: scale(1);
+			box-shadow: none;
+			transition-property: box-shadow z-index transform;
+			transition-duration: 1s;
+	}
+	.grid-box:hover {
+			z-index: 2;
+			transform: scale(1.03);
+			box-shadow: 0 0 5px black;
+	}
+	*/
+	p
+	{
+		margin-top: 2vh;
+	}
+	.news
+	{
+		grid-area: news;
+		background-color: white;
+		overflow-y: scroll;
+	}
+	.news > p
+	{
+		margin-left: 2vw;
+	}
+	.news > table
+	{
+		margin-left: 2.5vw;
+	}
+	.command
+	{
+		padding-right: 1vw;
+	}
+	.changelog
+	{
+			grid-area: changelog;
+			background-color: white;
+			overflow-y: scroll;
+	}
+	.changelog > div
+	{
+		margin-top: 1vh;
+		padding-left: 1vw;
+		padding-right: 0.5vw;
+		border-radius: 1vmin;
+		padding: 1vmin;
+		z-index: 0;
+		transform: scale(1);
+		box-shadow: none;
+		transition-property: box-shadow z-index transform;
+		transition-duration: 1s;
+	}
+	.changelog > div:hover
+	{
+		z-index: 2;
+		transform: scale(1.03);
+		box-shadow: 0 0 5px black;
+	}
+	.changelog ul
+	{
+		list-style-position: inside;
+		list-style-type: none;
+	}
+	.changelog > :nth-last-child(1) { background: var(--blue); }
+	.changelog > :nth-last-child(2) { background: var(--thegreen); }
+	.changelog > :nth-last-child(3) { background: var(--thehovergreen); }
+
+	ul > li
+	{
+			padding-left: 1vw;
+			padding-right: 1vw;
+			border-radius: 10px;
+			background: #cce5ff;
+			margin: 2px;
+	}
+
+}

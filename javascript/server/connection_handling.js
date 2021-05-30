@@ -9,7 +9,8 @@ function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, gam
 	console.log(`Login attempt by ${name}`);
 	if (disconnected_players.length != 0)
 	{
-		disconnected_players.forEach((player, index) => {
+		disconnected_players.forEach((player, index) =>
+		{
 			console.log(`${player.name}`);
 			if (player.name == name)
 			{
@@ -27,7 +28,6 @@ function login(/*string*/name, socket, /*array*/clients, /*array*/votes, io, gam
 				if (playingfield.waiting_for_card == player.id) { socket.emit(`card.request`); }
 				else if (playingfield.waiting_for_guess == player.id) { socket.emit(`guess.request`); }
 				console.log(`${player.name} reconnected.`);
-				//return 0;
 			}
 		});
 	}
