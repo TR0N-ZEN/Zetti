@@ -56,10 +56,16 @@ io.on('connection', (socket) =>
 	socket.on("connect_to_game", (number) => {  });
 });
 
-var namespace_1 = io.of("/game_1");
-var namespace_2 = io.of("/game_2");
-var game_1 = new Zetti(namespace_1);
-var game_2 = new Zetti(namespace_2);
+const namespace_1 = io.of("/game_1");
+const namespace_2 = io.of("/game_2");
+const namespace_oversight = io.of("/oversight");
+
+const debug_stream = require('./debug_stream').debug_stream;
+const game_1_debug_stream = new debug_stream('game_1', namespace_oversight);
+const game_2_debug_stream = new debug_stream('game_2', namespace_oversight);
+
+var game_1 = new Zetti(namespace_1, game_1_debug_stream);
+var game_2 = new Zetti(namespace_2, game_2_debug_stream);
 
 
 app.get("/game_1", (req, res) =>
@@ -96,6 +102,14 @@ app.get("/", (req, res) =>
 // 	app.use(express.static('client/excuse'));
 // 	res.sendFile(path.join(dirname, '/client/excuse/excuse.html'));
 // });
+
+app.get("/oversight", (req, res) =>
+{
+	app.use(express.static(path.join(client_dir, '/oversight')));
+	res.sendFile(path.join(client_dir, '/oversight/index.html'));
+});
+
+
 httpsserver.listen(port, IPaddress, () =>
 {
   console.log(`Server is listening on ${IPaddress} : ${port.toString()}`);
