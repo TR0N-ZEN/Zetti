@@ -19,7 +19,7 @@ $("#loading").slideUp();
 
 const vote = $('#ready_player');
 const chat = {
-		visible: true,
+		visible: false,
 		window: $('.chat.window'),
 		form: $('.chat.window > form'),
 		list: $('.chat.window > ul'),
