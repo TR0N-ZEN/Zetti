@@ -11,8 +11,10 @@
     "nodemon": "^2.0.6"
   },
   "scripts": {
-    "test": "node server.js server",
-    "dev": "nodemon server.js local"
+		"live-local": "node server.js local",
+    "live-server": "node server.js server",
+    "dev-local": "nodemon server.js local",
+    "dev-server": "nodemon server.js server"
   },
   "repository": {
     "type": "git",
