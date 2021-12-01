@@ -34,43 +34,40 @@ class Zetti
 		* 	.response
 		* disconnect
 		*/
-		if (namespace == undefined) { console.log("class Zetti: namespace undefined") }
-		else
-		{
-			this.game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
-				console.log('a user connected');
-				debug_stream.write('a user connected');
-				// connection_handling
-				socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/this.clients, /*global object*/this.already_voted, /*global object*/this.game_io, this.game_is_running ,this.field); });
-				socket.on('vote', (/*number*/playerid) => {
-					if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
-					{
-						/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
-						this.game(this.clients.list, this.field);
-					}
-				});
-				socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
-				// command
-				socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, this.game_io, this.field); });
-				socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
-				// miscellaneous
-				socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
-				socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
-				socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
-					let pos_on_stack = this.CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
-					socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
-					/*global variable*/ this.go_on(); //resolves Promise in this.play_trick()'s loop
-				});
-				socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
-					if (id == /*global variable*/ this.field.waiting_for_guess)
-					{
-						let player = Player.by_id(id, this.clients.list);
-						player.guess = guess;
-						/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
-					}
-				});
-			});	
-		}
+		if (namespace == undefined) { console.log("class Zetti: namespace undefined"); return 0; }
+		this.game_io.on('connection', (socket) => { //parameter of the callbackfunction here called 'socket' is the connection to the client that connected
+			console.log('a user connected');
+			debug_stream.write('a user connected');
+			// connection_handling
+			socket.on('login', (/*string*/name) => { connection_handling.login(name, socket, /*global object*/this.clients, /*global object*/this.already_voted, /*global object*/this.game_io, this.game_is_running ,this.field); });
+			socket.on('vote', (/*number*/playerid) => {
+				if (connection_handling.vote(playerid, this.clients.list, this.already_voted, this.game_io, this.game_is_running))
+				{
+					/*global variable*/ this.field = new Zetti_field(this.clients.list.length);
+					this.game(this.clients.list, this.field);
+				}
+			});
+			socket.on('disconnect', (reason) => { connection_handling.disconnected(this.clients, this.already_voted, this.game_io, this.game_is_running); });
+			// command
+			socket.on('Command', (string) => { console.log(`Command: ${string}`); commands.eval_command(string, this.game_io, this.field); });
+			socket.on('changeCSS', (element_selector, property, value) => { changeCSS(element_selector, property, value, undefined, socket); });
+			// miscellaneous
+			socket.on('toServerConsole', (/*string*/text) => { console.log(text); });
+			socket.on('MessageFromClient', (/*string*/message) => { this.game_io.emit('MessageFromServer', message); });
+			socket.on('card.toPlayingstack', (/*string*/color, /*number*/number, /*number*/player_id) => {
+				let pos_on_stack = this.CardtoPlayingstack(/*string*/color, /*number*/number, /*number*/player_id);
+				socket.broadcast.emit('card.update', /*string*/color, /*number*/number, /*number*/pos_on_stack);
+				/*global variable*/ this.go_on(); //resolves Promise in this.play_trick()'s loop
+			});
+			socket.on('guess.response', (/*number*/guess, /*number*/id) => { //both numbers in decimal
+				if (id == /*global variable*/ this.field.waiting_for_guess)
+				{
+					let player = Player.by_id(id, this.clients.list);
+					player.guess = guess;
+					/*global variable*/ this.take_next_guess(); //resolves Promise in async take_guesses()'s loop	
+				}
+			});
+		});	
 	}
 	clear_game()
 	{
