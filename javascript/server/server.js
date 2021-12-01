@@ -60,12 +60,12 @@ const namespace_1 = io.of("/game_1");
 const namespace_2 = io.of("/game_2");
 const namespace_oversight = io.of("/oversight");
 
-const debug_stream = require('./debug_stream').debug_stream;
-const game_1_debug_stream = new debug_stream('game_1', namespace_oversight);
-const game_2_debug_stream = new debug_stream('game_2', namespace_oversight);
+// const debug_stream = require('./debug_stream').debug_stream;
+// const game_1_debug_stream = new debug_stream('game_1', namespace_oversight);
+// const game_2_debug_stream = new debug_stream('game_2', namespace_oversight);
 
-var game_1 = new Zetti(namespace_1, game_1_debug_stream);
-var game_2 = new Zetti(namespace_2, game_2_debug_stream);
+var game_1 = new Zetti(namespace_1 /*, game_1_debug_stream*/);
+var game_2 = new Zetti(namespace_2 /*, game_2_debug_stream*/);
 
 
 app.get("/game_1", (req, res) =>
