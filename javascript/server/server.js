@@ -7,7 +7,7 @@ console.log(`Started process with arg: '${process.argv[2]}'`);
 switch (process.argv[2])
 {
 	case("local"):
-		IPaddress = os.networkInterfaces()["enp2s0"][0]["address"]; // - for dev on laptop via ethernet
+		IPaddress = os.networkInterfaces()["enp2s0"][0].address; // - for dev on laptop via ethernet
 		// const IPaddress = os.networkInterfaces()["wlp4s0"][0]["address"]; // - for dev on laptop via wifi
 		//const dirname = "/mnt/EAD49BDCD49BA979/Users/ego/desktop/Zetti/javascript"; // deprecated
 		dirname = __dirname; // only to use when not in node's interactive mode
@@ -27,8 +27,8 @@ const port = 80; // port for http server
 
 // helper code for constant variable "client_dir"
 let x = dirname.split(path.sep);
-x.splice((-1),1);
-x.splice(0,1);
+x.splice((-1),1); // removing the last element which will hold 'server'
+x.splice(0,1); // removing the first item since it will be an empty string, so just ''
 let y = "";
 for (e of x) { y+= (`/${e}`); }
 const client_dir = path.join(y, "/client");
