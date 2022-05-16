@@ -6,8 +6,8 @@
 
 class Zetti_Field : public Card_Field
 {
-	public:
-		int total_rounds;
-		int cardIndex = 0;
-		Zetti_Field(int Stack_size, std::vector<Card>* Cards, int player_count);
+  public:
+    int total_rounds;
+    int cardIndex = 0;
+    Zetti_Field(int Stack_size, std::vector<Card>* Cards, int player_count);
 };

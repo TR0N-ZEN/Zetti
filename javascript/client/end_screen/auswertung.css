@@ -1,56 +1,56 @@
 img
 {
-	height: inherit;
-	width: inherit;
+  height: inherit;
+  width: inherit;
 }
 :root
 {
-	--card-height: 14vh;
-	--card-width: 9.8vh;
+  --card-height: 14vh;
+  --card-width: 9.8vh;
 }
 .wrapper
 {
-	width: 100vw;
-	height: 100vh;
-	display: flex;
-	flex-flow: row;
-	flex-wrap: nowrap;
-	align-items: center;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 #placing
 {
-	border: 1vh solid grey;
-	height: 100%;
-	max-width: 35vw;
+  border: 1vh solid grey;
+  height: 100%;
+  max-width: 35vw;
 }
 #card_wall
 {
-	/* position: absolute;
-	top:1;
-	left:1; */
-	border: 1vh solid grey;
-	height: 86vh;
-	width: 100vh;
-	display: grid;
-	grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-	grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  /* position: absolute;
+  top:1;
+  left:1; */
+  border: 1vh solid grey;
+  height: 86vh;
+  width: 100vh;
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 
 .hidden_card
 {
-	transition-property: all;
-	transition-duration: 1500ms;
+  transition-property: all;
+  transition-duration: 1500ms;
 }
 .hidden_card
 {
-	/* border: orange solid 1px; */
-	width: 0;
-	height: 0;
-	opacity: 0;
+  /* border: orange solid 1px; */
+  width: 0;
+  height: 0;
+  opacity: 0;
 }
 .visible_card
 {
-	width: var(--card-width);
-	height: var(--card-height);
-	opacity: 1;
+  width: var(--card-width);
+  height: var(--card-height);
+  opacity: 1;
 }

@@ -4,7 +4,7 @@
 
 class Players : Clients
 {
-	public:
-		Players(std::vector<Client*> List);
-		~Players();
+  public:
+    Players(std::vector<Client*> List);
+    ~Players();
 };
