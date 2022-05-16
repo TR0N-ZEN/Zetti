@@ -5,13 +5,13 @@
   "main": "serverScript.js",
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^4.4.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.6"
   },
   "scripts": {
-		"live-local": "sudo node server.js local",
+    "live-local": "sudo node server.js local",
     "live-server": "sudo node server.js server",
     "dev-local": "sudo nodemon server.js local",
     "dev-server": "sudo nodemon server.js server"

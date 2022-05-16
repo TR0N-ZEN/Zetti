@@ -82,14 +82,14 @@ app.get("/game_1", (req, res) =>
 });
 app.get("/game_2", (req, res) =>
 {
-	app.use(express.static(path.join(client_dir, '/game_2')));
+	app.use(express.static(path.join(client_dir, '/game_1')));
 	if (game_2.clients.list.length < 6 || game_2.clients.left.length != 0)
 	{
-		res.sendFile(path.join(client_dir, '/game_2/index.html'));
+		res.sendFile(path.join(client_dir, '/game_1/index.html'));
 	}
 	else
 	{
-		res.sendFile(path.join(client_dir, '/game_2/game_is_full.html'));
+		res.sendFile(path.join(client_dir, '/game_1/game_is_full.html'));
 	}
 });
 
