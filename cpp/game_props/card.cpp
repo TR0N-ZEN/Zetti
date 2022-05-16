@@ -3,9 +3,9 @@
 
 Card::Card(std::string Color, int Number)
 {
-	color = Color;
-	number = Number;
-	static std::string colors[4]  = { "red", "green", "blue", "yellow" };
+  color = Color;
+  number = Number;
+  static std::string colors[4]  = { "red", "green", "blue", "yellow" };
 }
 
 Card::~Card() {};

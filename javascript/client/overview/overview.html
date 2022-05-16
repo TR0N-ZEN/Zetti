@@ -1,86 +1,86 @@
 ﻿<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<meta charset="utf-8" />
-	<title>news</title>
-	<meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
-	<meta name="theme-color" content="#ff5e00bb;">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
-	<script src="socket.io/socket.io.js" defer></script>
-	<script src="script.js" defer></script>
-	<link rel="stylesheet" type="text/css" href="standard.css">
+  <meta charset="utf-8" />
+  <title>news</title>
+  <meta name="viewport" content="width=device-width" initial-scale=1.0 user-scalable=no />
+  <meta name="theme-color" content="#ff5e00bb;">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" defer></script>
+  <script src="socket.io/socket.io.js" defer></script>
+  <script src="script.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="standard.css">
 </head>
 <body>
-	<div id="force_landscape"><h1>Dreh die R&ouml;hre</br>odder</br>such dir n anderes Ger&auml;t</h1></div>
-	<div class="wrapper">
-		<div class="news grid-box">
-			<h1>neues</h1>
-			<p>
-				Im Chat können Befehle an das Spiel gesendet werden.<br>
-				Befehle:<br>
-				<table>
-					<tr><td class="command">#Get Rounds</td><td>Gibt Auskunft über Anzahl der zu spielenden Runden.</td></tr>
-					<tr><td class="command">#Set Rounds x</td><td>Begrenzt die zu spielende Rundenanzahl auf den Wert von x.</td></tr>
-				</table>
-			</p>
-			<p>
-				Nach Ende des Spiels kann nach ca. 40 Sekunden die Website neu geladen werden,<br>
-				um sich erneut angemeldet und ein Spiel gestartet werden.
-			</p>
-			<p>
-				bei Verbindungsunterbrechung,<br>
-				Website neu laden<br>
-				und mit selben Namen anmelden unter dem man zuvor gespielt hat
-			</p>
-			<p>
-				Bei Problemen ne Mail mit Beschreibung und einem Bild vom Problem falls möglich an<br>
-				<a href="mailto:theo.reichert7@gmail.com">theo.reichert7@gmail.com</a><br>
-				Bis bald :-)<br>
-				T
-			</p>
-			<p>
-				<a href="../game_1">zu Spiel 1</a><br>
-				<a href="../game_2">zu Spiel 2</a>
-			</p>
-			<h3>bekannte Probleme</h3>
-			<p>
-				Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser<br>
-				<br>
-				Keine neue Runde startbar wenn altes Spiel nicht beendet<br>
-				-> Loesung: maximale Rundenanzahl mit Befehl niedriger setzen, laufende Runde zuende spielen und 40 Sekunden warten und Website neu laden<br>
-			</p>
-		</div>
-		<div class="changelog grid-box">
-			<div>
-				<h3>version 2.1</h3>
-				<p>(15.04.2020)</p>
-				<ul>
-					<li>die Bestimmung der Karte die den Stich gewinnt, sollte jetzt wieder fehlerlos laufen :-D</li>
-				</ul>
-			</div>
-			<div>
-				<h3>version 2.0</h3>
-				<p>(08.04.2020)</p>
-				<ul>
-					<li>Spiel durch Spieler allein spielbar</li>
-					<li>bei Verbindungsunterbrechung weiterspielbar</li>
-					<li>keine Siegerauswertung</li>
-					<li>2 Spiele laufen parallel</li>
-					<li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
-				</ul>
-			</div>
-			<div>
-				<h3>version 1.0</h3>
-				<p>(23.01.2020)</p>
-				<ul>
-					<li>läuft erstmal</li>
-					<li>bei Verbindungsunterbrechung is das Game meistens nicht weiterspielbar</li>
-					<li>keine Siegerauswertung</li>
-					<li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
-					<li>Programm braucht live Betreuung beim Spielen</li>
-				</ul>
-			</div>
-		</div>
-	</div>
+  <div id="force_landscape"><h1>Dreh die R&ouml;hre</br>odder</br>such dir n anderes Ger&auml;t</h1></div>
+  <div class="wrapper">
+    <div class="news grid-box">
+      <h1>neues</h1>
+      <p>
+        Im Chat können Befehle an das Spiel gesendet werden.<br>
+        Befehle:<br>
+        <table>
+          <tr><td class="command">#Get Rounds</td><td>Gibt Auskunft über Anzahl der zu spielenden Runden.</td></tr>
+          <tr><td class="command">#Set Rounds x</td><td>Begrenzt die zu spielende Rundenanzahl auf den Wert von x.</td></tr>
+        </table>
+      </p>
+      <p>
+        Nach Ende des Spiels kann nach ca. 40 Sekunden die Website neu geladen werden,<br>
+        um sich erneut angemeldet und ein Spiel gestartet werden.
+      </p>
+      <p>
+        bei Verbindungsunterbrechung,<br>
+        Website neu laden<br>
+        und mit selben Namen anmelden unter dem man zuvor gespielt hat
+      </p>
+      <p>
+        Bei Problemen ne Mail mit Beschreibung und einem Bild vom Problem falls möglich an<br>
+        <a href="mailto:theo.reichert7@gmail.com">theo.reichert7@gmail.com</a><br>
+        Bis bald :-)<br>
+        T
+      </p>
+      <p>
+        <a href="../game_1">zu Spiel 1</a><br>
+        <a href="../game_2">zu Spiel 2</a>
+      </p>
+      <h3>bekannte Probleme</h3>
+      <p>
+        Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser<br>
+        <br>
+        Keine neue Runde startbar wenn altes Spiel nicht beendet<br>
+        -> Loesung: maximale Rundenanzahl mit Befehl niedriger setzen, laufende Runde zuende spielen und 40 Sekunden warten und Website neu laden<br>
+      </p>
+    </div>
+    <div class="changelog grid-box">
+      <div>
+        <h3>version 2.1</h3>
+        <p>(15.04.2020)</p>
+        <ul>
+          <li>die Bestimmung der Karte die den Stich gewinnt, sollte jetzt wieder fehlerlos laufen :-D</li>
+        </ul>
+      </div>
+      <div>
+        <h3>version 2.0</h3>
+        <p>(08.04.2020)</p>
+        <ul>
+          <li>Spiel durch Spieler allein spielbar</li>
+          <li>bei Verbindungsunterbrechung weiterspielbar</li>
+          <li>keine Siegerauswertung</li>
+          <li>2 Spiele laufen parallel</li>
+          <li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
+        </ul>
+      </div>
+      <div>
+        <h3>version 1.0</h3>
+        <p>(23.01.2020)</p>
+        <ul>
+          <li>läuft erstmal</li>
+          <li>bei Verbindungsunterbrechung is das Game meistens nicht weiterspielbar</li>
+          <li>keine Siegerauswertung</li>
+          <li>Karten in Hand entfliehen Bildschirm bei hoher Kartenanzahl dieser</li>
+          <li>Programm braucht live Betreuung beim Spielen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

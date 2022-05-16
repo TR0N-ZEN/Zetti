@@ -19,8 +19,8 @@ body
     font-family: sans-serif;
     overflow-wrap: break-word;
     font-size: 4vmin;
-		background-color: black;
-		color: #7ABF24;
+    background-color: black;
+    color: #7ABF24;
 }
 
 .grid-box 
@@ -39,40 +39,40 @@ button
 
 button:hover 
 {
-		transition-property: color;
-		transition-duration: 0.5s;
+    transition-property: color;
+    transition-duration: 0.5s;
 }
 
 main
 {
-	padding: 1vmax;
-	height: 100vh;
-	width: 100vw;
-	display: grid;
-	grid-template-areas: 'game_1 game_2';
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr;
-	grid-column-gap: 1vw;
+  padding: 1vmax;
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-areas: 'game_1 game_2';
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-column-gap: 1vw;
 }
 
 .game_1
 {
-	grid-area: game_1;
+  grid-area: game_1;
 }
 .game_2
 {
-	grid-area: game_2;
+  grid-area: game_2;
 }
 .game_log > h2
 {
-	text-align: center;
-	height: 10%;
-	width: 100%;
+  text-align: center;
+  height: 10%;
+  width: 100%;
 }
 .game_log > ul
 {
-	height: 90%;
-	width: 100%;
-	padding: 1vmax;
-	overflow-y: scroll;
+  height: 90%;
+  width: 100%;
+  padding: 1vmax;
+  overflow-y: scroll;
 }
