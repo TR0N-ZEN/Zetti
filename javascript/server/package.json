@@ -11,7 +11,7 @@
     "nodemon": "^2.0.6"
   },
   "scripts": {
-		"live-local": "node server.js local",
+    "live-local": "node server.js local",
     "live-server": "node server.js server",
     "dev-local": "nodemon server.js local",
     "dev-server": "nodemon server.js server"
