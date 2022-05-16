@@ -2,7 +2,7 @@
   "name": "zetti",
   "version": "1.0.0",
   "description": "game of cards",
-  "main": "serverScript.js",
+  "main": "server.js",
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^4.4.1"
