@@ -1,7 +1,0 @@
-scan pictures with custom settings for scanning (paper size 75mm x 104mm, 600dpi)
-cut border with windows photo
-in inkscape
-top bar Pfad > Bitmap nachzeichnen > Farben & Abtastungen 8 & Glätten & Abtastungen stapeln & Hintergrund entfernen :: für Grüne Karten sind 13 Abtastungen nötig, blaue könnten schwierig werden
-top bar > scale pictures to height 100 width 70
-obere leiste > Bearbeiten > Seitengröße auf Auswahlgröße (Umschalt + Strg + R)
-save to ~/"Desktop/svgs fo Wizard/<color>_<number>.svg"
