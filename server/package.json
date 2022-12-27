@@ -8,7 +8,7 @@
     "socket.io": "^4.4.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.20"
   },
   "scripts": {
     "live-local": "sudo node server.js local",
