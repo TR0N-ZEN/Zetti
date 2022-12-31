@@ -1,5 +1,5 @@
-const Player = require('./assets/player').Player;
-const Clients = require('./assets/clients').Clients;
+const Player = require('./assets/players/player').Player;
+const Clients = require('./assets/players/clients/clients').Clients;
 
 
 

@@ -9,14 +9,17 @@ switch (process.argv[2])
 {
   // running code on local machine
   case("local"):
-    IPaddress = os.networkInterfaces()["enp2s0"][0].address; // - for dev on laptop via ethernet
-    // const IPaddress = os.networkInterfaces()["wlp4s0"][0].address; // - for dev on laptop via wifi
+    try {
+      IPaddress = os.networkInterfaces()["enp2s0"][0].address; // - for dev on laptop via ethernet
+    } catch {
+      IPaddress = os.networkInterfaces()["wlp3s0"][0].address; // - for dev on laptop via wifi
+    }
     //const dirname = "/mnt/EAD49BDCD49BA979/home/ego/Desktop/Zetti"; // deprecated
     dirname = __dirname; // only to use when not in node's interactive mode
     break;
   // running code on remote server
   case("server"):
-    const IPaddress = os.networkInterfaces()["venet0:0"][0].address;
+    IPaddress = os.networkInterfaces()["venet0:0"][0].address;
     // const dirname = "/home/zetti/Zetti/javascript"; // deprecated
     dirname = __dirname; // only to use when not inside node's interactive mode
     break;
@@ -114,16 +117,20 @@ io.on('connection', (socket) =>
   socket.on("connect_to_game", (number) => {  });
 });
 
-const namespace_1 = io.of("/game_1");
-const namespace_2 = io.of("/game_2");
 const namespace_oversight = io.of("/oversight");
 
 // const debug_stream = require('./debug_stream').debug_stream;
 // const game_1_debug_stream = new debug_stream('game_1', namespace_oversight);
 // const game_2_debug_stream = new debug_stream('game_2', namespace_oversight);
 
-var game_1 = new Zetti(namespace_1 /*, game_1_debug_stream*/);
-var game_2 = new Zetti(namespace_2 /*, game_2_debug_stream*/);
+var game_1 = new Zetti(
+  io.of("/game_1")
+  /*, game_1_debug_stream*/
+);
+var game_2 = new Zetti(
+  io.of("/game_2")
+  /*, game_2_debug_stream*/
+);
 
 
 // port for http server

@@ -1,0 +1,5 @@
+# standard case
+* text=auto eol=lf
+
+# javascript files
+*.js text eol=lf

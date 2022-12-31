@@ -1,17 +1,10 @@
 {
-  "name": "zetti",
+  "name": "server",
   "version": "1.0.0",
-  "description": "game of cards",
+  "description": "",
   "main": "main.js",
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.5.4"
-  },
   "scripts": {
-    "live-local": "sudo node main.js local",
-    "live-server": "sudo node main.js server",
-    "dev-local": "sudo nodemon main.js local",
-    "dev-server": "sudo nodemon main.js server"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -23,7 +16,8 @@
     "url": "https://github.com/TR0N-ZEN/Zetti/issues"
   },
   "homepage": "https://github.com/TR0N-ZEN/Zetti#readme",
-  "devDependencies": {
-    "nodemon": "^2.0.20"
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.5.4"
   }
 }

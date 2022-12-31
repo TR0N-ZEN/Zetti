@@ -39,6 +39,7 @@ class Clients
     }
     return array;
   }
+
 }
 
 module.exports.Clients = Clients;

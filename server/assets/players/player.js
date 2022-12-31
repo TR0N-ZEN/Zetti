@@ -1,4 +1,4 @@
-const Client = require('./client').Client;
+const Client = require('./clients/client.js').Client;
 
 class Player extends Client
 {
