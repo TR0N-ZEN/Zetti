@@ -12,7 +12,7 @@ class Player extends Client
     this.hand = [];
     this.id = Player.getID(ids);
   }
-  
+
   /**
    * 
    * @returns copy of the playerobject without .socket and .hand attribute
@@ -35,7 +35,7 @@ class Player extends Client
     player.tricks_won = 0;
     player.hand = [];
   }
-  
+
   /**
    * Get id for a player
    * @param {number[]} ids array of zeros and ones
@@ -52,7 +52,7 @@ class Player extends Client
       }
     }
   }
-  
+
   /**
    * calculate point won or lost through the just ending round
    * @param {Object} player 
@@ -70,7 +70,7 @@ class Player extends Client
     player.points += delta;
     //console.log(`\thas delta ${delta}\n\tpoints: ${player.points}`);
   }
-  
+
   /**
    * 
    * @param {number} id 
@@ -128,7 +128,7 @@ class Player extends Client
     }
     return false;
   }
-  
+
   /**
    * 
    * @param {String} player_id 
@@ -140,7 +140,7 @@ class Player extends Client
       if ( players[index].id == player_id ) { return index; }
     }
   }
-  
+
   /**
    * maybe need to delete keyword 'static'
    * @param {String} id 
