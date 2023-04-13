@@ -5,29 +5,14 @@ const Zetti = require('./zetti').Zetti;
 let IPaddress, dirname = undefined;
 console.log(`Started process with arg: '${process.argv[2]}'`);
 
-switch (process.argv[2])
-{
-  // running code on local machine
-  case("local"):
-    try {
-      IPaddress = os.networkInterfaces()["enp2s0"][0].address; // - for dev on laptop via ethernet
-    } catch {
-      IPaddress = os.networkInterfaces()["wlp3s0"][0].address; // - for dev on laptop via wifi
-    }
-    //const dirname = "/mnt/EAD49BDCD49BA979/home/ego/Desktop/Zetti"; // deprecated
-    dirname = __dirname; // only to use when not in node's interactive mode
-    break;
-  // running code on remote server
-  case("server"):
-    IPaddress = os.networkInterfaces()["venet0:0"][0].address;
-    // const dirname = "/home/zetti/Zetti/javascript"; // deprecated
-    dirname = __dirname; // only to use when not inside node's interactive mode
-    break;
-  // argument is invalid
-  default:
-    console.log("Your supplied argument is invalid. Valid arguents are 'local', 'server'.");
+for (let [key, value] of Object.entries(os.networkInterfaces()))
+{ 
+  if (["eth0","enp2s0","venet0:0","wlp3s0"].includes(key)) { IPaddress=value[0].address; break; }
 }
 
+console.log(IPaddress);
+
+dirname = __dirname; // only to use when not inside node's interactive mode
 // helper code for constant variable "client_dir"
 let x = dirname.split(path.sep);
 x.splice((-1),1); // remove last element which will hold 'server'
