@@ -4,7 +4,7 @@ const delay = require('./tools/delay').delay;
 
 const Clients = require('./assets/players/clients/clients').Clients;
 const Player = require('./assets/players/player').Player;
-const Players = require('./assets/players').Players;
+const Players = require('./assets/players/players').Players;
 const Card = require('./entities/card').Card;
 const Zetti_field= require('./entities/zetti_field').Zetti_field;
 const commands = require('./commands');
