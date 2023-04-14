@@ -1,0 +1,17 @@
+services:
+  production:
+    image: zetti.production
+    build:
+      context: .
+      dockerfile: production.dockerfile
+    ports:
+      - "80:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2G
+          pids: 20
+        reservations:
+          cpus: '1.00'
+          memory: 1G
