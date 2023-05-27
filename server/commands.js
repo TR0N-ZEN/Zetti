@@ -1,7 +1,7 @@
 /**
  * 
  * @param {number} number 
- * @param {object} playingfield 
+ * @param {Playingfield} playingfield 
  * @param {object} io 
  */
 function SetRounds(number, playingfield, io)
@@ -12,7 +12,7 @@ function SetRounds(number, playingfield, io)
 
 /**
  * 
- * @param {object} playingfield 
+ * @param {Playingfield} playingfield 
  * @param {object} io 
  */
 function GetRounds(playingfield, io)
@@ -24,7 +24,7 @@ function GetRounds(playingfield, io)
  * 
  * @param {string} string 
  * @param {object} io 
- * @param {object} playingfield 
+ * @param {Playingfield} playingfield 
  */
 function eval_command(string, io, playingfield)
 {

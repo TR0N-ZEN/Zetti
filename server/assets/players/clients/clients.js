@@ -18,7 +18,7 @@ class Clients
 
   /**
    * 
-   * @param {object} client 
+   * @param {Client} client 
    */
   append(client)
   {
@@ -27,8 +27,8 @@ class Clients
   
   /**
    * Return array of info about each player referenced in the clients array
-   * @param {object[]} clients 
-   * @returns {object[]} info about clients
+   * @param {Client[]} clients 
+   * @returns {Client[]} info about clients
    */
   static info(clients)
   {

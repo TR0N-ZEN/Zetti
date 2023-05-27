@@ -74,7 +74,7 @@ class Player extends Client
   /**
    * 
    * @param {number} id 
-   * @param {Object[]} players 
+   * @param {Player[]} players 
    * @returns reference to player object inside players that has the id
    */
   static by_id (id, players)
@@ -88,7 +88,7 @@ class Player extends Client
 
   /**
    * 
-   * @param {Object} player 
+   * @param {Player} player 
    */
   static update_points_branchless(player)
   {
@@ -104,7 +104,7 @@ class Player extends Client
   /**
    * 
    * @param {String} socket_id 
-   * @param {Objects[]} players 
+   * @param {Player[]} players 
    * @returns {number}index
    */
   static index_by_socket_id(socket_id, players)
@@ -117,7 +117,7 @@ class Player extends Client
   /**
    * 
    * @param {String} socket_id 
-   * @param {Object[]} players 
+   * @param {Player[]} players 
    * @returns boolean value that indicates success of operation
    */
   static delete_by_socket_id(socket_id, players) {
@@ -132,7 +132,7 @@ class Player extends Client
   /**
    * 
    * @param {String} player_id 
-   * @param {Object[]} players 
+   * @param {Player[]} players 
    * @returns index of player which has player_id as id
    */
   static index_by_id(player_id, players) {
@@ -144,7 +144,7 @@ class Player extends Client
   /**
    * maybe need to delete keyword 'static'
    * @param {String} id 
-   * @param {Object[]} players 
+   * @param {Player[]} players 
    * @returns boolean indicating  
    */
   static delete_by_id(id, players)

@@ -1,6 +1,6 @@
-const mod = require('./tools/mod').mod;
-const get_random_element = require('./tools/get_random_element').get_random_element;
-const delay = require('./tools/delay').delay;
+const mod = require('./JSTools/math/mod').mod;
+const get_random_element = require('./JSTools/datatypes/array').get_random_element;
+const delay = require('./JSTools/delay').delay;
 
 const Clients = require('./assets/players/clients/clients').Clients;
 const Player = require('./assets/players/player').Player;

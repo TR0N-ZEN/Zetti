@@ -1,0 +1,3 @@
+[submodule "server/JSTools"]
+	path = server/JSTools
+	url = git@github.com:TR0N-ZEN/JSTools.git
