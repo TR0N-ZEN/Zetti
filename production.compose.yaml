@@ -1,5 +1,6 @@
 services:
   production:
+    command: node /tmp/Zetti/server/main.js
     image: zetti.production
     build:
       context: .
