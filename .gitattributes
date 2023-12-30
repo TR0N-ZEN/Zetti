@@ -1,5 +1,6 @@
 # standard case
 * text=auto eol=lf
-
 # javascript files
 *.js text eol=lf
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.svg filter=lfs diff=lfs merge=lfs -text
